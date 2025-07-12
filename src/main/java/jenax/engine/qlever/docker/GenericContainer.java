@@ -39,6 +39,12 @@ import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Volume;
 
+/**
+ * An implementation of the test containers API that
+ * builds a command line that invokes the docker command.
+ *
+ * Avoids some code duplication by relying on test container's CreateContainerCmd.
+ */
 public class GenericContainer<SELF extends GenericContainer<SELF>> implements Container<SELF> {
 
     public String[] buildCmdLine() {

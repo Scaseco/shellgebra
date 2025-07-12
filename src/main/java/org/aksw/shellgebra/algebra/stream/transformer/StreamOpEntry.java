@@ -27,7 +27,7 @@ public record StreamOpEntry<T>(StreamOp op, T data)
 
     @Override
     public StreamOp getKey() {
-        return op;
+        return getStreamOp();
     }
 
     @Override

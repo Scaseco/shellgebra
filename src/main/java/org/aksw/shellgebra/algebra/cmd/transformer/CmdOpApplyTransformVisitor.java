@@ -12,6 +12,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirect;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpString;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpSubst;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpToArg;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 
 public class CmdOpApplyTransformVisitor
@@ -88,5 +89,10 @@ public class CmdOpApplyTransformVisitor
         CmdOp newOp = op.getSubOp().accept(this);
         CmdOp result = transform.transform(op, newOp);
         return result;
+    }
+
+    @Override
+    public CmdOp visit(CmdOpVar op) {
+        throw new UnsupportedOperationException();
     }
 }

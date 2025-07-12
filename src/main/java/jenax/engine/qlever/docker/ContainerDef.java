@@ -27,7 +27,10 @@ import com.github.dockerjava.api.model.InternetProtocol;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 
-/** A copy of TestContainer's ContainerDef class. */
+/**
+ * A copy of TestContainer's ContainerDef class.
+ * Used in {@link GenericContainer}.
+ */
 public class ContainerDef {
     private static final Logger log = LoggerFactory.getLogger(ContainerDef.class);
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.jenax.dataaccess.sparql.creator.FileSetOverPathBase;
 import org.aksw.jenax.dataaccess.sparql.creator.RDFDatabase;
 import org.aksw.jenax.dataaccess.sparql.engine.RDFEngine;
@@ -18,7 +19,6 @@ import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RDFEngineFactoryLegac
 import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RDFEngineFactoryLegacyBase.CloseablePath;
 import org.aksw.jenax.dataaccess.sparql.factory.datasource.RdfDataSourceSpecBasic;
 import org.aksw.jenax.dataaccess.sparql.factory.datasource.RdfDataSourceSpecBasicFromMap;
-import org.aksw.jenax.engine.docker.common.ContainerPathResolver;
 import org.aksw.jenax.engine.qlever.RdfDatabaseQlever;
 import org.aksw.jenax.engine.qlever.SystemUtils;
 import org.aksw.shellgebra.exec.CmdStrOps;

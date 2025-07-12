@@ -2,8 +2,8 @@ package org.aksw.shellgebra.algebra.stream.transform;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
@@ -21,8 +21,8 @@ import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformBase;
 import org.aksw.shellgebra.exec.SysRuntime;
-import org.aksw.shellgebra.registry.CodecRegistry;
-import org.aksw.shellgebra.registry.CodecVariant;
+import org.aksw.shellgebra.registry.codec.CodecRegistry;
+import org.aksw.shellgebra.registry.codec.CodecVariant;
 
 public class StreamOpTransformToCmdOp
     extends StreamOpTransformBase
@@ -55,12 +55,12 @@ public class StreamOpTransformToCmdOp
         return result;
     }
 
-    public static String resolveCmdName(CodecVariant codecVariant, SysRuntime runtime) {
-        String[] cmd = codecVariant.getCmd();
-        if (cmd.length == 0) {
-            throw new IllegalStateException("Encountered zero-length command");
-        }
-        String rawCmdName = cmd[0];
+    public static String resolveCmdName(String toolName, SysRuntime runtime) {
+//        String[] cmd = codecVariant.getCmd();
+//        if (cmd.length == 0) {
+//            throw new IllegalStateException("Encountered zero-length command");
+//        }
+        String rawCmdName = toolName; //cmd[0];
         String resolvedCmdName;
         try {
             resolvedCmdName = runtime.which(rawCmdName);
@@ -75,16 +75,16 @@ public class StreamOpTransformToCmdOp
         String name = op.getName();
         StreamOp result = null;
 
-        CodecSpec spec = registry.requireCodec(name);
-        for (CodecVariant variant : spec.getVariants()) {
-            String[] cmd = variant.getCmd();
-            String resolvedCmdName = resolveCmdName(variant, env.getRuntime());
+        CodecSpec spec = registry.getCodecSpec(name)
+            .orElseThrow(() -> new NoSuchElementException("No codec with name: " + name));
+        for (CodecVariant variant : spec.getDecoderVariants()) {
+            // String[] cmd = variant.getCmd();
+            String toolName = variant.getToolName();
+            String resolvedCmdName = resolveCmdName(toolName, env.getRuntime());
 
             // cmd[0] = resolvedCmdName;
             List<CmdOp> args = new ArrayList<>();
-            Arrays.asList(cmd)
-                .subList(1, cmd.length)
-                .forEach(s -> args.add(new CmdOpString(s)));
+            variant.getArgs().forEach(s -> args.add(new CmdOpString(s)));
             SysRuntime runtime = env.getRuntime();
 
             boolean canSubst = true;

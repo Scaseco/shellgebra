@@ -21,13 +21,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.commons.util.exception.FinallyRunAll;
 import org.aksw.jena_sparql_api.http.domain.api.RdfEntityInfo;
 import org.aksw.jenax.arq.util.lang.RDFLanguagesEx;
 import org.aksw.jenax.arq.util.prefix.ShortNameMgr;
 import org.aksw.jenax.dataaccess.sparql.creator.FileSet;
 import org.aksw.jenax.dataaccess.sparql.creator.RDFDatabaseBuilder;
-import org.aksw.jenax.engine.docker.common.ContainerPathResolver;
 import org.aksw.jenax.sparql.query.rx.RDFDataMgrEx;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
@@ -56,7 +56,7 @@ import org.aksw.shellgebra.exec.FileWriterTaskNoop;
 import org.aksw.shellgebra.exec.PathLifeCycles;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
-import org.aksw.shellgebra.registry.CodecRegistry;
+import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.graph.Node;
@@ -340,6 +340,11 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
         // List<StreamOp> ops = args.stream().map(this::convertArgToOp).toList();
     }
 
+    /**
+     * Command contribution to process a given file.
+     * The fileName is the container-relative path of the input file.
+     * The input file will be bind-mounted to that fileName.
+     */
     public static record FileAndCmd(String fileName, String[] cmd) {}
 
     protected FileAndCmd buildCmdPart(String containerBasePath, StreamOp containerOp, String fileArg, Node graph, Lang lang) {
@@ -632,7 +637,7 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
             BindMode bindMode = AccessMode.ro.equals(bind.getAccessMode())
                 ? BindMode.READ_ONLY
                 : null;
-            container.addFileSystemBind(bind.getPath(), bind.getVolume().getPath(), bindMode);
+            container.withFileSystemBind(bind.getPath(), bind.getVolume().getPath(), bindMode);
         }
 
         container.start();

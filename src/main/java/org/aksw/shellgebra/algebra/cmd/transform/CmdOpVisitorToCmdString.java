@@ -16,6 +16,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirect;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpString;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpSubst;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpToArg;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.exec.CmdStrOps;
 
@@ -114,5 +115,10 @@ public class CmdOpVisitorToCmdString
         String fileName = op.getFileName();
         CmdString result = new CmdString(strOps.redirect(before, fileName));
         return result;
+    }
+
+    @Override
+    public CmdString visit(CmdOpVar op) {
+        throw new UnsupportedOperationException();
     }
 }

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
-/** A file writer task that does nothing (it just 'serves' an existing file). */
+/**
+ * A no-op file writer task that just serves an existing file.
+ */
 public class FileWriterTaskNoop
     extends FileWriterTaskBase
 {

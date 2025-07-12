@@ -1,0 +1,83 @@
+package org.aksw.shellgebra.registry.tool;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.aksw.shellgebra.registry.codec.CodecRegistry;
+
+/** Mapping of tools to locations and containers */
+public class ToolRegistry {
+    protected List<ToolInfoProvider> toolInfoProviders = new ArrayList<>();
+
+    private static ToolRegistry defaultRegistry = null;
+
+    public static ToolRegistry get() {
+        if (defaultRegistry == null) {
+            synchronized (CodecRegistry.class) {
+                if (defaultRegistry == null) {
+                    defaultRegistry = new ToolRegistry();
+                    loadDefaults(defaultRegistry);
+                }
+            }
+        }
+        return defaultRegistry;
+    }
+
+    public static void loadDefaults(ToolRegistry registry) {
+        ToolInfoProvider toolProvider = ToolInfoProviderImpl.newBuilder()
+
+            .add(ToolInfo.newBuilder()
+                .setName("lbzip2")
+                .addCommand(CommandPathInfo.newBuilder()
+                    .setCommand("/usr/bin/lbzip2")
+                    .addDockerImageName("nestio/lbzip2")
+                    .build())
+                .build())
+
+            .add(ToolInfo.newBuilder()
+                .setName("gzip")
+                .addCommand(CommandPathInfo.newBuilder()
+                    .setCommand("/usr/bin/gzip")
+                    .build())
+                .build())
+
+            .add(ToolInfo.newBuilder()
+                .setName("bzip2")
+                .addCommand(CommandPathInfo.newBuilder()
+                    .setCommand("/usr/bin/bzip2")
+                    .build())
+                .build())
+
+            .add(ToolInfo.newBuilder()
+                .setName("cat")
+                .addCommand(CommandPathInfo.newBuilder()
+                    .setCommand("/usr/bin/cat")
+                    .build())
+                .build())
+            .build()
+            ;
+
+        registry.addToolInfoProvider(toolProvider);
+    }
+
+//    public List<DockerizedToolInfo> getDockerImages(String toolName) {
+//        List<DockerizedToolInfo> result = imageProviders.stream()
+//            .flatMap(provider -> provider.get(toolName).stream())
+//            .toList();
+//        return result;
+//    }
+
+    public Optional<ToolInfo> getToolInfo(String name) {
+        Optional<ToolInfo> result = toolInfoProviders.stream()
+            .map(provider -> provider.get(name))
+            .flatMap(Optional::stream)
+            .findFirst();
+        return result;
+    }
+
+    public ToolRegistry addToolInfoProvider(ToolInfoProvider provider) {
+        toolInfoProviders.add(0, provider);
+        return this;
+    }
+}

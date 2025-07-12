@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.aksw.jenax.engine.docker.common.ContainerUtils;
-import org.aksw.jenax.engine.docker.common.HostNameUtils;
-import org.aksw.jenax.engine.docker.common.ImageIntrospector;
-import org.aksw.jenax.engine.docker.common.ImageIntrospectorImpl;
+import org.aksw.commons.util.docker.ContainerUtils;
+import org.aksw.commons.util.docker.HostNameUtils;
+import org.aksw.commons.util.docker.ImageIntrospector;
+import org.aksw.commons.util.docker.ImageIntrospectorImpl;
 import org.aksw.jenax.model.osreo.ImageIntrospection;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
@@ -19,9 +19,15 @@ import jenax.engine.qlever.docker.QleverConstants;
 
 public class MainPlaygroundShellgebra {
     public static void main(String[] args) throws IOException, InterruptedException {
+//       String imageName = "ubuntu:latest";
+//       String imageName = "nestio/lbzip2";
+       String imageName = QleverConstants.DOCKER_IMAGE_NAME + ":" + QleverConstants.DOCKER_IMAGE_TAG;
+
         Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
         ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(model);
-        ImageIntrospection inspection = imageIntrospector.inspect("ubuntu:latest", true);
+        ImageIntrospection inspection = imageIntrospector.inspect(imageName, true);
+
+
 
         System.out.println(inspection);
 
@@ -47,9 +53,6 @@ public class MainPlaygroundShellgebra {
         // Define paths
         Path inputFile = Path.of("/home/raven/Datasets/dcat-maven-demo/countries/countries.ttl.bz2").toAbsolutePath();
         Path fifoPath = Path.of("/tmp/output.pipe").toAbsolutePath();
-        // String imageName = "ubuntu:latest";
-        // String imageName = "nestio/lbzip2";
-        String imageName = QleverConstants.DOCKER_IMAGE_NAME + ":" + QleverConstants.DOCKER_IMAGE_TAG;
 
         // Ensure input exists
         if (!Files.exists(inputFile)) {

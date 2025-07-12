@@ -5,6 +5,7 @@ public interface CmdOpVisitor<T> {
     T visit(CmdOpPipe op);
     T visit(CmdOpGroup op);
     T visit(CmdOpString op);
+    T visit(CmdOpVar op);
     T visit(CmdOpSubst op);
     T visit(CmdOpToArg op);
     T visit(CmdOpFile op);

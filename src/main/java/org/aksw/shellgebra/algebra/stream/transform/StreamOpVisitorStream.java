@@ -126,7 +126,11 @@ public class StreamOpVisitorStream
     @Override
     public InputStream visit(StreamOpContentConvert op) {
         InputStream base = op.getSubOp().accept(this);
-        String sourceFormat = op.getSourceFormat();
+        return convert(op, base);
+    }
+
+	private InputStream convert(StreamOpContentConvert op, InputStream base) {
+		String sourceFormat = op.getSourceFormat();
         String targetFormat = op.getTargetFormat();
         String baseIri = op.getBaseIri();
 
@@ -141,7 +145,7 @@ public class StreamOpVisitorStream
         }
 
         return result;
-    }
+	}
 
 //    @Override
 //    public InputStream visit(CodecOpCommandGroup op) {

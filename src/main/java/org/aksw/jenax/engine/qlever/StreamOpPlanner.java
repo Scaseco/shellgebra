@@ -17,7 +17,7 @@ import org.aksw.shellgebra.algebra.stream.transform.StreamOpVisitorFileName.File
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpEntry;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformer;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
-import org.aksw.shellgebra.registry.CodecRegistry;
+import org.aksw.shellgebra.registry.codec.CodecRegistry;
 
 public class StreamOpPlanner {
     public static String streamOpToFileName(StreamOp op) {
