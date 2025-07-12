@@ -8,7 +8,11 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
+import org.aksw.shellgebra.registry.codec.CodecVariant;
 import org.aksw.shellgebra.registry.codec.JavaCodec;
+import org.aksw.shellgebra.registry.tool.CommandPathInfo;
+import org.aksw.shellgebra.registry.tool.ToolInfo;
+import org.aksw.shellgebra.registry.tool.ToolRegistry;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,7 +31,6 @@ public class TestCodecRegistry {
 
     private static void assertRoundTrip(String codecName, String expected) throws IOException {
         String actual;
-
         JavaCodec codec = CodecRegistry.get().requireJavaCodec(codecName);
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -42,5 +45,17 @@ public class TestCodecRegistry {
         }
 
         Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testCmdBzip2() {
+        CodecVariant variant = CodecRegistry.get().getCodecSpec("bzip2").get().getDecoderVariants().get(0);
+        String toolName = variant.getToolName();
+        Assert.assertEquals("-cd", variant.getArgs().get(0));
+
+        ToolInfo toolInfo = ToolRegistry.get().getToolInfo(toolName).get();
+        CommandPathInfo entry = toolInfo.getCommandsByPath().values().iterator().next();
+
+        Assert.assertTrue(entry.getDockerImages().contains("nestio/lbzip2"));
     }
 }

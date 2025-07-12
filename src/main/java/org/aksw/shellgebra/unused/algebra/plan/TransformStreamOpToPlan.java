@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
-import org.aksw.shellgebra.algebra.stream.op.CodecSpec;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
@@ -78,7 +77,7 @@ public class TransformStreamOpToPlan
     @Override
     public PlanNode visit(StreamOpTranscode op) {
         String codecName = op.getName();
-        CodecSpec codecSpec = codecRegistry.getCodecSpec(codecName);
+        // CodecSpec codecSpec = codecRegistry.getCodecSpec(codecName);
 
 
         return null;
