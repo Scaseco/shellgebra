@@ -6,7 +6,10 @@ import java.util.Optional;
 
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
 
-/** Mapping of tools to locations and containers */
+/**
+ * Registry to resolve tools to commands.
+ * Commands may be executable on the host or using docker containers.
+ */
 public class ToolRegistry {
     protected List<ToolInfoProvider> toolInfoProviders = new ArrayList<>();
 
@@ -25,6 +28,25 @@ public class ToolRegistry {
     }
 
     public static void loadDefaults(ToolRegistry registry) {
+        ToolInfoProviderImpl toolProvider = new ToolInfoProviderImpl();
+
+        toolProvider.getOrCreate("lbzip2")
+            .getOrCreateCommand("/usr/bin/lbzip2")
+                .addDockerImageAvailability("nestio/lbzip2");
+
+        toolProvider.getOrCreate("gzip")
+            .getOrCreateCommand("/usr/bin/gzip");
+
+        toolProvider.getOrCreate("bzip2")
+            .getOrCreateCommand("/usr/bin/bzip2");
+
+        toolProvider.getOrCreate("cat")
+            .getOrCreateCommand("/usr/bin/cat");
+
+        toolProvider.getOrCreate("rapper")
+            .getOrCreateCommand("/usr/bin/rapper");
+
+        /*
         ToolInfoProvider toolProvider = ToolInfoProviderImpl.newBuilder()
 
             .add(ToolInfo.newBuilder()
@@ -55,8 +77,18 @@ public class ToolRegistry {
                     .setCommand("/usr/bin/cat")
                     .build())
                 .build())
+
+            .add(ToolInfo.newBuilder()
+                .setName("rapper")
+                .addCommand(CommandPathInfo.newBuilder()
+                    .setCommand("/usr/bin/rapper")
+                    // .addDockerImageName("nestio/lbzip2")
+                    .build())
+                .build())
+
             .build()
             ;
+        */
 
         registry.addToolInfoProvider(toolProvider);
     }

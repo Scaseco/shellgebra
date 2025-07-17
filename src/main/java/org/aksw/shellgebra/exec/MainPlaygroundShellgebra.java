@@ -21,7 +21,7 @@ public class MainPlaygroundShellgebra {
     public static void main(String[] args) throws IOException, InterruptedException {
 //       String imageName = "ubuntu:latest";
 //       String imageName = "nestio/lbzip2";
-       String imageName = QleverConstants.DOCKER_IMAGE_NAME + ":" + QleverConstants.DOCKER_IMAGE_TAG;
+        String imageName = QleverConstants.DOCKER_IMAGE_NAME + ":" + QleverConstants.DOCKER_IMAGE_TAG;
 
         Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
         ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(model);

@@ -2,10 +2,16 @@ package org.aksw.shellgebra.registry.content;
 
 import java.util.Optional;
 
+import org.aksw.shellgebra.algebra.stream.op.ContentConvertSpec;
+
 public class ContentConvertProviderOverRapper
     implements ContentConvertProvider
 {
     @Override
+    public Optional<Tool> getConverter(ContentConvertSpec spec) {
+        return getConverter(spec.sourceFormat(), spec.targetFormat(), spec.baseIri());
+    }
+
     public Optional<Tool> getConverter(String srcLangStr, String tgtFormatStr, String base) {
         Tool tool = null;
         try {

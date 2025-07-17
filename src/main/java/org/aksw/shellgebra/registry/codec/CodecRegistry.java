@@ -1,12 +1,15 @@
 package org.aksw.shellgebra.registry.codec;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.aksw.shellgebra.algebra.common.TranscodeMode;
+import org.aksw.shellgebra.algebra.common.Transcoding;
 import org.aksw.shellgebra.algebra.stream.op.CodecSpec;
 
 // So there are two similar but different views:
@@ -40,6 +43,22 @@ public class CodecRegistry {
         return Optional.ofNullable(registry.get(name));
     }
 
+    public List<CodecVariant> getEncoders(String name) {
+        List<CodecVariant> result = getCodecSpec(name).stream()
+            .map(CodecSpec::getEncoderVariants)
+            .flatMap(Collection::stream)
+            .toList();
+        return result;
+    }
+
+    public List<CodecVariant> getDecoders(String name) {
+        List<CodecVariant> result = getCodecSpec(name).stream()
+            .map(CodecSpec::getDecoderVariants)
+            .flatMap(Collection::stream)
+            .toList();
+        return result;
+    }
+
 //    public CodecSpec requireCodec(String name) {
 //        CodecSpec result = getCodecSpec(name);
 //        if (result == null) {
@@ -70,7 +89,7 @@ public class CodecRegistry {
 
         {
             CodecSpec spec = CodecSpec.newBuilder()
-                .setName("gz")
+                .setName("gz") // reuse "gz" which is the name in commons-compress.
                 .addDecoderVariant(CodecVariant.of("gzip", "-cd"))
                 .addEncoderVariant(CodecVariant.of("gzip", "-c"))
                 .build();
@@ -86,11 +105,31 @@ public class CodecRegistry {
         registry.addJavaCodecProvider(new JavaCodecProviderOverCommonsCompress());
     }
 
-    public JavaCodec requireJavaCodec(String javaName) {
-        JavaCodec result = javaCodecProviders.stream()
+    public Optional<JavaStreamTransform> getJavaCodec(Transcoding transcoding) {
+        return getJavaCodec(transcoding.name(), transcoding.mode());
+    }
+
+    public Optional<JavaStreamTransform> getJavaCodec(String javaName, TranscodeMode mode) {
+        Optional<JavaStreamTransform> result = javaCodecProviders.stream()
             .map(provider -> provider.getCodec(javaName))
             .flatMap(Optional::stream)
-            .findFirst()
+            .map(codec -> TranscodeMode.DECODE.equals(mode) ? codec.decoder() : codec.encoder())
+            // XXX Validate that provider does not return a transform record with only null values.
+            // .filter(st -> st.inputStreamTransform() != null || st.outputStreamTransform() != null)
+            .findFirst();
+        return result;
+    }
+
+    public Optional<JavaCodec> getJavaCodec(String javaName) {
+        Optional<JavaCodec> result = javaCodecProviders.stream()
+            .map(provider -> provider.getCodec(javaName))
+            .flatMap(Optional::stream)
+            .findFirst();
+        return result;
+    }
+
+    public JavaCodec requireJavaCodec(String javaName) {
+        JavaCodec result = getJavaCodec(javaName)
             .orElseThrow(() -> new NoSuchElementException(javaName));
         return result;
     }

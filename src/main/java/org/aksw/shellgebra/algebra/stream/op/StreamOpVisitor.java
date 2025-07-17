@@ -11,4 +11,6 @@ public interface StreamOpVisitor<T>
     T visit(StreamOpConcat op);
     T visit(StreamOpCommand op);
     T visit(StreamOpVar op);
+
+    T visit(StreamOpResolution op);
 }

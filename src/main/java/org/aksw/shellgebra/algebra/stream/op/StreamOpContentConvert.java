@@ -1,33 +1,36 @@
 package org.aksw.shellgebra.algebra.stream.op;
 
+import java.util.Objects;
+
 /** Byte-level operation. Transform a stream of bytes into another one with a content type conversion applied. */
 public class StreamOpContentConvert
     extends StreamOp1
 {
-    // XXX Enforce mime types?
-    protected String sourceFormat;
-    protected String targetFormat;
-
-    // XXX Do we need a base IRI to parameterize RDF conversions?
-    protected String baseIri;
+    protected ContentConvertSpec contentConvertSpec;
 
     public StreamOpContentConvert(String sourceFormat, String targetFormat, String baseIri, StreamOp subOp) {
+        this(new ContentConvertSpec(sourceFormat, targetFormat, baseIri), subOp);
+    }
+
+    public StreamOpContentConvert(ContentConvertSpec contentConvertspec, StreamOp subOp) {
         super(subOp);
-        this.sourceFormat = sourceFormat;
-        this.targetFormat = targetFormat;
-        this.baseIri = baseIri;
+        this.contentConvertSpec = Objects.requireNonNull(contentConvertspec);
+    }
+
+    public ContentConvertSpec getContentConvertSpec() {
+        return contentConvertSpec;
     }
 
     public String getSourceFormat() {
-        return sourceFormat;
+        return contentConvertSpec.sourceFormat();
     }
 
     public String getTargetFormat() {
-        return targetFormat;
+        return contentConvertSpec.targetFormat();
     }
 
     public String getBaseIri() {
-        return baseIri;
+        return contentConvertSpec.baseIri();
     }
 
     @Override
@@ -38,6 +41,6 @@ public class StreamOpContentConvert
 
     @Override
     public String toString() {
-        return "(convert (" + subOp + " " + sourceFormat + " " + targetFormat + " " + baseIri + "))";
+        return "(convert (" + subOp + " " + getSourceFormat() + " " + getTargetFormat() + " " + getBaseIri() + "))";
     }
 }

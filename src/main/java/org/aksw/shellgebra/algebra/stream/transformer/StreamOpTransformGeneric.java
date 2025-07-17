@@ -7,6 +7,7 @@ import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
+import org.aksw.shellgebra.algebra.stream.op.StreamOpResolution;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpVar;
 
@@ -17,4 +18,6 @@ public interface StreamOpTransformGeneric<T extends HasStreamOp> {
     T transform(StreamOpConcat op, List<T> subOps);
     T transform(StreamOpCommand op);
     T transform(StreamOpVar op);
+
+    T transform(StreamOpResolution op, T subOp);
 }

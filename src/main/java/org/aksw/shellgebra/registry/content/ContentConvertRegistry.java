@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.aksw.shellgebra.algebra.stream.op.ContentConvertSpec;
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.aksw.shellgebra.registry.codec.JavaStreamTransform;
 
@@ -27,17 +28,26 @@ public class ContentConvertRegistry {
     }
 
     public Optional<JavaStreamTransform> getJavaConverter(String srcLang, String tgtFormat, String base) {
+        return getJavaConverter(new ContentConvertSpec(srcLang, tgtFormat, base));
+    }
+
+    public Optional<JavaStreamTransform> getJavaConverter(ContentConvertSpec spec) {
         return javaProviders.stream()
-            .map(provider -> provider.getConverter(srcLang, tgtFormat, base))
+            .map(provider -> provider.getConverter(spec))
             .flatMap(Optional::stream)
             .findFirst();
     }
 
-    public Optional<Tool> getCmdConverter(String srcLang, String tgtFormat, String base) {
+    public List<Tool> getCmdConverter(String srcLang, String tgtFormat, String base) {
+        return getCmdConverter(new ContentConvertSpec(srcLang, tgtFormat, base));
+    }
+
+    public List<Tool> getCmdConverter(ContentConvertSpec spec) {
         return cmdProviders.stream()
-            .map(provider -> provider.getConverter(srcLang, tgtFormat, base))
+            .map(provider -> provider.getConverter(spec))
             .flatMap(Optional::stream)
-            .findFirst();
+            .toList();
+            // .findFirst();
     }
 
     public static void loadDefaults(ContentConvertRegistry registry) {

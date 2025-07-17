@@ -10,6 +10,7 @@ import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
+import org.aksw.shellgebra.algebra.stream.op.StreamOpResolution;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpVar;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpVisitor;
@@ -67,6 +68,11 @@ public class StreamOpVisitorFileName
 
     @Override
     public FileName visit(StreamOpCommand op) {
+        throw new UnsupportedOperationException("Filename generation not implemented for this operator: " + op);
+    }
+
+    @Override
+    public FileName visit(StreamOpResolution op) {
         throw new UnsupportedOperationException("Filename generation not implemented for this operator: " + op);
     }
 

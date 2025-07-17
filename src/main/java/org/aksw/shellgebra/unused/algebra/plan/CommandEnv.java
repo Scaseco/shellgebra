@@ -1,16 +1,23 @@
 package org.aksw.shellgebra.unused.algebra.plan;
 
-import org.apache.commons.cli.CommandLine;
-
 public class CommandEnv {
-    protected CommandLine commandLine;
+    // protected CommandLine commandLine;
+    protected String toolName;
+    protected String resolvedCommand;
 
-    public CommandEnv(CommandLine commandLine) {
+    public CommandEnv(String toolName, String resolvedCommand) {
         super();
-        this.commandLine = commandLine;
+        this.toolName = toolName;
+        this.resolvedCommand = resolvedCommand;
     }
 
-    public CommandLine getCommandLine() {
-        return commandLine;
-    }
+
+//    public CommandEnv(CommandLine commandLine) {
+//        super();
+//        this.commandLine = commandLine;
+//    }
+
+//    public CommandLine getCommandLine() {
+//        return commandLine;
+//    }
 }

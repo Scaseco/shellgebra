@@ -1,10 +1,15 @@
 package org.aksw.shellgebra.registry.tool;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ *
+ * TODO Add sanity check whether different tools share the same command (shouldn't happen).
+ */
 public class ToolInfoProviderImpl
     implements ToolInfoProvider
 {
@@ -13,6 +18,28 @@ public class ToolInfoProviderImpl
     private ToolInfoProviderImpl(Map<String, ToolInfo> nameToToolInfo) {
         super();
         this.nameToToolInfo = nameToToolInfo;
+    }
+
+    public ToolInfoProviderImpl() {
+    }
+
+    public Collection<ToolInfo> list() {
+        return nameToToolInfo.values();
+    }
+
+    public ToolInfo getOrCreate(String toolName) {
+        return nameToToolInfo.computeIfAbsent(toolName, tn -> new ToolInfo(toolName));
+    }
+
+    public ToolInfo merge(ToolInfo toolInfo) {
+        ToolInfo result = getOrCreate(toolInfo.getName());
+        for (CommandPathInfo cpi :  toolInfo.list()) {
+            CommandPathInfo thisCpi = result.getOrCreateCommand(cpi.getCommand());
+            cpi.getDockerImages().forEach(thisCpi::addDockerImageAvailability);
+        }
+        result.getAbsenceInDockerImages().addAll(toolInfo.getAbsenceInDockerImages());
+
+        return result;
     }
 
     @Override
@@ -35,5 +62,10 @@ public class ToolInfoProviderImpl
 
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    @Override
+    public String toString() {
+        return nameToToolInfo.values().toString();
     }
 }
