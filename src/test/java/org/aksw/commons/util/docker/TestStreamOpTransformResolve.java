@@ -7,7 +7,6 @@ import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTransformResolve;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpTransformToolUsage;
 import org.aksw.shellgebra.algebra.stream.op.ToolUsage;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformer;
 import org.aksw.shellgebra.registry.tool.ToolInfoProviderImpl;
@@ -25,12 +24,8 @@ public class TestStreamOpTransformResolve {
 
         StreamOp afterOp = StreamOpTransformer.transform(op, resolveTransform);
 
-        StreamOpTransformToolUsage toolUsage = new StreamOpTransformToolUsage();
-        StreamOpTransformer.transform(afterOp, toolUsage);
-
-        ToolInfoProviderImpl tools = toolUsage.getTools();
-
-        ToolUsage.enrich(tools);
+        ToolInfoProviderImpl tools = ToolUsage.analyzeUsage(afterOp);
+        ToolUsage.enrich(tools, "adfreiburg/qlever:commit-f59763c");
 
         System.out.println(tools);
 

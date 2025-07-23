@@ -8,12 +8,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// XXX Could separate host from image commands - but probably this would just increase complexity.
 public class ToolInfo {
     protected String name;
     protected Map<String, CommandPathInfo> commandMap;
 
     // XXX absentOnHost can be true even though there may be a command - revise design to avoid inconsistency.
     protected Boolean absentOnHost = null;
+
+    // Known absences in images.
     protected Set<String> absenceInDockerImages = new LinkedHashSet<>();
 
     public ToolInfo(String name) {
@@ -87,7 +90,7 @@ public class ToolInfo {
 
     @Override
     public String toString() {
-        return "ToolInfo [name=" + name + ", commands=" + commandMap.values() + "absentOnHost=" + absentOnHost +  ", absences: " + absenceInDockerImages + "]";
+        return "ToolInfo [name=" + name + ", commands=" + commandMap.values() + ", absentOnHost=" + absentOnHost +  ", absences: " + absenceInDockerImages + "]";
     }
 
 //    public static class Builder {

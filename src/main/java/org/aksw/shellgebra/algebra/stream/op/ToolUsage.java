@@ -1,11 +1,18 @@
 package org.aksw.shellgebra.algebra.stream.op;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.commons.util.docker.ImageIntrospector;
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
+import org.aksw.jenax.model.osreo.ImageIntrospection;
+import org.aksw.jenax.model.osreo.ShellSupport;
+import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformer;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.registry.tool.CommandPathInfo;
 import org.aksw.shellgebra.registry.tool.ToolInfo;
@@ -19,6 +26,14 @@ import org.slf4j.LoggerFactory;
 public class ToolUsage {
     private static final Logger logger = LoggerFactory.getLogger(ToolUsage.class);
 
+    public static ToolInfoProviderImpl analyzeUsage(StreamOp streamOp) {
+        StreamOpTransformToolUsage toolUsage = new StreamOpTransformToolUsage();
+        StreamOpTransformer.transform(streamOp, toolUsage);
+        ToolInfoProviderImpl tools = toolUsage.getTools();
+
+        // TODO Inject custom images, e.g. adfreiburg/qlever:commit-f59763c
+        return tools;
+    }
 
     /**
      * Given a set of tools which verified commands and images, check for whether
@@ -26,13 +41,17 @@ public class ToolUsage {
      *
      * @param tools
      */
-    public static void enrich(ToolInfoProviderImpl tools) {
+    public static void enrich(ToolInfoProviderImpl tools, String ... targetImages) {
         Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
         ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(model);
 
         List<String> toolNames = tools.list().stream().map(ToolInfo::getName).toList();
-        List<String> imageNames = tools.list().stream().flatMap(tool -> tool.getCommandsByPath().values().stream())
-            .flatMap(cmd -> cmd.getDockerImages().stream()).toList();
+        List<String> derivedImageNames = tools.list().stream().flatMap(tool -> tool.getCommandsByPath().values().stream())
+            .flatMap(cmd -> cmd.getDockerImages().stream()).collect(Collectors.toList());
+
+        List<String> imageNames = new ArrayList<>();
+        imageNames.addAll(Arrays.asList(targetImages));
+        imageNames.addAll(derivedImageNames);
 
         ToolInfoProviderImpl enrichedRegistry = new ToolInfoProviderImpl();
         // Map<String, ToolInfo> toolInfo = new LinkedHashMap<>();
@@ -43,7 +62,7 @@ public class ToolUsage {
 //        	toolInfo.getCommandsByPath()
 //        }
 
-        ToolRegistry baseRegistry = ToolRegistry.get();
+        // ToolRegistry baseRegistry = ToolRegistry.get();
 
         for (String toolName : toolNames) {
             // ToolInfo baseToolInfo = baseRegistry.getToolInfo(toolName).orElseGet(() -> new ToolInfo(toolName));
@@ -75,14 +94,19 @@ public class ToolUsage {
 
                     if (availability == null) {
                         try {
-                            // ImageIntrospection introspection = imageIntrospector.inspect(imageName, true);
-                            // introspection.getShellStatus();
+                            ImageIntrospection introspection = imageIntrospector.inspect(imageName, true);
+                            Map<String, ShellSupport> shells = introspection.getShellStatus();
+                            for (ShellSupport shellSupport : shells.values()) {
+                                String entryPoint = shellSupport.getCommandPath();
+                                String locatorCommand = shellSupport.getLocatorCommand();
+                                String cmd = ContainerUtils.checkImage(imageName, entryPoint, locatorCommand, toolName);
 
-                            // Boolean availability = toolInfo.get
+                                // Boolean availability = toolInfo.get
 
-                            String cmd = ContainerUtils.checkImageForCommand(imageName, toolName);
-                            if (cmd != null) {
-                                toolInfo.getOrCreateCommand(cmd).addDockerImageAvailability(imageName);
+                                // String cmd = ContainerUtils.checkImageForCommand(imageName, toolName);
+                                if (cmd != null) {
+                                    toolInfo.getOrCreateCommand(cmd).addDockerImageAvailability(imageName);
+                                }
                             }
                         } catch (Exception e) {
                             logger.info("Absence: " + toolName + " in " + imageName);
@@ -92,5 +116,7 @@ public class ToolUsage {
                 }
             }
         }
+
+        System.out.println(enrichedRegistry);
     }
 }

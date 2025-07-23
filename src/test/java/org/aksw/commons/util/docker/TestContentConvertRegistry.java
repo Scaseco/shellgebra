@@ -54,6 +54,8 @@ public class TestContentConvertRegistry {
         ToolInfo toolInfo = ToolRegistry.get().getToolInfo(tool.name()).orElse(null);
         System.err.println(toolInfo.getCommandsByPath());
 
+        
+        
 //        String actualStr;
 //        try (InputStream in = xform.inputStreamTransform().apply(new ByteArrayInputStream(ttlStr.getBytes(StandardCharsets.UTF_8)))) {
 //            actualStr = IOUtils.toString(in, StandardCharsets.UTF_8);
