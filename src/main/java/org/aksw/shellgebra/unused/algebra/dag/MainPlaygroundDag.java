@@ -1,15 +1,9 @@
 package org.aksw.shellgebra.unused.algebra.dag;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.function.Supplier;
-
 import org.jgrapht.Graph;
 import org.jgrapht.graph.AsSubgraph;
-import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.jgrapht.graph.EdgeReversedGraph;
-import org.jgrapht.graph.builder.GraphBuilder;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 
 public class MainPlaygroundDag {
@@ -17,6 +11,8 @@ public class MainPlaygroundDag {
         // Create a DAG where each node is a StreamNode
         DirectedAcyclicGraph<StreamNode, StreamEdge> dag =
             new DirectedAcyclicGraph<>(StreamNode.vertexSupplier(), StreamEdge::new, false);
+
+        dag.addVertex(new StreamNode("foobar"));
 
         // Create nodes
         StreamNode a = dag.addVertex();

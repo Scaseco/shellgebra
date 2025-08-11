@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.aksw.shellgebra.algebra.stream.op.ContentConvertSpec;
+import org.aksw.shellgebra.algebra.common.OpSpecContentConvert;
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.aksw.shellgebra.registry.codec.JavaStreamTransform;
 
@@ -28,10 +28,10 @@ public class ContentConvertRegistry {
     }
 
     public Optional<JavaStreamTransform> getJavaConverter(String srcLang, String tgtFormat, String base) {
-        return getJavaConverter(new ContentConvertSpec(srcLang, tgtFormat, base));
+        return getJavaConverter(new OpSpecContentConvert(srcLang, tgtFormat, base));
     }
 
-    public Optional<JavaStreamTransform> getJavaConverter(ContentConvertSpec spec) {
+    public Optional<JavaStreamTransform> getJavaConverter(OpSpecContentConvert spec) {
         return javaProviders.stream()
             .map(provider -> provider.getConverter(spec))
             .flatMap(Optional::stream)
@@ -39,10 +39,10 @@ public class ContentConvertRegistry {
     }
 
     public List<Tool> getCmdConverter(String srcLang, String tgtFormat, String base) {
-        return getCmdConverter(new ContentConvertSpec(srcLang, tgtFormat, base));
+        return getCmdConverter(new OpSpecContentConvert(srcLang, tgtFormat, base));
     }
 
-    public List<Tool> getCmdConverter(ContentConvertSpec spec) {
+    public List<Tool> getCmdConverter(OpSpecContentConvert spec) {
         return cmdProviders.stream()
             .map(provider -> provider.getConverter(spec))
             .flatMap(Optional::stream)

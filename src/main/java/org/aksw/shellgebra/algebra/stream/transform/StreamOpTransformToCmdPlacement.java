@@ -24,14 +24,13 @@ import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.aksw.shellgebra.registry.codec.CodecVariant;
 
-// CmdOp transformation that does not consider execution sites such as host or docker container.
-public class StreamOpTransformToCmdOp
+public class StreamOpTransformToCmdPlacement
     extends StreamOpTransformBase
 {
     private CodecRegistry registry;
     private CodecSysEnv env;
 
-    public StreamOpTransformToCmdOp(CodecRegistry registry, CodecSysEnv env) {
+    public StreamOpTransformToCmdPlacement(CodecRegistry registry, CodecSysEnv env) {
         super();
         this.registry = registry;
         this.env = env;
@@ -57,10 +56,10 @@ public class StreamOpTransformToCmdOp
     }
 
     public static String resolveCmdName(String toolName, SysRuntime runtime) {
-//        String[] cmd = codecVariant.getCmd();
-//        if (cmd.length == 0) {
-//            throw new IllegalStateException("Encountered zero-length command");
-//        }
+    //    String[] cmd = codecVariant.getCmd();
+    //    if (cmd.length == 0) {
+    //        throw new IllegalStateException("Encountered zero-length command");
+    //    }
         String rawCmdName = toolName; //cmd[0];
         String resolvedCmdName;
         try {

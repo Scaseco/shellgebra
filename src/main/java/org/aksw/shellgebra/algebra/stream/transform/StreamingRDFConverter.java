@@ -8,7 +8,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
 import org.aksw.jenax.arq.util.lang.RDFLanguagesEx;
-import org.aksw.shellgebra.algebra.stream.op.ContentConvertSpec;
+import org.aksw.shellgebra.algebra.common.OpSpecContentConvert;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFFormat;
@@ -19,7 +19,7 @@ import org.apache.jena.riot.system.StreamRDFWriter;
 
 public class StreamingRDFConverter {
 
-    public static InputStreamTransform converter(ContentConvertSpec spec) {
+    public static InputStreamTransform converter(OpSpecContentConvert spec) {
         return converter(spec.sourceFormat(), spec.targetFormat(), spec.baseIri());
     }
 

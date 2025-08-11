@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.aksw.shellgebra.algebra.common.TranscodeMode;
-import org.aksw.shellgebra.algebra.common.Transcoding;
+import org.aksw.shellgebra.algebra.common.OpSpecContentConvert;
+import org.aksw.shellgebra.algebra.common.OpSpecTranscoding;
 import org.aksw.shellgebra.algebra.stream.transform.StreamOpTransformToCmdOp;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransform;
 import org.aksw.shellgebra.exec.SysRuntime;
@@ -51,7 +52,7 @@ public class StreamOpTransformResolve
     public StreamOp transform(StreamOpTranscode op, StreamOp subOp) {
         Resolution resolution = new Resolution();
 
-        Transcoding transcoding = op.getTranscoding();
+        OpSpecTranscoding transcoding = op.getTranscoding();
         String name = transcoding.name();
 
         List<CodecVariant> variants = transcoding.mode().equals(TranscodeMode.DECODE)
@@ -90,7 +91,7 @@ public class StreamOpTransformResolve
     public StreamOp transform(StreamOpContentConvert op, StreamOp subOp) {
         Resolution resolution = new Resolution();
 
-        ContentConvertSpec spec = op.getContentConvertSpec();
+        OpSpecContentConvert spec = op.getContentConvertSpec();
 
         JavaStreamTransform converter = convertRegistry.getJavaConverter(spec).orElse(null);
         if (converter != null) {

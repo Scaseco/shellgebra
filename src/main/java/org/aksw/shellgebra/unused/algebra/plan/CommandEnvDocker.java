@@ -1,7 +1,5 @@
 package org.aksw.shellgebra.unused.algebra.plan;
 
-import org.apache.commons.cli.CommandLine;
-
 import jenax.engine.qlever.docker.ContainerDef;
 
 /**
@@ -12,8 +10,8 @@ public class CommandEnvDocker
 {
     protected ContainerDef containerDef;
 
-    public CommandEnvDocker(CommandLine commandLine, ContainerDef conatinerDef) {
-        super(commandLine);
+    public CommandEnvDocker(String toolName, String commandName, String commandTarget, String[] commandArgs, ContainerDef conatinerDef) {
+        super(toolName, commandName, commandTarget);
         this.containerDef = conatinerDef;
     }
 

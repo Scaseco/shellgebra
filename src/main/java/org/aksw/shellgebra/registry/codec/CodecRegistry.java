@@ -9,7 +9,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.aksw.shellgebra.algebra.common.TranscodeMode;
-import org.aksw.shellgebra.algebra.common.Transcoding;
+import org.aksw.shellgebra.algebra.common.OpSpecTranscoding;
 import org.aksw.shellgebra.algebra.stream.op.CodecSpec;
 
 // So there are two similar but different views:
@@ -105,7 +105,7 @@ public class CodecRegistry {
         registry.addJavaCodecProvider(new JavaCodecProviderOverCommonsCompress());
     }
 
-    public Optional<JavaStreamTransform> getJavaCodec(Transcoding transcoding) {
+    public Optional<JavaStreamTransform> getJavaCodec(OpSpecTranscoding transcoding) {
         return getJavaCodec(transcoding.name(), transcoding.mode());
     }
 

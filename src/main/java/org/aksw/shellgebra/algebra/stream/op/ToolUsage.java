@@ -36,7 +36,7 @@ public class ToolUsage {
     }
 
     /**
-     * Given a set of tools which verified commands and images, check for whether
+     * Given a set of tools with verified commands and images, check for whether
      * some tools are provided by other containers.
      *
      * @param tools
@@ -87,6 +87,7 @@ public class ToolUsage {
                     }
                 }
 
+                // Only scan image if the tool is not declared to be absent.
                 boolean isAbsent = toolInfo.isAbsentInDockerImage(imageName);
                 if (!isAbsent) {
                     CommandPathInfo imageCmd = toolInfo.findCommandByImage(imageName);
@@ -106,6 +107,8 @@ public class ToolUsage {
                                 // String cmd = ContainerUtils.checkImageForCommand(imageName, toolName);
                                 if (cmd != null) {
                                     toolInfo.getOrCreateCommand(cmd).addDockerImageAvailability(imageName);
+                                    // Once the command is located (regardless of the shell) we are finished here.
+                                    break;
                                 }
                             }
                         } catch (Exception e) {

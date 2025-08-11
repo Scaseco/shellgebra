@@ -8,6 +8,7 @@ import org.aksw.jenax.arq.util.lang.RDFLanguagesEx;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFFormat;
 
+/** Convert parameters of OpStreamContentConvert to arguments for a command invocation.*/
 public class CommandLineArgumentsBuilderRapper
     implements CommandLineArgumentsBuilder
 {

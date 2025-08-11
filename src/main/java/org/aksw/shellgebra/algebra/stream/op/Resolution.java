@@ -4,28 +4,21 @@ import org.aksw.shellgebra.registry.tool.ToolInfoProviderImpl;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.aksw.shellgebra.unused.algebra.plan.OutputStreamTransform;
 
+/**
+ * A resolution represents a concrete set of candidates that implement
+ * a byte stream transformation.
+ */
 public class Resolution {
-    // protected List<CommandEnv> hostCommands = new ArrayList<>();
-    // protected List<CommandEnvDocker> dockerCommands = new ArrayList<>();
-    // protected ToolInfo toolInfo;
+    // XXX Should keep a reference to the OpSpec.
+
     protected ToolInfoProviderImpl tools = new ToolInfoProviderImpl();
 
-
-    // protected Map<String, CommandEnv> dockerCommands; // grouped by image
     protected InputStreamTransform inputStreamTransform;
     protected OutputStreamTransform outputStreamTarsform;
 
     public ToolInfoProviderImpl getTools() {
         return tools;
     }
-
-//    public List<CommandEnv> getHostCommands() {
-//        return hostCommands;
-//    }
-//
-//    public List<CommandEnvDocker> getDockerCommands() {
-//        return dockerCommands;
-//    }
 
     public InputStreamTransform getInputStreamTransform() {
         return inputStreamTransform;

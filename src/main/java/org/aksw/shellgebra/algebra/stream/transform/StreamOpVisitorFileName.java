@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import org.aksw.shellgebra.algebra.common.Transcoding;
+import org.aksw.shellgebra.algebra.common.OpSpecTranscoding;
 import org.aksw.shellgebra.algebra.stream.op.StreamOp;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
@@ -22,7 +22,7 @@ public class StreamOpVisitorFileName
 {
     public static record FileName(
         String baseName,
-        List<Transcoding> transcodings
+        List<OpSpecTranscoding> transcodings
     ) {}
 
     protected Function<String, ? extends StreamOp> varNameResolver;
@@ -44,7 +44,7 @@ public class StreamOpVisitorFileName
     @Override
     public FileName visit(StreamOpTranscode op) {
         FileName base = op.getSubOp().accept(this);
-        List<Transcoding> transcodings = new ArrayList<>(base.transcodings());
+        List<OpSpecTranscoding> transcodings = new ArrayList<>(base.transcodings());
         transcodings.add(op.getTranscoding());
         return new FileName(base.baseName(), List.copyOf(transcodings));
     }

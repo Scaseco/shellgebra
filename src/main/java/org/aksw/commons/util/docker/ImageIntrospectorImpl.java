@@ -10,10 +10,13 @@ import org.aksw.jenax.model.osreo.Shell;
 import org.aksw.jenax.model.osreo.ShellSupport;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImageIntrospectorImpl
     implements ImageIntrospector
 {
+    private static final Logger logger = LoggerFactory.getLogger(ImageIntrospectorImpl.class);
     protected Model model;
 
     protected List<Shell> shells;
@@ -49,6 +52,9 @@ public class ImageIntrospectorImpl
         outer: for (Shell shell : shells) {
             String shellName = shell.getLabel();
             String shellPrefix = shell.getCommandPrefix();
+
+            logger.info("Probing image [{}] for shell [{}]" , imageName, shellName);
+
             Set<String> shellProbeLocations = shell.getProbeLocations();
             for (String shellLocation : shellProbeLocations) {
                 if (ContainerUtils.canRunEntrypoint(imageName, shellLocation, shellPrefix)) {
@@ -72,7 +78,7 @@ public class ImageIntrospectorImpl
                             }
                         }
                     }
-                    // break outer;
+                    // break outer; // This would stop after finding the first shell.
                     break;
                 }
             }
