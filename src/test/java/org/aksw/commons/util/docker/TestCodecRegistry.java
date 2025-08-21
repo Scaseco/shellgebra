@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.aksw.shellgebra.registry.codec.CodecVariant;
 import org.aksw.shellgebra.registry.codec.JavaCodec;
-import org.aksw.shellgebra.registry.tool.CommandPathInfo;
+import org.aksw.shellgebra.registry.tool.CommandTargetInfo;
 import org.aksw.shellgebra.registry.tool.ToolInfo;
 import org.aksw.shellgebra.registry.tool.ToolRegistry;
 import org.apache.commons.io.IOUtils;
@@ -54,7 +54,7 @@ public class TestCodecRegistry {
         Assert.assertEquals("-cd", variant.getArgs().get(0));
 
         ToolInfo toolInfo = ToolRegistry.get().getToolInfo(toolName).get();
-        CommandPathInfo entry = toolInfo.getCommandsByPath().values().iterator().next();
+        CommandTargetInfo entry = toolInfo.getCommandsByPath().values().iterator().next();
 
         Assert.assertTrue(entry.getDockerImages().contains("nestio/lbzip2"));
     }

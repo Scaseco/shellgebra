@@ -10,9 +10,9 @@ import org.aksw.shellgebra.algebra.stream.op.StreamOp;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
 import org.aksw.shellgebra.algebra.stream.transform.StreamOpTransformExecutionPartitioner;
+import org.aksw.shellgebra.algebra.stream.transform.StreamOpTransformExecutionPartitioner.Location;
 import org.aksw.shellgebra.algebra.stream.transform.StreamOpTransformToCmdOp;
 import org.aksw.shellgebra.algebra.stream.transform.StreamOpVisitorFileName;
-import org.aksw.shellgebra.algebra.stream.transform.StreamOpTransformExecutionPartitioner.Location;
 import org.aksw.shellgebra.algebra.stream.transform.StreamOpVisitorFileName.FileName;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpEntry;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformer;
@@ -45,8 +45,8 @@ public class StreamOpPlanner {
         StreamOpTransformToCmdOp sysCallTransform = new StreamOpTransformToCmdOp(codecRegistry, env);
         StreamOpTransformExecutionPartitioner xform = new StreamOpTransformExecutionPartitioner(sysCallTransform);
 
-        StreamOp op = new StreamOpTranscode("rot13", TranscodeMode.DECODE,
-            new StreamOpTranscode("bzip2", TranscodeMode.DECODE,
+        StreamOp op = new StreamOpTranscode(TranscodeMode.DECODE, "rot13",
+            new StreamOpTranscode(TranscodeMode.DECODE, "bzip2",
                 new StreamOpFile("/tmp/foo.bar")));
 
         StreamOpVisitorFileName fileNamer = new StreamOpVisitorFileName();

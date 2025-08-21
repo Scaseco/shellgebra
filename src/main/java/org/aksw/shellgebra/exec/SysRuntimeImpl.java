@@ -65,10 +65,19 @@ public class SysRuntimeImpl
     }
 
     @Override
-    public String[] compileCommand(CmdOp op) {
+    public CmdString compileString(CmdOp op) {
         // Transform file arguments to properly quoted strings
         CmdOp tmpOp = CmdOpTransformer.transform(op, new CmdOpTransformArguments(this));
-        CmdString cmdStr = tmpOp.accept(stringifier);
+        CmdString result = tmpOp.accept(stringifier);
+        return result;
+    }
+
+    @Override
+    public String[] compileCommand(CmdOp op) {
+        // Transform file arguments to properly quoted strings
+        // CmdOp tmpOp = CmdOpTransformer.transform(op, new CmdOpTransformArguments(this));
+        // CmdString cmdStr = tmpOp.accept(stringifier);
+        CmdString cmdStr = compileString(op);
         String[] result;
         if (cmdStr.isScriptString()) {
             String bashPath = getBashPath();

@@ -1,0 +1,9 @@
+package org.aksw.shellgebra.algebra.cmd.arg;
+
+public interface CmdArgVisitor<T> {
+    T visit(CmdArgLiteral arg);
+    T visit(CmdArgString arg);
+    T visit(CmdArgPath arg);
+    T visit(CmdArgCmdOp arg);
+    T visit(CmdArgRedirect arg);
+}

@@ -3,14 +3,14 @@ package org.aksw.shellgebra.algebra.stream.op;
 public class StreamOpResolution
     extends StreamOp1
 {
-    protected Resolution resolution;
+    protected Resolution1 resolution;
 
-    public StreamOpResolution(Resolution resolution, StreamOp subOp) {
+    public StreamOpResolution(Resolution1 resolution, StreamOp subOp) {
         super(subOp);
         this.resolution = resolution;
     }
 
-    public Resolution getResolution() {
+    public Resolution1 getResolution() {
         return resolution;
     }
 

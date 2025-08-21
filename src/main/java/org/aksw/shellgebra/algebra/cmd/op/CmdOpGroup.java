@@ -1,13 +1,22 @@
 package org.aksw.shellgebra.algebra.cmd.op;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
-public class CmdOpGroup
-    extends CmdOpN
+import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+
+/** Command group - brace group (not a sub-shell).
+ *
+ * <pre>
+ * { cmd1; ...; cmdN }
+ * </pre>
+ */
+public record CmdOpGroup(List<CmdOp> subOps, List<Redirect> redirects)
+    implements CmdOp
 {
-    public CmdOpGroup(List<CmdOp> subOps) {
-        super(subOps);
+    public CmdOpGroup {
+        Objects.requireNonNull(subOps);
+        Objects.requireNonNull(redirects);
     }
 
     @Override
@@ -18,6 +27,6 @@ public class CmdOpGroup
 
     @Override
     public String toString() {
-        return "(group " + subOps.stream().map(Object::toString).collect(Collectors.joining(" ")) + ")";
+        return "(group " + CmdOp.toStrings(subOps, redirects) + ")";
     }
 }

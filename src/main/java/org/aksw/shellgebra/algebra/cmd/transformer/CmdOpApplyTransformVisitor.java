@@ -3,14 +3,12 @@ package org.aksw.shellgebra.algebra.cmd.transformer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpFile;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipe;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirect;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpString;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpSubst;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpToArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
@@ -34,42 +32,55 @@ public class CmdOpApplyTransformVisitor
         return newOps;
     }
 
+    public static List<CmdArg> transformAllArgs(CmdOpVisitor<? extends CmdOp> transform, List<? extends CmdArg> args) {
+        List<CmdArg> newArgs = new ArrayList<>(args.size());
+        for (CmdArg arg : args) {
+            CmdArg newArg = arg instanceof CmdArgCmdOp argOp
+                ? new CmdArgCmdOp(argOp.cmdOp().accept(transform))
+                : arg;
+            newArgs.add(newArg);
+        }
+        return newArgs;
+    }
+
     @Override
     public CmdOp visit(CmdOpExec op) {
-        List<CmdOp> newOps = transformAll(this, op.getSubOps());
+        List<CmdArg> newOps = transformAllArgs(this, op.getArgs());
         CmdOp result = transform.transform(op, newOps);
         return result;
     }
 
     @Override
-    public CmdOp visit(CmdOpPipe op) {
+    public CmdOp visit(CmdOpPipeline op) {
 //    	CmdOp subOp1 = op.getSubOp1();
 //    	CmdOp subOp2 = op.getSubOp2();
-        CmdOp newOp1 = op.getSubOp1().accept(this);
-        CmdOp newOp2 = op.getSubOp2().accept(this);
-        CmdOp result = transform.transform(op, newOp1, newOp2);
+//        CmdOp newOp1 = op.getSubOp1().accept(this);
+//        CmdOp newOp2 = op.getSubOp2().accept(this);
+        List<CmdOp> newOps = op.getSubOps().stream().map(subOp -> subOp.accept(this)).toList();
+        CmdOp result = new CmdOpPipeline(newOps);
+//        CmdOp result = transform.transform(op, newOp1, newOp2);
         return result;
     }
 
     @Override
     public CmdOp visit(CmdOpGroup op) {
-        List<CmdOp> newOps = transformAll(this, op.getSubOps());
+        List<CmdOp> newOps = transformAll(this, op.subOps());
         CmdOp result = transform.transform(op, newOps);
         return result;
     }
 
-    @Override
-    public CmdOp visit(CmdOpString op) {
-        CmdOp result = transform.transform(op);
-        return result;
-    }
+//    @Override
+//    public CmdOp visit(CmdOpString op) {
+//        CmdOp result = transform.transform(op);
+//        return result;
+//    }
 
-    @Override
-    public CmdOp visit(CmdOpSubst op) {
-        CmdOp subOp = op.getSubOp().accept(this);
-        CmdOp result = transform.transform(op, subOp);
-        return result;
-    }
+//    @Override
+//    public CmdOp visit(CmdOpSubst op) {
+//        CmdOp subOp = op.getSubOp().accept(this);
+//        CmdOp result = transform.transform(op, subOp);
+//        return result;
+//    }
 
     @Override
     public CmdOp visit(CmdOpToArg op) {
@@ -78,18 +89,18 @@ public class CmdOpApplyTransformVisitor
         return result;
     }
 
-    @Override
-    public CmdOp visit(CmdOpFile op) {
-        CmdOp result = transform.transform(op);
-        return result;
-    }
+//    @Override
+//    public CmdOp visit(CmdOpFile op) {
+//        CmdOp result = transform.transform(op);
+//        return result;
+//    }
 
-    @Override
-    public CmdOp visit(CmdOpRedirect op) {
-        CmdOp newOp = op.getSubOp().accept(this);
-        CmdOp result = transform.transform(op, newOp);
-        return result;
-    }
+//    @Override
+//    public CmdOp visit(CmdOpRedirectRight op) {
+//        CmdOp newOp = op.getSubOp().accept(this);
+//        CmdOp result = transform.transform(op, newOp);
+//        return result;
+//    }
 
     @Override
     public CmdOp visit(CmdOpVar op) {

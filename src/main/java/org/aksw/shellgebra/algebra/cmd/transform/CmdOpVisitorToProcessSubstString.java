@@ -5,13 +5,10 @@ import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpFile;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipe;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirect;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpString;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirectRight;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpSubst;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpToArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.exec.CmdStrOps;
@@ -28,6 +25,9 @@ public class CmdOpVisitorToProcessSubstString
 
     @Override
     public String visit(CmdOpExec op) {
+        // TODO quote file names and string
+        // String result = strOps.quoteArg(str);
+
         List<CmdOp> subOps = op.getSubOps();
         List<String> argStrs = CmdOpTransformLib.transformAll(this, subOps);
         String result = strOps.call(op.getName(), argStrs);
@@ -56,30 +56,30 @@ public class CmdOpVisitorToProcessSubstString
         return result;
     }
 
-    @Override
-    public String visit(CmdOpString op) {
-        return op.getValue();
-    }
+//    @Override
+//    public String visit(CmdOpString op) {
+//        return op.getValue();
+//    }
 
-    @Override
-    public String visit(CmdOpToArg op) {
-        String str = op.getSubOp().accept(this);
-        String result = strOps.quoteArg(str);
-        return result;
-    }
+//    @Override
+//    public String visit(CmdOpToArg op) {
+//        String str = op.getSubOp().accept(this);
+//        String result = strOps.quoteArg(str);
+//        return result;
+//    }
 
     /** For proper stringification file nodes of exec nodes need to be replaced with strings.
      *  See {@link CmdOpTransformArguments}
      */
-    @Override
-    public String visit(CmdOpFile op) {
-        String str = op.getPath(); // op.getSubOp().accept(this);
-        String result = strOps.quoteArg(str);
-        return result;
-    }
+//    @Override
+//    public String visit(CmdOpFile op) {
+//        String str = op.getPath(); // op.getSubOp().accept(this);
+//        String result = strOps.quoteArg(str);
+//        return result;
+//    }
 
     @Override
-    public String visit(CmdOpRedirect op) {
+    public String visit(CmdOpRedirectRight op) {
         String cmdStr = op.getSubOp().accept(this);
         String fileName = op.getFileName();
         String result = strOps.redirect(cmdStr, fileName);

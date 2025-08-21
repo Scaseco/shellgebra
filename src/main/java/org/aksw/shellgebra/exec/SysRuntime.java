@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 
 public interface SysRuntime {
     String which(String cmdName) throws IOException, InterruptedException;
@@ -13,6 +14,7 @@ public interface SysRuntime {
     /** Quote a filename for use as an argument.*/
     String quoteFileArgument(String fileName);
 
+    CmdString compileString(CmdOp op);
     String[] compileCommand(CmdOp op);
 
     CmdStrOps getStrOps();
@@ -39,5 +41,11 @@ public interface SysRuntime {
         String[] result = Arrays.copyOf(cmd, cmd.length);
         result[0] = resolvedName;
         return result;
+    }
+
+    public static CmdString toString(CmdOp cmdOp) {
+        SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
+        CmdString cmdString = runtime.compileString(cmdOp);
+        return cmdString;
     }
 }

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 // XXX Could separate host from image commands - but probably this would just increase complexity.
 public class ToolInfo {
     protected String name;
-    protected Map<String, CommandPathInfo> commandMap;
+    protected Map<String, CommandTargetInfo> commandMap;
 
     // XXX absentOnHost can be true even though there may be a command - revise design to avoid inconsistency.
     protected Boolean absentOnHost = null;
@@ -23,7 +23,7 @@ public class ToolInfo {
         this(name, new LinkedHashMap<>(), new LinkedHashSet<>());
     }
 
-    private ToolInfo(String name, Map<String, CommandPathInfo> commandMap, Set<String> absenceInDockerImages) {
+    private ToolInfo(String name, Map<String, CommandTargetInfo> commandMap, Set<String> absenceInDockerImages) {
         super();
         this.name = name;
         this.commandMap = commandMap;
@@ -55,42 +55,42 @@ public class ToolInfo {
         return this;
     }
 
-    public CommandPathInfo findCommandByImage(String imageName) {
-        CommandPathInfo result = commandMap.values().stream()
+    public CommandTargetInfo findCommandByImage(String imageName) {
+        CommandTargetInfo result = commandMap.values().stream()
             .filter(cpi -> cpi.getDockerImages().contains(imageName))
             .findFirst().orElse(null);
         return result;
     }
 
-    public CommandPathInfo findCommandOnHost() {
-        CommandPathInfo result = commandMap.values().stream()
+    public CommandTargetInfo findCommandOnHost() {
+        CommandTargetInfo result = commandMap.values().stream()
             .filter(cpi -> Boolean.TRUE.equals(cpi.getAvailableOnHost()))
             .findFirst().orElse(null);
         return result;
     }
 
-    public Map<String, CommandPathInfo> getCommandsByPath() {
+    public Map<String, CommandTargetInfo> getCommandsByPath() {
         return commandMap;
     }
 
-    public Collection<CommandPathInfo> list() {
+    public Collection<CommandTargetInfo> list() {
         return commandMap.values();
     }
 
-    public CommandPathInfo getOrCreateCommand(String commandPath) {
-        return commandMap.computeIfAbsent(commandPath, n -> new CommandPathInfo(commandPath));
+    public CommandTargetInfo getOrCreateCommand(String commandPath) {
+        return commandMap.computeIfAbsent(commandPath, n -> new CommandTargetInfo(commandPath));
     }
 
     @Override
     public ToolInfo clone() {
-        Map<String, CommandPathInfo> newCmdMap = commandMap.entrySet().stream()
+        Map<String, CommandTargetInfo> newCmdMap = commandMap.entrySet().stream()
                 .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().clone(), (u, v) -> u, LinkedHashMap::new));
         return new ToolInfo(name, newCmdMap, new LinkedHashSet<>(absenceInDockerImages));
     }
 
     @Override
     public String toString() {
-        return "ToolInfo [name=" + name + ", commands=" + commandMap.values() + ", absentOnHost=" + absentOnHost +  ", absences: " + absenceInDockerImages + "]";
+        return "ToolInfo [name=" + name + ", commandTargets=" + commandMap.values() + ", absentOnHost=" + absentOnHost +  ", absences: " + absenceInDockerImages + "]";
     }
 
 //    public static class Builder {

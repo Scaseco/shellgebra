@@ -14,7 +14,7 @@ import org.aksw.jenax.model.osreo.ImageIntrospection;
 import org.aksw.jenax.model.osreo.ShellSupport;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformer;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
-import org.aksw.shellgebra.registry.tool.CommandPathInfo;
+import org.aksw.shellgebra.registry.tool.CommandTargetInfo;
 import org.aksw.shellgebra.registry.tool.ToolInfo;
 import org.aksw.shellgebra.registry.tool.ToolInfoProviderImpl;
 import org.aksw.shellgebra.registry.tool.ToolRegistry;
@@ -65,61 +65,66 @@ public class ToolUsage {
         // ToolRegistry baseRegistry = ToolRegistry.get();
 
         for (String toolName : toolNames) {
-            // ToolInfo baseToolInfo = baseRegistry.getToolInfo(toolName).orElseGet(() -> new ToolInfo(toolName));
-            // ToolInfo toolInfo = enrichedRegistry.merge(baseToolInfo);
-            ToolInfo toolInfo = enrichedRegistry.getOrCreate(toolName);
+            analyzeToolAvailability(imageIntrospector, imageNames, enrichedRegistry, toolName);
+        }
 
-            for (String imageName : imageNames) {
+        System.out.println(enrichedRegistry);
+    }
 
-                if (toolInfo.getAbsentOnHost() != null) {
-                    String hostCmd = null;
-                    try {
-                        hostCmd = SysRuntimeImpl.forCurrentOs().which(toolName);
-                    } catch (IOException | InterruptedException e) {
-                    }
+    public static void analyzeToolAvailability(ImageIntrospector imageIntrospector, List<String> imageNames,
+            ToolInfoProviderImpl enrichedRegistry, String toolName) {
+        // ToolInfo baseToolInfo = baseRegistry.getToolInfo(toolName).orElseGet(() -> new ToolInfo(toolName));
+        // ToolInfo toolInfo = enrichedRegistry.merge(baseToolInfo);
+        ToolInfo toolInfo = enrichedRegistry.getOrCreate(toolName);
 
-                    // boolean isAvailabeOnHost = hostCmd != null;
-                    if (hostCmd != null) {
-                        toolInfo.getOrCreateCommand(hostCmd).setAvailableOnHost(true);
-                        toolInfo.setAbsentOnHost(false);
-                    } else {
-                        toolInfo.setAbsentOnHost(true);
-                    }
+        for (String imageName : imageNames) {
+
+            if (toolInfo.getAbsentOnHost() != null) {
+                String hostCmd = null;
+                try {
+                    hostCmd = SysRuntimeImpl.forCurrentOs().which(toolName);
+                } catch (IOException | InterruptedException e) {
                 }
 
-                // Only scan image if the tool is not declared to be absent.
-                boolean isAbsent = toolInfo.isAbsentInDockerImage(imageName);
-                if (!isAbsent) {
-                    CommandPathInfo imageCmd = toolInfo.findCommandByImage(imageName);
-                    Boolean availability = imageCmd == null ? null : imageCmd.getDockerImageAvailability(imageName);
+                // boolean isAvailabeOnHost = hostCmd != null;
+                if (hostCmd != null) {
+                    toolInfo.getOrCreateCommand(hostCmd).setAvailableOnHost(true);
+                    toolInfo.setAbsentOnHost(false);
+                } else {
+                    toolInfo.setAbsentOnHost(true);
+                }
+            }
 
-                    if (availability == null) {
-                        try {
-                            ImageIntrospection introspection = imageIntrospector.inspect(imageName, true);
-                            Map<String, ShellSupport> shells = introspection.getShellStatus();
-                            for (ShellSupport shellSupport : shells.values()) {
-                                String entryPoint = shellSupport.getCommandPath();
-                                String locatorCommand = shellSupport.getLocatorCommand();
-                                String cmd = ContainerUtils.checkImage(imageName, entryPoint, locatorCommand, toolName);
+            // Only scan image if the tool is not declared to be absent.
+            boolean isAbsent = toolInfo.isAbsentInDockerImage(imageName);
+            if (!isAbsent) {
+                CommandTargetInfo imageCmd = toolInfo.findCommandByImage(imageName);
+                Boolean availability = imageCmd == null ? null : imageCmd.getDockerImageAvailability(imageName);
 
-                                // Boolean availability = toolInfo.get
+                if (availability == null) {
+                    try {
+                        ImageIntrospection introspection = imageIntrospector.inspect(imageName, true);
+                        Map<String, ShellSupport> shells = introspection.getShellStatus();
+                        for (ShellSupport shellSupport : shells.values()) {
+                            String entryPoint = shellSupport.getCommandPath();
+                            String locatorCommand = shellSupport.getLocatorCommand();
+                            String cmd = ContainerUtils.checkImage(imageName, entryPoint, locatorCommand, toolName);
 
-                                // String cmd = ContainerUtils.checkImageForCommand(imageName, toolName);
-                                if (cmd != null) {
-                                    toolInfo.getOrCreateCommand(cmd).addDockerImageAvailability(imageName);
-                                    // Once the command is located (regardless of the shell) we are finished here.
-                                    break;
-                                }
+                            // Boolean availability = toolInfo.get
+
+                            // String cmd = ContainerUtils.checkImageForCommand(imageName, toolName);
+                            if (cmd != null) {
+                                toolInfo.getOrCreateCommand(cmd).addDockerImageAvailability(imageName);
+                                // Once the command is located (regardless of the shell) we are finished here.
+                                break;
                             }
-                        } catch (Exception e) {
-                            logger.info("Absence: " + toolName + " in " + imageName);
-                            toolInfo.setAbsentInDockerImage(toolName);
                         }
+                    } catch (Exception e) {
+                        logger.info("Absence: " + toolName + " in " + imageName);
+                        toolInfo.setAbsentInDockerImage(toolName);
                     }
                 }
             }
         }
-
-        System.out.println(enrichedRegistry);
     }
 }

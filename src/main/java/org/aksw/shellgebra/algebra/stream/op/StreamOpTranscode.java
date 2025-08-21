@@ -12,7 +12,7 @@ public class StreamOpTranscode
     protected OpSpecTranscoding transcoding;
 
     public StreamOpTranscode(TranscodeMode transcodeMode, String name, StreamOp subOp) {
-        this(new OpSpecTranscoding(name, transcodeMode), subOp);
+        this(new OpSpecTranscoding(transcodeMode, name), subOp);
     }
 
     public StreamOpTranscode(OpSpecTranscoding transcoding, StreamOp subOp) {

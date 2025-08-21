@@ -40,6 +40,7 @@ public abstract class FileWriterTaskBase
         this.pathLifeCycle = Objects.requireNonNull(pathLifeCycle);
     }
 
+    @Override
     public Path getOutputPath() {
         return outputPath;
     }

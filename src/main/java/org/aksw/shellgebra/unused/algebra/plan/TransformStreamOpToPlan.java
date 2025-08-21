@@ -61,59 +61,59 @@ class EnvContext {
 
 }
 
-
-public class TransformStreamOpToPlan
-    implements StreamOpVisitor<PlanNode>
-{
-    protected List<Env> envs;
-    protected CodecRegistry codecRegistry;
-
-    @Override
-    public PlanNode visit(StreamOpFile op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PlanNode visit(StreamOpTranscode op) {
-        String codecName = op.getName();
-        // CodecSpec codecSpec = codecRegistry.getCodecSpec(codecName);
-
-
-        return null;
-    }
-
-    @Override
-    public PlanNode visit(StreamOpContentConvert op) {
-        // Check the current environment for whether it can handle the conversion.
-
-
-        op.getSourceFormat();
-        op.getTargetFormat();
-        op.getSubOp();
-
-
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PlanNode visit(StreamOpConcat op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PlanNode visit(StreamOpCommand op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PlanNode visit(StreamOpVar op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-}
+//
+//public class TransformStreamOpToPlan
+//    implements StreamOpVisitor<PlanNode>
+//{
+//    protected List<Env> envs;
+//    protected CodecRegistry codecRegistry;
+//
+//    @Override
+//    public PlanNode visit(StreamOpFile op) {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//    @Override
+//    public PlanNode visit(StreamOpTranscode op) {
+//        String codecName = op.getName();
+//        // CodecSpec codecSpec = codecRegistry.getCodecSpec(codecName);
+//
+//
+//        return null;
+//    }
+//
+//    @Override
+//    public PlanNode visit(StreamOpContentConvert op) {
+//        // Check the current environment for whether it can handle the conversion.
+//
+//
+//        op.getSourceFormat();
+//        op.getTargetFormat();
+//        op.getSubOp();
+//
+//
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//    @Override
+//    public PlanNode visit(StreamOpConcat op) {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//    @Override
+//    public PlanNode visit(StreamOpCommand op) {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//    @Override
+//    public PlanNode visit(StreamOpVar op) {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//
+//}

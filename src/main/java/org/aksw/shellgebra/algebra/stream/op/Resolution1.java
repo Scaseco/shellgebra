@@ -5,10 +5,12 @@ import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.aksw.shellgebra.unused.algebra.plan.OutputStreamTransform;
 
 /**
+ * Resolution for unary byte stream operations.
+ *
  * A resolution represents a concrete set of candidates that implement
  * a byte stream transformation.
  */
-public class Resolution {
+public class Resolution1 {
     // XXX Should keep a reference to the OpSpec.
 
     protected ToolInfoProviderImpl tools = new ToolInfoProviderImpl();

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpFile;
@@ -84,8 +85,8 @@ public class StreamOpTransformToCmdOp
             String resolvedCmdName = resolveCmdName(toolName, env.getRuntime());
 
             // cmd[0] = resolvedCmdName;
-            List<CmdOp> args = new ArrayList<>();
-            variant.getArgs().forEach(s -> args.add(new CmdOpString(s)));
+            List<CmdArg> args = new ArrayList<>();
+            variant.getArgs().forEach(s -> args.add(CmdArg.ofString(s)));
             SysRuntime runtime = env.getRuntime();
 
             boolean canSubst = true;
@@ -97,7 +98,7 @@ public class StreamOpTransformToCmdOp
                 CmdOp cmdOp = subCmd.getCmdOp();
 
                 if (supportsFile && cmdOp instanceof CmdOpFile fileOp) {
-                    args.add(new CmdOpFile(fileOp.getPath()));
+                    args.add(CmdArg.ofPath(fileOp.getPath()));
                     newCmdOp = new CmdOpExec(resolvedCmdName, args);
                 } else if (supportsStdIn) {
                     newCmdOp = new CmdOpExec(resolvedCmdName, args);
@@ -105,12 +106,12 @@ public class StreamOpTransformToCmdOp
                 } else {
                     // String[] parts = runtime.compileCommand(cmdOp);
                     // CmdOp subC = new CmdOpSubst(CmdOpExec.of(parts));
-                    args.add(new CmdOpSubst(cmdOp));
+                    args.add(CmdArg.ofCmd(cmdOp));
                     newCmdOp = new CmdOpExec(resolvedCmdName, args);
                 }
                 result = new StreamOpCommand(newCmdOp);
             } if (subOp instanceof StreamOpFile cmdOfFile) {
-                result = new StreamOpCommand(CmdOpExec.ofStrings("cat", cmdOfFile.getPath()));
+                result = new StreamOpCommand(CmdOpExec.ofLiterals("cat", cmdOfFile.getPath()));
             }
 
             // Accept the first result

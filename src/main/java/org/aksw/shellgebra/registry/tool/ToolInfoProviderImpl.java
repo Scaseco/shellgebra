@@ -33,8 +33,8 @@ public class ToolInfoProviderImpl
 
     public ToolInfo merge(ToolInfo toolInfo) {
         ToolInfo result = getOrCreate(toolInfo.getName());
-        for (CommandPathInfo cpi :  toolInfo.list()) {
-            CommandPathInfo thisCpi = result.getOrCreateCommand(cpi.getCommand());
+        for (CommandTargetInfo cpi :  toolInfo.list()) {
+            CommandTargetInfo thisCpi = result.getOrCreateCommand(cpi.getCommand());
             cpi.getDockerImages().forEach(thisCpi::addDockerImageAvailability);
         }
         result.getAbsenceInDockerImages().addAll(toolInfo.getAbsenceInDockerImages());

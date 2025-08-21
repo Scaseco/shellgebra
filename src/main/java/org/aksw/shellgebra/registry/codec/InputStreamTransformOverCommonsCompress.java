@@ -26,4 +26,9 @@ public class InputStreamTransformOverCommonsCompress
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public String toString() {
+        return "(" + this.getClass().getSimpleName() + " " + name + ")";
+    }
 }

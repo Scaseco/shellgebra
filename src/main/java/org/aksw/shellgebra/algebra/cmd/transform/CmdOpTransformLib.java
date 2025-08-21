@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 
@@ -37,6 +39,17 @@ public class CmdOpTransformLib {
         Objects.requireNonNull(visitor);
         for (CmdOp op : ops) {
             T contrib = op.accept(visitor);
+            U item = mapper.apply(contrib);
+            accumulator.add(item);
+        }
+    }
+
+    public static <T, U> void transformAllArgs(Collection<U> accumulator, CmdOpVisitor<T> visitor, List<? extends CmdArg> args, Function<? super T, ? extends U> mapper) {
+        Objects.requireNonNull(accumulator);
+        Objects.requireNonNull(visitor);
+        for (CmdArg arg : args) {
+            T contrib = arg instanceof CmdArgCmdOp argOp;
+            T contrib = args.accept(visitor);
             U item = mapper.apply(contrib);
             accumulator.add(item);
         }

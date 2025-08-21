@@ -109,7 +109,7 @@ public class StreamOpTransformToCmdPlacement
                 }
                 result = new StreamOpCommand(newCmdOp);
             } if (subOp instanceof StreamOpFile cmdOfFile) {
-                result = new StreamOpCommand(CmdOpExec.ofStrings("cat", cmdOfFile.getPath()));
+                result = new StreamOpCommand(CmdOpExec.ofLiterals("cat", cmdOfFile.getPath()));
             }
 
             // Accept the first result

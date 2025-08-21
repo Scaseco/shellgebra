@@ -41,8 +41,9 @@ public class CmdStrOpsBash
     }
 
     @Override
-    public String pipe(String before, String after) {
-        return before + " | " + after;
+    public String pipeline(List<String> strs) {
+        // return before + " | " + after;
+        return strs.stream().collect(Collectors.joining(" | "));
     }
 
     @Override

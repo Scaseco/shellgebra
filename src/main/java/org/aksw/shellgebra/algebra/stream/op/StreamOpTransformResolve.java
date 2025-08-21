@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.aksw.shellgebra.algebra.common.TranscodeMode;
 import org.aksw.shellgebra.algebra.common.OpSpecContentConvert;
 import org.aksw.shellgebra.algebra.common.OpSpecTranscoding;
+import org.aksw.shellgebra.algebra.common.TranscodeMode;
 import org.aksw.shellgebra.algebra.stream.transform.StreamOpTransformToCmdOp;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransform;
 import org.aksw.shellgebra.exec.SysRuntime;
@@ -50,9 +50,14 @@ public class StreamOpTransformResolve
 
     @Override
     public StreamOp transform(StreamOpTranscode op, StreamOp subOp) {
-        Resolution resolution = new Resolution();
-
         OpSpecTranscoding transcoding = op.getTranscoding();
+        Resolution1 resolution = processTranscode(transcoding);
+        StreamOpResolution result = new StreamOpResolution(resolution, subOp);
+        return result;
+    }
+
+    public Resolution1 processTranscode(OpSpecTranscoding transcoding) {
+        Resolution1 resolution = new Resolution1();
         String name = transcoding.name();
 
         List<CodecVariant> variants = transcoding.mode().equals(TranscodeMode.DECODE)
@@ -83,15 +88,28 @@ public class StreamOpTransformResolve
             resolution.setOutputStreamTransform(javaCodec.outputStreamTransform());
         }
 
-        StreamOpResolution result = new StreamOpResolution(resolution, subOp);
-        return result;
+        return resolution;
     }
 
     @Override
     public StreamOp transform(StreamOpContentConvert op, StreamOp subOp) {
-        Resolution resolution = new Resolution();
-
         OpSpecContentConvert spec = op.getContentConvertSpec();
+        Resolution1 resolution = processContentConvert(spec);
+        StreamOpResolution result = new StreamOpResolution(resolution, subOp);
+        return result;
+    }
+
+    public Resolution1 processOpSpec(Object opSpec) {
+        Resolution1 result = opSpec instanceof OpSpecTranscoding x
+            ? processTranscode(x)
+            : opSpec instanceof OpSpecContentConvert y
+                ? processContentConvert(y)
+                : null;
+        return result;
+    }
+
+    public Resolution1 processContentConvert(OpSpecContentConvert spec) {
+        Resolution1 resolution = new Resolution1();
 
         JavaStreamTransform converter = convertRegistry.getJavaConverter(spec).orElse(null);
         if (converter != null) {
@@ -110,11 +128,7 @@ public class StreamOpTransformResolve
 
         toolInfos.forEach(e -> resolution.getTools().merge(e.getValue()));
 
-//        resolution.getHostCommands();
-//        resolution.getDockerCommands();
-
-        StreamOpResolution result = new StreamOpResolution(resolution, subOp);
-        return result;
+        return resolution;
     }
 
     public static String resolveCmdName(String toolName, SysRuntime runtime) {

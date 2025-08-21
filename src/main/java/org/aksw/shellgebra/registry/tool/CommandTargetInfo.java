@@ -6,17 +6,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class CommandPathInfo {
+public class CommandTargetInfo {
     protected String command;
     protected Boolean availableOnHost;
     // protected Set<String> dockerImages;
     protected Map<String, Boolean> imageToAvailability;
 
-    public CommandPathInfo(String command) {
+    public CommandTargetInfo(String command) {
         this(command, true, new LinkedHashMap<>());
     }
 
-    private CommandPathInfo(String command, Boolean availableOnHost, Map<String, Boolean> dockerImages) {
+    private CommandTargetInfo(String command, Boolean availableOnHost, Map<String, Boolean> dockerImages) {
         super();
         this.command = command;
         this.availableOnHost = availableOnHost;
@@ -44,12 +44,12 @@ public class CommandPathInfo {
         return imageToAvailability.entrySet().stream().filter(e -> Boolean.TRUE.equals(e.getValue())).map(Entry::getKey);
     }
 
-    public CommandPathInfo setDockerImageAvailability(String imageName, Boolean value) {
+    public CommandTargetInfo setDockerImageAvailability(String imageName, Boolean value) {
         imageToAvailability.put(imageName, value);
         return this;
     }
 
-    public CommandPathInfo addDockerImageAvailability(String imageName) {
+    public CommandTargetInfo addDockerImageAvailability(String imageName) {
         setDockerImageAvailability(imageName, true);
         return this;
     }
@@ -59,8 +59,8 @@ public class CommandPathInfo {
     }
 
     @Override
-    public CommandPathInfo clone() {
-        return new CommandPathInfo(command, availableOnHost, new LinkedHashMap<>(imageToAvailability));
+    public CommandTargetInfo clone() {
+        return new CommandTargetInfo(command, availableOnHost, new LinkedHashMap<>(imageToAvailability));
     }
 
     @Override

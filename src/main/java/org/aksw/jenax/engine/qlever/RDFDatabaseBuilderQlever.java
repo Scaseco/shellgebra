@@ -31,10 +31,8 @@ import org.aksw.jenax.dataaccess.sparql.creator.RDFDatabaseBuilder;
 import org.aksw.jenax.sparql.query.rx.RDFDataMgrEx;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpFile;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipe;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirect;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpSubst;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirectRight;
 import org.aksw.shellgebra.algebra.common.TranscodeMode;
 import org.aksw.shellgebra.algebra.stream.op.CodecSysEnv;
 import org.aksw.shellgebra.algebra.stream.op.StreamOp;
@@ -212,7 +210,7 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
         Path path = arg.path();
         StreamOp result = new StreamOpFile(path.toString());
         for (String encoding : arg.encodings()) {
-            result = new StreamOpTranscode(encoding, TranscodeMode.DECODE, result);
+            result = new StreamOpTranscode(TranscodeMode.DECODE, encoding, result);
         }
 
         // Check if content type conversion is needed.
@@ -281,7 +279,7 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
         // Inject a dummy codec 'cat' to cat immediate file arguments
         // FIXME HACK 'cat' is certainly not a transcoding operation! Its something like StreamOpFile
         args = args.stream()
-            .map(x -> x instanceof StreamOpFile f ? new StreamOpTranscode("cat", TranscodeMode.DECODE, f) : x)
+            .map(x -> x instanceof StreamOpFile f ? new StreamOpTranscode(TranscodeMode.DECODE, "cat", f) : x)
             .toList();
 
         StreamOpTransformToCmdOp sysCallTransform = sysCallTransform();
@@ -348,27 +346,27 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
     public static record FileAndCmd(String fileName, String[] cmd) {}
 
     protected FileAndCmd buildCmdPart(String containerBasePath, StreamOp containerOp, String fileArg, Node graph, Lang lang) {
-        CmdOp cmdOp;
-        if (containerOp instanceof StreamOpFile opFile) {
-            cmdOp = new CmdOpFile(opFile.getPath());
-        } else {
-            // String fileArg = StreamOpPlanner.streamOpToFileName(containerOp);
-            StreamOpTransformToCmdOp sysCallTransform = sysCallTransform();
-            StreamOp sysOp = StreamOpTransformer.transform(containerOp, sysCallTransform);
-
-            if (sysOp instanceof StreamOpCommand streamOpCmd) {
-                cmdOp = streamOpCmd.getCmdOp();
-                cmdOp = new CmdOpSubst(cmdOp);
-
-//                SysRuntime runtime = getRuntime();
-//                String[] cmd = runtime.compileCommand(cmdOp);
-                // SysRuntimeImpl.forCurrentOs().
-            } else {
-                // TODO A riot-based content type conversion would have to be handled as a
-                // named pipe
-                throw new IllegalStateException("Op unexpectedly did not compile to a command. Got: " + sysOp);
-            }
-        }
+//        CmdOp cmdOp;
+//        if (containerOp instanceof StreamOpFile opFile) {
+//            cmdOp = new CmdOpFile(opFile.getPath());
+//        } else {
+//            // String fileArg = StreamOpPlanner.streamOpToFileName(containerOp);
+//            StreamOpTransformToCmdOp sysCallTransform = sysCallTransform();
+//            StreamOp sysOp = StreamOpTransformer.transform(containerOp, sysCallTransform);
+//
+//            if (sysOp instanceof StreamOpCommand streamOpCmd) {
+//                cmdOp = streamOpCmd.getCmdOp();
+//                cmdOp = new CmdOpSubst(cmdOp);
+//
+////                SysRuntime runtime = getRuntime();
+////                String[] cmd = runtime.compileCommand(cmdOp);
+//                // SysRuntimeImpl.forCurrentOs().
+//            } else {
+//                // TODO A riot-based content type conversion would have to be handled as a
+//                // named pipe
+//                throw new IllegalStateException("Op unexpectedly did not compile to a command. Got: " + sysOp);
+//            }
+//        }
 
         SysRuntime sysRuntime = getRuntime();
         // CmdOpVisitorToProcessSubstString stringifier = new CmdOpVisitorToProcessSubstString(sysRuntime.getStrOps());
@@ -426,7 +424,7 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
             if (sysOp instanceof StreamOpCommand streamOpCmd) {
                 CmdOp cmdOp = streamOpCmd.getCmdOp();
                 String hostPathStr = hostPath.toString();
-                CmdOpRedirect redirectOp = new CmdOpRedirect(hostPathStr, cmdOp);
+                CmdOpRedirectRight redirectOp = new CmdOpRedirectRight(hostPathStr, cmdOp);
 
                 SysRuntime runtime = getRuntime();
                 String[] cmd = runtime.compileCommand(redirectOp);
