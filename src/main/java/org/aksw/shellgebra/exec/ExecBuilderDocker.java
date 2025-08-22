@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.FileWriterTaskBase.PathLifeCycle;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.riot.Lang;
 import org.slf4j.Logger;
@@ -36,7 +38,6 @@ import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.google.common.io.ByteSource;
-import com.google.common.io.Closer;
 import com.nimbusds.jose.util.StandardCharset;
 
 public class ExecBuilderDocker {
@@ -137,27 +138,29 @@ public class ExecBuilderDocker {
         return null;
     }
 
-    public InputStream execToInputStream() throws NumberFormatException, IOException, InterruptedException {
-        Closer closer = Closer.create();
+    protected FileWriterTask execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) throws NumberFormatException, IOException, InterruptedException {
+        // Closer closer = Closer.create();
+
+        List<FileWriterTask> inputTasks = new ArrayList<>();
 
         CmdOp tmpOp = cmdOp;
         if (inputTask != null) {
-            inputTask.start();
+//            inputTask.start();
             Entry<Path, String> inputBind = fileMapper.allocateTempFile("byteSource", "", AccessMode.ro);
             // Path hostPath = inputBind.getKey();
             tmpOp = CmdOp.prependRedirect(tmpOp, new RedirectFile(inputBind.getValue(), OpenMode.READ, 0));
-            closer.register(() -> {
-                try { inputTask.close(); }
-                catch (Exception e) { throw new RuntimeException(e); }
-            });
+//            closer.register(() -> {
+//                try { inputTask.close(); }
+//                catch (Exception e) { throw new RuntimeException(e); }
+//            });
             // Set up a bind for the input
             // FileWriterTask inputTask = new FileWriterTaskFromByteSource(hostPath, PathLifeCycles.namedPipe(), byteSource);
+
+            inputTasks.add(inputTask);
         }
 
-        Entry<Path, String> map = fileMapper.allocateTempFile("", "", AccessMode.rw);
-        Path outPipePath = map.getKey();
-        SysRuntimeImpl.forCurrentOs().createNamedPipe(outPipePath);
-        CmdOp effectiveOp = CmdOp.appendRedirect(tmpOp, RedirectFile.fileToStdOut(map.getValue(), OpenMode.WRITE_TRUNCATE));
+        // SysRuntimeImpl.forCurrentOs().createNamedPipe(outPipePath);
+        CmdOp effectiveOp = CmdOp.appendRedirect(tmpOp, RedirectFile.fileToStdOut(outContainerPath, OpenMode.WRITE_TRUNCATE));
 
         // effectiveOp = tmpOp;
 
@@ -166,17 +169,45 @@ public class ExecBuilderDocker {
 
         // If there is a byte source as a file writer then start it.
         org.testcontainers.containers.GenericContainer<?> container = setupContainer(effectiveOp);
-        container.start();
 
-        closer.register(container::close);
+        FileWriterTask task = new FileWriterTaskFromContainer(container, outPath, pathLifeCycle, inputTasks);
+
+        return task;
+    }
+
+    public FileWriterTask execToRegularFile(Path hostPath) throws NumberFormatException, IOException, InterruptedException {
+        return execToFile(hostPath, PathLifeCycles.none());
+    }
+
+    public FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle) throws NumberFormatException, IOException, InterruptedException {
+        String hostPathStr = hostPath.toAbsolutePath().toString();
+        fileMapper.allocate(hostPathStr, AccessMode.rw);
+        return execToPathInternal(hostPath, hostPathStr, pathLifeCycle);
+    }
+
+    public InputStream execToInputStream() throws NumberFormatException, IOException, InterruptedException {
+        PathLifeCycle pathLifeCycle = PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe());
+
+        Entry<Path, String> map = fileMapper.allocateTempFile("", "", AccessMode.rw);
+        Path outPipePath = map.getKey();
+        String outContainerPath = map.getValue();
+
+        FileWriterTask fileWriterTask =  execToPathInternal(outPipePath, outContainerPath, pathLifeCycle);
+        fileWriterTask.start();
 
         InputStream in = Files.newInputStream(outPipePath, StandardOpenOption.READ);
         FilterInputStream result = new FilterInputStream(in) {
             @Override
             public void close() throws IOException {
-                super.close();
-                closer.close();
-                Files.deleteIfExists(outPipePath);
+                try {
+                    super.close();
+                } finally {
+                    try {
+                        fileWriterTask.close();
+                    } catch (Exception e) {
+                        logger.warn("Failure during close", e);
+                    }
+                }
             }
         };
 

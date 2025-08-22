@@ -66,17 +66,17 @@ public class TestCmdToDocker {
         // processBuilder.
     }
 
-
     @Test
     public void testExec() throws Exception {
         FileMapper fileMapper = FileMapper.of("/shared");
 
         // List<Bind> binds = List.of();
-        CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/echo", "'hello'");
+        CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'hello'");
         ExecBuilderDocker builder = ExecBuilderDocker.of("ubuntu:24.04", cmdOp, fileMapper);
 
         try (InputStream in = builder.execToInputStream()) {
             System.out.println(IOUtils.toString(in, StandardCharsets.UTF_8));
+            System.out.println("[done]");
         }
 
         // builder
