@@ -65,13 +65,23 @@ public class FileMapper {
         return containerFullPath;
     }
 
-    public Entry<Path, String> allocateTempFile(String prefix, String suffix, AccessMode accessMode) {
+    public static String allocateTempFilename(String prefix, String suffix) {
         String name = Stream.of(prefix, Long.toString(System.nanoTime()), suffix)
                 .filter(str -> !str.isEmpty())
                 .collect(Collectors.joining("-"));
 
+        return name;
+    }
+
+    public static Path allocateTempPath(String prefix, String suffix) {
+        String name = allocateTempFilename(prefix, suffix);
         Path tmpDir = FileUtils.getTempDirectory().toPath();
         Path tmpFile = tmpDir.resolve(name);
+        return tmpFile;
+    }
+
+    public Entry<Path, String> allocateTempFile(String prefix, String suffix, AccessMode accessMode) {
+        Path tmpFile = allocateTempPath(prefix, suffix);
         String tmpFileStr = tmpFile.toAbsolutePath().toString();
 
         String containerPath = allocate(tmpFileStr, accessMode);
