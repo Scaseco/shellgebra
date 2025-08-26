@@ -1,6 +1,5 @@
 package org.aksw.commons.util.docker;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -14,7 +13,6 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.CmdOpRewriter;
 import org.aksw.shellgebra.exec.ExecBuilderDocker;
 import org.aksw.shellgebra.exec.SysRuntime;
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -54,14 +52,11 @@ public class TestCmdToDocker {
 
     @Test
     public void testExec() throws Exception {
+        String expected = "hello";
         FileMapper fileMapper = FileMapper.of("/shared");
-
-        CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'hello'");
+        CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
         ExecBuilderDocker builder = ExecBuilderDocker.of("ubuntu:24.04", cmdOp, fileMapper);
-
-        try (InputStream in = builder.execToInputStream()) {
-            System.out.println(IOUtils.toString(in, StandardCharsets.UTF_8));
-            System.out.println("[done]");
-        }
+        String actual = builder.asByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        Assert.assertEquals(expected, actual);
     }
 }

@@ -134,7 +134,17 @@ public class ExecBuilderDocker {
     }
 
     public ByteSource asByteSource() {
-        return null;
+        // TODO Make a snapshot of the builder state here.
+        return new ByteSource() {
+            @Override
+            public InputStream openStream() throws IOException {
+                try {
+                    return execToInputStream();
+                } catch (NumberFormatException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
     }
 
     protected FileWriterTask execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) throws NumberFormatException, IOException, InterruptedException {
