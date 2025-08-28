@@ -16,7 +16,7 @@ public class Resolution1 {
     protected ToolInfoProviderImpl tools = new ToolInfoProviderImpl();
 
     protected InputStreamTransform inputStreamTransform;
-    protected OutputStreamTransform outputStreamTarsform;
+    protected OutputStreamTransform outputStreamTransform;
 
     public ToolInfoProviderImpl getTools() {
         return tools;
@@ -26,8 +26,8 @@ public class Resolution1 {
         return inputStreamTransform;
     }
 
-    public OutputStreamTransform getOutputStreamTarsform() {
-        return outputStreamTarsform;
+    public OutputStreamTransform getOutputStreamTransform() {
+        return outputStreamTransform;
     }
 
     public void setInputStreamTransform(InputStreamTransform inputStreamTransform) {
@@ -35,12 +35,12 @@ public class Resolution1 {
     }
 
     public void setOutputStreamTransform(OutputStreamTransform outputStreamTarsform) {
-        this.outputStreamTarsform = outputStreamTarsform;
+        this.outputStreamTransform = outputStreamTarsform;
     }
 
     @Override
     public String toString() {
-        return "StreamOpResolution [inputStreamTransform=" + inputStreamTransform + ", outputStreamTarsform="
-                + outputStreamTarsform + ", tools=" + tools + "]";
+        return "StreamOpResolution [inputStreamTransform=" + inputStreamTransform + ", outputStreamTransform="
+                + outputStreamTransform + ", tools=" + tools + "]";
     }
 }

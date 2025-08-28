@@ -11,7 +11,8 @@ import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.CmdOpRewriter;
-import org.aksw.shellgebra.exec.ExecBuilderDocker;
+import org.aksw.shellgebra.exec.ExecFactory;
+import org.aksw.shellgebra.exec.Execs;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,8 +56,8 @@ public class TestCmdToDocker {
         String expected = "hello";
         FileMapper fileMapper = FileMapper.of("/shared");
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
-        ExecBuilderDocker builder = ExecBuilderDocker.of("ubuntu:24.04", cmdOp, fileMapper);
-        String actual = builder.asByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        ExecFactory factory = Execs.docker("ubuntu:24.04", cmdOp, fileMapper);
+        String actual = factory.forNullInput().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
     }
 }

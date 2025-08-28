@@ -15,10 +15,7 @@ import java.util.stream.Collectors;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.jenax.engine.qlever.SystemUtils;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
@@ -39,7 +36,64 @@ import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.google.common.io.ByteSource;
 
-public class ExecBuilderDocker {
+public class ExecFactoryDocker
+    implements ExecFactory
+{
+    // A Docker image reference consists of several components that describe where the image is stored and its identity. These components are:
+    // https://docs.docker.com/reference/cli/docker/image/tag/ - [HOST[:PORT]/]NAMESPACE/REPOSITORY[:TAG]
+    protected String imageRef;
+    protected CmdOp cmdOp;
+    protected FileMapper fileMapper;
+    protected ContainerPathResolver containerPathResolver;
+
+    public ExecFactoryDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver) {
+        super();
+        this.imageRef = imageRef;
+        this.cmdOp = cmdOp;
+        this.fileMapper = fileMapper;
+        this.containerPathResolver = containerPathResolver;
+    }
+
+    public static ExecFactoryDocker of(String imageRef, CmdOp cmdOp, FileMapper fileMapper) { // List<Bind> binds) {
+        ContainerPathResolver containerPathResolver = ContainerPathResolver.create();
+        return new ExecFactoryDocker(imageRef, cmdOp, fileMapper, containerPathResolver);
+    }
+
+    @Override
+    public ExecBuilder forInput(ByteSource input) {
+        // Allocate a tmp path
+        // String allocate(String hostPath, AccessMode accessMode) {
+
+        // TODO Must create the file writer on demand!
+        Entry<Path, String> map = fileMapper.allocateTempFile("byteSource", "", AccessMode.ro);
+
+        Path hostPath = map.getKey();
+
+        // Set up a bind for the input
+        FileWriterTask inputTask = new FileWriterTaskFromByteSource(hostPath, PathLifeCycles.namedPipe(), input);
+        ExecBuilder result = forInput(inputTask);
+        return result;
+    }
+
+    @Override
+    public ExecBuilder forInput(FileWriterTask inputTask) {
+        return new ExecBuilderDocker(imageRef, cmdOp, fileMapper, containerPathResolver, inputTask, null);
+    }
+
+    @Override
+    public ExecBuilder forInput(ExecBuilder input) {
+        return new ExecBuilderDocker(imageRef, cmdOp, fileMapper, containerPathResolver, null, input);
+    }
+
+    @Override
+    public ExecBuilder forNullInput() {
+        return new ExecBuilderDocker(imageRef, cmdOp, fileMapper, containerPathResolver, (FileWriterTask)null, null);
+    }
+}
+
+class ExecBuilderDocker
+    implements ExecBuilder
+{
     private static final Logger logger = LoggerFactory.getLogger(ExecBuilderDocker.class);
 
     // A Docker image reference consists of several components that describe where the image is stored and its identity. These components are:
@@ -53,23 +107,22 @@ public class ExecBuilderDocker {
     protected String workingDirectory;
     protected ContainerPathResolver containerPathResolver;
     protected FileMapper fileMapper;
+
     protected FileWriterTask inputTask;
+    protected ExecBuilder inputExecBuilder;
 
     // List<Bind> binds
-    public ExecBuilderDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver) {
+    public ExecBuilderDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver, FileWriterTask inputTask, ExecBuilder inputExecBuilder) {
         super();
         this.imageRef = imageRef;
         this.cmdOp = cmdOp;
         this.fileMapper = fileMapper;
         // this.binds = binds;
         this.containerPathResolver = containerPathResolver;
+        this.inputTask = inputTask;
+        this.inputExecBuilder = inputExecBuilder;
         // this.workingDirectory = workingDirectory;
         // this.containerPathResolver = containerPathResolver;
-    }
-
-    public static ExecBuilderDocker of(String imageRef, CmdOp cmdOp, FileMapper fileMapper) { // List<Bind> binds) {
-        ContainerPathResolver containerPathResolver = ContainerPathResolver.create();
-        return new ExecBuilderDocker(imageRef, cmdOp, fileMapper, containerPathResolver);
     }
 
     protected String getUserString() throws IOException {
@@ -88,17 +141,22 @@ public class ExecBuilderDocker {
 //        return result;
 //    }
 
-    protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp cmdOp) throws NumberFormatException, IOException, InterruptedException {
+    protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp cmdOp) throws IOException {
         String userStr = getUserString();
         logger.info("Setting up container with UID:GID=" + userStr);
 
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
-        CmdOp op = new CmdOpExec("/usr/bin/bash", new CmdArgLiteral("-c"), new CmdArgCmdOp(cmdOp));
+
+        // CmdOp op = new CmdOpExec("/usr/bin/bash", new CmdArgLiteral("-c"), new CmdArgCmdOp(cmdOp));
         CmdString cmdString = runtime.compileString(cmdOp);
+
         String[] cmdParts = new String[] {
-            "/usr/bin/bash", "-c",
+            "/bin/bash", "-c",
             List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
         };
+
+
+        // String[] cmdParts = cmdString.cmd();
 
 
         // String str = cmdString.scriptString();
@@ -110,7 +168,7 @@ public class ExecBuilderDocker {
         // String[] cmdParts = cmdString.cmd(); // cmd.toArray(new String[0]);
         // String[] cmdStrs = new String[] {"/usr/bin/bash", "-c", str};
 
-        List.of(cmdParts).stream().forEach(p -> System.out.println("[" + p + "]"));
+        List.of(cmdParts).stream().forEach(p -> logger.info("Command part: [" + p + "]"));
 
         org.testcontainers.containers.GenericContainer<?> result = new org.testcontainers.containers.GenericContainer<>(imageRef)
             // .withWorkingDirectory(workingDirectory)
@@ -133,31 +191,36 @@ public class ExecBuilderDocker {
         return result;
     }
 
-    public ByteSource asByteSource() {
+    @Override
+    public ByteSource toByteSource() {
         // TODO Make a snapshot of the builder state here.
         return new ByteSource() {
             @Override
             public InputStream openStream() throws IOException {
-                try {
-                    return execToInputStream();
-                } catch (NumberFormatException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                return execToInputStream();
             }
         };
     }
 
-    protected FileWriterTask execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) throws NumberFormatException, IOException, InterruptedException {
+    protected FileWriterTask execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) {
         // Closer closer = Closer.create();
 
         List<FileWriterTask> inputTasks = new ArrayList<>();
 
+        FileWriterTask itask = inputTask;
+
+        if (inputExecBuilder != null) {
+            itask = inputExecBuilder.runToHostPipe();
+        }
+
         CmdOp tmpOp = cmdOp;
-        if (inputTask != null) {
+        if (itask != null) {
 //            inputTask.start();
-            Entry<Path, String> inputBind = fileMapper.allocateTempFile("byteSource", "", AccessMode.ro);
+            // Entry<Path, String> inputBind = fileMapper.allocateTempFile("byteSource", "", AccessMode.ro);
+            String containerPath = fileMapper.allocate(itask.getOutputPath().toAbsolutePath().toString(), AccessMode.ro);
+
             // Path hostPath = inputBind.getKey();
-            tmpOp = CmdOp.prependRedirect(tmpOp, new RedirectFile(inputBind.getValue(), OpenMode.READ, 0));
+            tmpOp = CmdOp.prependRedirect(tmpOp, new RedirectFile(containerPath, OpenMode.READ, 0));
 //            closer.register(() -> {
 //                try { inputTask.close(); }
 //                catch (Exception e) { throw new RuntimeException(e); }
@@ -165,7 +228,7 @@ public class ExecBuilderDocker {
             // Set up a bind for the input
             // FileWriterTask inputTask = new FileWriterTaskFromByteSource(hostPath, PathLifeCycles.namedPipe(), byteSource);
 
-            inputTasks.add(inputTask);
+            inputTasks.add(itask);
         }
 
         // SysRuntimeImpl.forCurrentOs().createNamedPipe(outPipePath);
@@ -177,34 +240,41 @@ public class ExecBuilderDocker {
 //        String[] parts = cmdString.cmd();
 
         // If there is a byte source as a file writer then start it.
-        org.testcontainers.containers.GenericContainer<?> container = setupContainer(effectiveOp);
+        org.testcontainers.containers.GenericContainer<?> container;
+        try {
+            container = setupContainer(effectiveOp);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         FileWriterTask task = new FileWriterTaskFromContainer(container, outPath, pathLifeCycle, inputTasks);
 
         return task;
     }
 
-    public FileWriterTask execToRegularFile(Path hostPath) throws NumberFormatException, IOException, InterruptedException {
+    @Override
+    public FileWriterTask execToRegularFile(Path hostPath) {
         return execToFile(hostPath, PathLifeCycles.none());
     }
 
-    public FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle) throws NumberFormatException, IOException, InterruptedException {
+    @Override
+    public FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle) {
         String hostPathStr = hostPath.toAbsolutePath().toString();
         fileMapper.allocate(hostPathStr, AccessMode.rw);
         return execToPathInternal(hostPath, hostPathStr, pathLifeCycle);
     }
 
-    public InputStream execToInputStream() throws NumberFormatException, IOException, InterruptedException {
+    public InputStream execToInputStream() throws IOException {
         PathLifeCycle pathLifeCycle = PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe());
 
         Entry<Path, String> map = fileMapper.allocateTempFile("", "", AccessMode.rw);
         Path outPipePath = map.getKey();
         String outContainerPath = map.getValue();
 
-        FileWriterTask fileWriterTask =  execToPathInternal(outPipePath, outContainerPath, pathLifeCycle);
+        FileWriterTask fileWriterTask = execToPathInternal(outPipePath, outContainerPath, pathLifeCycle);
         fileWriterTask.start();
 
-        InputStream in = Files.newInputStream(outPipePath, StandardOpenOption.READ);
+        InputStream in = Files.newInputStream(outPipePath); //, StandardOpenOption.READ);
         FilterInputStream result = new FilterInputStream(in) {
             @Override
             public void close() throws IOException {
@@ -222,32 +292,6 @@ public class ExecBuilderDocker {
 
         return result;
     }
-
-    // Allocates a temp pipe name
-    public FileWriterTask runToHostPipe() {
-        return null;
-    }
-
-
-    // TODO Supply input stream - mount via named pipe
-    public void setByteSource(ByteSource byteSource) {
-        // Allocate a tmp path
-        // String allocate(String hostPath, AccessMode accessMode) {
-
-        // TODO Must create the file writer on demand!
-        Entry<Path, String> map = fileMapper.allocateTempFile("byteSource", "", AccessMode.ro);
-
-        Path hostPath = map.getKey();
-
-        // Set up a bind for the input
-        FileWriterTask inputTask = new FileWriterTaskFromByteSource(hostPath, PathLifeCycles.namedPipe(), byteSource);
-        setFileWriter(inputTask);
-    }
-
-    public void setFileWriter(FileWriterTask inputTask) {
-        this.inputTask = inputTask;
-    }
-
 
     private static BindMode toBindMode(AccessMode am) {
         return am == AccessMode.ro ? BindMode.READ_ONLY : BindMode.READ_WRITE;
@@ -331,5 +375,11 @@ public class ExecBuilderDocker {
             .awaitCompletion();
 
         container.stop();
+    }
+
+    @Override
+    public FileWriterTask runToHostPipe() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

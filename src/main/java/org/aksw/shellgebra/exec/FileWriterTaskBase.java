@@ -13,9 +13,11 @@ public abstract class FileWriterTaskBase
         NEW,       // Not started
         STARTING,  // In transition to running; task submitted to executor (if applicable).
         RUNNING,   // Writing in progress; executor has started the runnable
-        COMPLETED, // Finished successfully
-        FAILED,    // Error occurred
-        ABORTED    // Stopped before completion
+        TERMINATING,
+        TERMINATED
+//        COMPLETED, // Finished successfully
+//        FAILED,    // Error occurred
+//        ABORTED    // Stopped before completion
     }
 
     public static interface PathLifeCycle {
@@ -63,7 +65,7 @@ public abstract class FileWriterTaskBase
     }
 
     public boolean isFinished() {
-        return state.get() == TaskState.COMPLETED || state.get() == TaskState.FAILED || state.get() == TaskState.ABORTED;
+        return state.get() == TaskState.TERMINATED; // TaskState.COMPLETED || state.get() == TaskState.FAILED || state.get() == TaskState.ABORTED;
     }
 
     public TaskState getState() {

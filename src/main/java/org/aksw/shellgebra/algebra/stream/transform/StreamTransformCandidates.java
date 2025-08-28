@@ -11,7 +11,7 @@ public class StreamTransformCandidates {
     protected List<CommandEnv> hostCommands;
     protected List<CommandEnvDocker> dockerCommands;
     protected InputStreamTransform inputStreamTransform;
-    protected OutputStreamTransform outputStreamTarsform;
+    protected OutputStreamTransform outputStreamTransform;
 
 
 }

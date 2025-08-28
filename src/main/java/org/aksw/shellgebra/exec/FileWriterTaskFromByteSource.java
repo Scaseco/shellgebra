@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 import com.google.common.io.ByteSource;
 
@@ -32,7 +31,7 @@ public class FileWriterTaskFromByteSource
 
     @Override
     protected void runWriteFile() throws IOException {
-        try (OutputStream out = Files.newOutputStream(outputPath, StandardOpenOption.WRITE)) {
+        try (OutputStream out = Files.newOutputStream(outputPath)) { //, StandardOpenOption.WRITE)) {
             try (InputStream in = byteSource.openStream()) {
                 in.transferTo(out);
             }

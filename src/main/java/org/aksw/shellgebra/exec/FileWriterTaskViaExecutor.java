@@ -16,8 +16,9 @@ public abstract class FileWriterTaskViaExecutor
     }
 
     protected Object lock = new Object();
-    private ExecutorService executor;
-    private Future<?> futureTask;
+    // private ExecutorService executor;
+    // private Future<?> futureTask;
+    private Thread taskThread = null;
 
     // Running state is reached once writeFile is called
 
@@ -28,8 +29,10 @@ public abstract class FileWriterTaskViaExecutor
             checkIfNew();
 
             state.set(TaskState.STARTING);
-            executor = Executors.newSingleThreadExecutor();
-            futureTask = executor.submit(new Worker());
+            // executor = Executors.newSingleThreadExecutor();
+            // futureTask = executor.submit(new Worker());
+            taskThread = new Thread(new Worker());
+            taskThread.start();
         }
     }
 
@@ -68,7 +71,7 @@ public abstract class FileWriterTaskViaExecutor
                     prepareWriteFile();
                 } catch (Exception e) {
                     // We do not allow abort during prepareWriteFile
-                    state.set(TaskState.FAILED);
+                    state.set(TaskState.TERMINATED);
                     throw new RuntimeException(e);
                 }
             }
@@ -76,9 +79,9 @@ public abstract class FileWriterTaskViaExecutor
             try {
                 checkIfAbortHasBeenCalled();
                 runWriteFile();
-                state.compareAndSet(TaskState.RUNNING, TaskState.COMPLETED);
+                state.compareAndSet(TaskState.RUNNING, TaskState.TERMINATED);
             } catch (IOException e) {
-                state.compareAndSet(TaskState.RUNNING, TaskState.FAILED);
+                state.compareAndSet(TaskState.RUNNING, TaskState.TERMINATED);
                 throw new CompletionException(e);
             } finally {
                 try {
@@ -98,8 +101,14 @@ public abstract class FileWriterTaskViaExecutor
             throw new IllegalStateException("Task has not been started.");
         }
 
+        /*
         if (futureTask != null) {
             futureTask.get();
+        }
+        */
+
+        if (taskThread != null) {
+            taskThread.join();
         }
     }
 
@@ -112,22 +121,27 @@ public abstract class FileWriterTaskViaExecutor
         synchronized (lock) {
             if (!isAbortCalled) {
                 // Set a new task directly to aborted
-                state.compareAndSet(TaskState.NEW, TaskState.ABORTED);
+                state.compareAndSet(TaskState.NEW, TaskState.TERMINATED);
 
                 isAbortCalled = true;
-                boolean wasRunning = state.get() == TaskState.RUNNING;
+                boolean wasRunning = state.get() == TaskState.RUNNING || state.get() == TaskState.STARTING;
                 if (wasRunning) {
+                    // try {
                     try {
-                        try {
-                            abortActual();
-                        } finally {
-                            if (!futureTask.isDone()) {
-                                futureTask.cancel(true);
-                            }
-                        }
+                        abortActual();
                     } finally {
-                        state.compareAndSet(TaskState.RUNNING, TaskState.ABORTED);
+                        if (taskThread.isAlive()) {
+                            taskThread.interrupt();
+                        }
+                        /*
+                        if (!futureTask.isDone()) {
+                            futureTask.cancel(true);
+                        }
+                        */
                     }
+//                    } finally {
+//                        state.compareAndSet(TaskState.RUNNING, TaskState.TERMINATED);
+//                    }
                 }
             }
         }
@@ -148,9 +162,13 @@ public abstract class FileWriterTaskViaExecutor
             try {
                 closeActual();
             } finally {
-                if (executor != null) {
-                    executor.shutdown();
+                if (taskThread != null) {
+                    taskThread.interrupt();
+                    taskThread.join();
                 }
+//                if (executor != null) {
+//                    executor.shutdown();
+//                }
             }
         }
     }

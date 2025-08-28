@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.jenax.arq.util.prefix.ShortNameMgr;
 import org.apache.commons.io.FileUtils;
 
@@ -18,16 +17,18 @@ import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 
 public class FileMapper {
-    private List<Bind> binds = new ArrayList<>();
+    private List<Bind> binds;
 
     // Base-path in the container under which to bind-mount files from the host.
     private String containerSharedPath;
-
     // private Path hostTempPath;
-
     private ShortNameMgr shortNameMgr;
 
-    private ContainerPathResolver containerPathResolver;
+    // XXX Also copy shortNameMgr?
+    @Override
+    public FileMapper clone() {
+        return new FileMapper(this.containerSharedPath, this.shortNameMgr.clone(), new ArrayList<>(this.binds));
+    }
 
     public static FileMapper of(String containerSharedPath) {
         return new FileMapper(containerSharedPath);
@@ -38,13 +39,17 @@ public class FileMapper {
     }
 
     public FileMapper(String containerSharedPath, ShortNameMgr shortNameMgr) {
+        this(containerSharedPath, shortNameMgr, new ArrayList<>());
+    }
+
+    public FileMapper(String containerSharedPath, ShortNameMgr shortNameMgr, List<Bind> binds) {
         super();
         this.containerSharedPath = Objects.requireNonNull(containerSharedPath);
         this.shortNameMgr = Objects.requireNonNull(shortNameMgr);
 
         // Remove trailing backslashes
         this.containerSharedPath = this.containerSharedPath.replaceAll("/+$", "");
-        this.containerPathResolver = ContainerPathResolver.create();
+        this.binds = binds;
     }
 
     public List<Bind> getBinds() {

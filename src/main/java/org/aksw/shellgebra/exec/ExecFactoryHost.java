@@ -89,29 +89,42 @@ class ByteSourceOverPipeline
     }
 }
 
-public class ExecBuilderHost {
-    private static final Logger logger = LoggerFactory.getLogger(ExecBuilderHost.class);
+class ExecBuilderHost
+    implements ExecBuilder
+{
+    private static final Logger logger = LoggerFactory.getLogger(ExecFactoryHost.class);
 
     protected CmdOp cmdOp;
 
-    // Input task can be:
-    // - java input stream
-    // - another command -> another pipeline / list of process builder
-    // - a local file
-    protected List<FileWriterTask> dependentTasks;
-    protected FileWriterTask inputTask;
-    protected ByteSource inputSource;
-
-
+    protected ExecBuilder inputExecBuilder = null;
+    protected FileWriterTask inputTask = null;
+    protected ByteSource inputSource = null;
     // protected String workingDirectory;
+
+    protected List<FileWriterTask> dependentTasks;
+
+
+    public ExecBuilderHost(CmdOp cmdOp, ByteSource inputSource) {
+        super();
+        this.cmdOp = cmdOp;
+        this.inputSource = inputSource;
+    }
+
+    public ExecBuilderHost(CmdOp cmdOp, FileWriterTask inputTask) {
+        super();
+        this.cmdOp = cmdOp;
+        this.inputTask = inputTask;
+    }
+
+    public ExecBuilderHost(CmdOp cmdOp, ExecBuilder inputExecBuilder) {
+        super();
+        this.cmdOp = cmdOp;
+        this.inputExecBuilder = inputExecBuilder;
+    }
 
     public ExecBuilderHost(CmdOp cmdOp) {
         super();
         this.cmdOp = cmdOp;
-    }
-
-    public static ExecBuilderHost of(CmdOp cmdOp) {
-        return new ExecBuilderHost(cmdOp);
     }
 
     protected List<ProcessBuilder> setupProcessBuilders(CmdOp cmdOp) {
@@ -161,15 +174,18 @@ public class ExecBuilderHost {
         return task;
     }
 
-    public FileWriterTask execToRegularFile(Path hostPath) throws NumberFormatException, IOException, InterruptedException {
+    @Override
+    public FileWriterTask execToRegularFile(Path hostPath) {
         return execToFile(hostPath, PathLifeCycles.none());
     }
 
-    public FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle) throws NumberFormatException, IOException, InterruptedException {
+    @Override
+    public FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle) {
         return execToPathInternal(hostPath, pathLifeCycle);
     }
 
-    public ByteSource asByteSource() {
+    @Override
+    public ByteSource toByteSource() {
         List<ProcessBuilder> processBuilders;
         try {
             processBuilders = setupProcessBuilders(cmdOp);
@@ -183,6 +199,7 @@ public class ExecBuilderHost {
     }
 
     // Allocates a temp pipe name
+    @Override
     public FileWriterTask runToHostPipe() {
         PathLifeCycle pathLifeCycle = PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe());
         Path tempFile = FileMapper.allocateTempPath("", "");
@@ -190,16 +207,73 @@ public class ExecBuilderHost {
     }
 
     // TODO Supply input stream - mount via named pipe
-    public ExecBuilderHost setInputByteSource(ByteSource byteSource) {
-        this.inputSource = byteSource;
-        return this;
+
+//    @Override
+//    public X setInput(ByteSource byteSource) {
+//        this.inputSource = byteSource;
+//        return self();
+//    }
+//
+//    @Override
+//    public X setInput(FileWriterTask inputTask) {
+//        this.inputTask = inputTask;
+//        return self();
+//    }
+//
+//    @Override
+//    public X setInput(ExecBuilder execBuilder) {
+//        this.inputExecBuilder = execBuilder;
+//        return self();
+//    }
+//
+//    public void setInputPipeLine(List<ProcessBuilder> inputPipeline) {
+//        throw new UnsupportedOperationException("not yet implemented");
+//    }
+//
+//    @SuppressWarnings("unchecked")
+//    public X self() {
+//        return (X)this;
+//    }
+}
+
+
+public class ExecFactoryHost
+    implements ExecFactory
+{
+    protected CmdOp cmdOp;
+
+    // Input task can be:
+    // - java input stream
+    // - another command -> another pipeline / list of process builder
+    // - a local file
+    protected List<FileWriterTask> dependentTasks;
+
+    public ExecFactoryHost(CmdOp cmdOp) {
+        super();
+        this.cmdOp = cmdOp;
     }
 
-    public void setInputFileWriter(FileWriterTask inputTask) {
-        this.inputTask = inputTask;
+    public static ExecFactoryHost of(CmdOp cmdOp) {
+        return new ExecFactoryHost(cmdOp);
     }
 
-    public void setInputPipeLine(List<ProcessBuilder> inputPipeline) {
-        throw new UnsupportedOperationException("not yet implemented");
+    @Override
+    public ExecBuilder forInput(ByteSource byteSource) {
+        return new ExecBuilderHost(cmdOp, byteSource);
+    }
+
+    @Override
+    public ExecBuilder forInput(FileWriterTask inputTask) {
+        return new ExecBuilderHost(cmdOp, inputTask);
+    }
+
+    @Override
+    public ExecBuilder forInput(ExecBuilder execBuilder) {
+        return new ExecBuilderHost(cmdOp, execBuilder);
+    }
+
+    @Override
+    public ExecBuilder forNullInput() {
+        return new ExecBuilderHost(cmdOp);
     }
 }

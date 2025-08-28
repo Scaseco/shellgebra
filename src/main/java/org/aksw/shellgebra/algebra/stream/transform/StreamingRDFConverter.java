@@ -69,6 +69,11 @@ public class StreamingRDFConverter {
                 @Override
                 public void close() throws IOException {
                     converterThread.interrupt();
+                    try {
+                        converterThread.join();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                     super.close();
                 }
             };

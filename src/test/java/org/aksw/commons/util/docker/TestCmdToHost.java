@@ -3,7 +3,8 @@ package org.aksw.commons.util.docker;
 import java.nio.charset.StandardCharsets;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.exec.ExecBuilderHost;
+import org.aksw.shellgebra.exec.ExecFactory;
+import org.aksw.shellgebra.exec.Execs;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -19,8 +20,8 @@ public class TestCmdToHost {
     public void testExec() throws Exception {
         String expected = "hello";
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
-        ExecBuilderHost builder = ExecBuilderHost.of(cmdOp);
-        String actual = builder.asByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        ExecFactory factory = Execs.host(cmdOp);
+        String actual = factory.forNullInput().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
     }
 
@@ -29,9 +30,9 @@ public class TestCmdToHost {
         String expected = "hello";
         ByteSource byteSource = ByteSource.wrap(expected.getBytes(StandardCharsets.UTF_8));
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/cat");
-        ExecBuilderHost builder = ExecBuilderHost.of(cmdOp);
-        String actual = builder.setInputByteSource(byteSource)
-                .asByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        ExecFactory factory = Execs.host(cmdOp);
+        String actual = factory.forInput(byteSource)
+                .toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
     }
 }
