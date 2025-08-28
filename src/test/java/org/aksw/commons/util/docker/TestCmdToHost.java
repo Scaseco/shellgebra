@@ -20,8 +20,8 @@ public class TestCmdToHost {
     public void testExec() throws Exception {
         String expected = "hello";
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
-        Stage factory = Stages.host(cmdOp);
-        String actual = factory.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        Stage stage = Stages.host(cmdOp);
+        String actual = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
     }
 
@@ -30,8 +30,8 @@ public class TestCmdToHost {
         String expected = "hello";
         ByteSource byteSource = ByteSource.wrap(expected.getBytes(StandardCharsets.UTF_8));
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/cat");
-        Stage factory = Stages.host(cmdOp);
-        String actual = factory.from(byteSource)
+        Stage stage = Stages.host(cmdOp);
+        String actual = stage.from(byteSource)
                 .toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
     }

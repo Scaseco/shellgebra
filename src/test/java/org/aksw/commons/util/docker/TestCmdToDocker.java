@@ -56,8 +56,8 @@ public class TestCmdToDocker {
         String expected = "hello";
         FileMapper fileMapper = FileMapper.of("/shared");
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
-        Stage factory = Stages.docker("ubuntu:24.04", cmdOp, fileMapper);
-        String actual = factory.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        Stage stage = Stages.docker("ubuntu:24.04", cmdOp, fileMapper);
+        String actual = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
     }
 }

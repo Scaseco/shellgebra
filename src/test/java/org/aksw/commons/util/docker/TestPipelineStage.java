@@ -23,15 +23,15 @@ public class TestPipelineStage {
         FileMapper fileMapper = FileMapper.of("/shared");
 
         String expected = "hello";
-        CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
-        Stage base = Stages.host(cmdOp);
+        CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", expected);
+        Stage inputStage = Stages.host(cmdOp);
 
-        Stage stage = Stages.pipeline(
+        Stage pipelineStage = Stages.pipeline(
             Stages.javaOut(BZip2CompressorOutputStream::new),
             Stages.docker("nestio/lbzip2", CmdOpExec.ofLiterals("/usr/bin/lbzip2", "-d"), fileMapper)
         );
 
-        ByteSource bs = stage.from(base.fromNull()).toByteSource();
+        ByteSource bs = pipelineStage.from(inputStage.fromNull()).toByteSource();
 
         String actual = bs.asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
