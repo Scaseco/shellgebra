@@ -6,7 +6,7 @@ import org.aksw.shellgebra.exec.FileWriterTaskBase.PathLifeCycle;
 
 import com.google.common.io.ByteSource;
 
-public interface ExecBuilder
+public interface BoundStage
 {
     ByteSource toByteSource();
 

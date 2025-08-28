@@ -5,29 +5,33 @@ import java.nio.charset.StandardCharsets;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.ExecFactory;
-import org.aksw.shellgebra.exec.Execs;
+import org.aksw.shellgebra.exec.Stage;
+import org.aksw.shellgebra.exec.Stages;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.io.ByteSource;
 
-public class TestExecFactoryPipeline {
+public class TestPipelineStage {
+    /**
+     * Pipeline that (1) prints a text using printf on the host,
+     * (2) bzip2-encodes using java and (3) bzip2-decodes using docker.
+     */
     @Test
     public void test01() throws IOException {
         FileMapper fileMapper = FileMapper.of("/shared");
 
         String expected = "hello";
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
-        ExecFactory base = Execs.host(cmdOp);
+        Stage base = Stages.host(cmdOp);
 
-        ExecFactory factory = Execs.pipeline(
-            Execs.javaOut(BZip2CompressorOutputStream::new),
-            Execs.docker("nestio/lbzip2", CmdOpExec.ofLiterals("/usr/bin/lbzip2", "-d"), fileMapper)
+        Stage stage = Stages.pipeline(
+            Stages.javaOut(BZip2CompressorOutputStream::new),
+            Stages.docker("nestio/lbzip2", CmdOpExec.ofLiterals("/usr/bin/lbzip2", "-d"), fileMapper)
         );
 
-        ByteSource bs = factory.forInput(base.forNullInput()).toByteSource();
+        ByteSource bs = stage.from(base.fromNull()).toByteSource();
 
         String actual = bs.asCharSource(StandardCharsets.UTF_8).read();
         Assert.assertEquals(expected, actual);
