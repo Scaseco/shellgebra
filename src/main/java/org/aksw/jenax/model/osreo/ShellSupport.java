@@ -8,7 +8,7 @@ import org.apache.jena.rdf.model.Resource;
 
 @Namespace(OsreoTerms.O)
 public interface ShellSupport
-    extends HasCommandPrefix
+    extends HasCommandOption
 {
     // Shell support must be referenced by a single ImageIntrospection
     @HashId

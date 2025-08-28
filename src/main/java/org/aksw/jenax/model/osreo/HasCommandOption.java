@@ -8,10 +8,10 @@ import org.apache.jena.rdf.model.Resource;
  * E.g. to use the bash shell with a user command, the "-c" option is needed.
  *
  */
-public interface HasCommandPrefix
+public interface HasCommandOption
     extends Resource
 {
-    @Iri(OsreoTerms.commandPrefix)
+    @Iri(OsreoTerms.commandOption)
     String getCommandPrefix();
-    HasCommandPrefix setCommandPrefix(String commandPrefix);
+    HasCommandOption setCommandPrefix(String commandPrefix);
 }

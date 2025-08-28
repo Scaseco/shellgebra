@@ -6,7 +6,7 @@ import org.aksw.jenax.model.rdfs.domain.api.HasRdfsLabel;
 
 @Namespace(OsreoTerms.O)
 public interface Shell
-    extends HasRdfsLabel, HasProbeLocation, HasCommandPrefix
+    extends HasRdfsLabel, HasProbeLocation, HasCommandOption
 {
     /**
      * Some shells have a built-in command locator.

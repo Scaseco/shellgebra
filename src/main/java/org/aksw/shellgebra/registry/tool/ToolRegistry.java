@@ -47,6 +47,10 @@ public class ToolRegistry {
             .getOrCreateCommand("/usr/bin/rapper");
 
         /*
+
+         */
+
+        /*
         ToolInfoProvider toolProvider = ToolInfoProviderImpl.newBuilder()
 
             .add(ToolInfo.newBuilder()

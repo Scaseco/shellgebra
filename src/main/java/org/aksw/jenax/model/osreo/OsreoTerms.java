@@ -10,6 +10,6 @@ public interface OsreoTerms {
     public static final String shellSupport = O + "shellSupport";
     public static final String locatorCommand = O + "locatorCommand";
     public static final String commandPath = O + "commandPath";
-    public static final String commandPrefix = O + "commandPrefix";
+    public static final String commandOption = O + "commandOption";
     public static final String shellType = O + "shellType";
 }
