@@ -23,6 +23,25 @@ public class CommandLineArgumentsBuilderRapper
         return map;
     }
 
+    public static Map<Lang, String> initOutLangMap() {
+        /*
+        ntriples        N-Triples (default)
+        turtle          Turtle Terse RDF Triple Language
+        nquads          N-Quads
+        rdfxml          RDF/XML
+        ---
+        rdfxml-xmp      RDF/XML (XMP Profile)
+        rdfxml-abbrev   RDF/XML (Abbreviated)
+        mkr             mKR my Knowledge Representation Language
+        rss-1.0         RSS 1.0
+        atom            Atom 1.0
+        dot             GraphViz DOT format
+        json-triples    RDF/JSON Triples
+        json            RDF/JSON Resource-Centric
+        html            HTML Table
+        */
+    }
+
     // protected String srcLang;
     // protected String tgtFormat;
     protected String baseUri;
@@ -71,6 +90,6 @@ public class CommandLineArgumentsBuilderRapper
 
     @Override
     public List<String> build() {
-        return List.of("-i", srcFmtArg, "-o", tgtFmtArg, "baseUri");
+        return List.of("-i", srcFmtArg, "-o", tgtFmtArg, "-", "baseUri");
     }
 }
