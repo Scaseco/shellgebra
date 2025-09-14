@@ -27,6 +27,8 @@ public class TestPipelineStage {
         Stage inputStage = Stages.host(cmdOp);
 
         Stage pipelineStage = Stages.pipeline(
+            // Stages.javaOut(BZip2CompressorOutputStream::new),
+            // Stages.javaIn(BZip2CompressorInputStream::new),
             Stages.javaOut(BZip2CompressorOutputStream::new),
             Stages.docker("nestio/lbzip2", CmdOpExec.ofLiterals("/usr/bin/lbzip2", "-d"), fileMapper)
         );

@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.aksw.shellgebra.exec.TransformedByteSource.ByteSourceSplit;
+
 import com.google.common.io.ByteSource;
 
 public class FileWriterTaskFromByteSource
@@ -31,8 +33,13 @@ public class FileWriterTaskFromByteSource
 
     @Override
     protected void runWriteFile() throws IOException {
-        try (OutputStream out = Files.newOutputStream(outputPath)) { //, StandardOpenOption.WRITE)) {
-            try (InputStream in = byteSource.openStream()) {
+        // Extract output stream transforms from the byte source and apply them on the output stream.
+        // This can avoid some piped input/output streams.
+        ByteSourceSplit split = TransformedByteSource.split(byteSource);
+        ByteSource bs = split.byteSource();
+
+        try (OutputStream out = split.outTransforms().apply(Files.newOutputStream(outputPath))) { //, StandardOpenOption.WRITE)) {
+            try (InputStream in = bs.openStream()) {
                 in.transferTo(out);
             }
             out.flush();

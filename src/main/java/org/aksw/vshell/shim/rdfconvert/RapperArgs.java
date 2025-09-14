@@ -3,6 +3,7 @@ package org.aksw.vshell.shim.rdfconvert;
 import java.util.ArrayList;
 import java.util.List;
 
+import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Unmatched;
@@ -42,6 +43,24 @@ public class RapperArgs {
 
     public List<String> getUnmatchedArgs() {
         return unmatchedArgs;
+    }
+
+    public List<String> toArgLine() {
+        List<String> result = CmdBuilder.newBuilder()
+            .opt("-i", inputFormat)
+            .opt("-o", outputFormat)
+            .arg(inputFile, "-")
+            .arg(baseUrl)
+            .args(unmatchedArgs)
+            .build();
+        return result;
+    }
+
+    public static RapperArgs parse(String[] args) {
+        RapperArgs model = new RapperArgs();
+        CommandLine cmd = new CommandLine(model);
+        cmd.parseArgs(args);
+        return model;
     }
 
     @Override

@@ -13,4 +13,7 @@ public interface BoundStage
     FileWriterTask execToRegularFile(Path hostPath);
     FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle);
     FileWriterTask runToHostPipe();
+
+    // XXX Add support for OutputStream destinations.
+    // BoundStage writeTo(Stage nextStage);
 }

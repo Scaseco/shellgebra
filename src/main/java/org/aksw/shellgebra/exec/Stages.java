@@ -1,7 +1,9 @@
 package org.aksw.shellgebra.exec;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
@@ -26,6 +28,11 @@ public class Stages {
         ContainerPathResolver containerPathResolver = ContainerPathResolver.create();
         return new DockerStage(imageRef, cmdOp, fileMapper, containerPathResolver);
     }
+
+//    public static Stage javaIn(Function<? super InputStream, ? extends InputStream> transform) {
+//        InputStreamTransform t = in -> transform.apply(in);
+//        return new JvmStage(t);
+//    }
 
     public static Stage javaIn(InputStreamTransform transform) {
         return new JvmStage(transform);
