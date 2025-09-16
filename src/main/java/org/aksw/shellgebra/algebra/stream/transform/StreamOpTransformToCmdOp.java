@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpFile;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipe;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpString;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpSubst;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.stream.op.CodecSpec;
 import org.aksw.shellgebra.algebra.stream.op.CodecSysEnv;
 import org.aksw.shellgebra.algebra.stream.op.StreamOp;
@@ -26,6 +25,7 @@ import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.aksw.shellgebra.registry.codec.CodecVariant;
 
 // CmdOp transformation that does not consider execution sites such as host or docker container.
+// FIXME StreamOps (if even needed at all) should only translate to virtual commands.
 public class StreamOpTransformToCmdOp
     extends StreamOpTransformBase
 {
@@ -40,7 +40,8 @@ public class StreamOpTransformToCmdOp
 
     @Override
     public StreamOp transform(StreamOpFile op) {
-        return new StreamOpCommand(new CmdOpFile(op.getPath()));
+        throw new UnsupportedOperationException("Cannot tranform file; must be a child of another stream op.");
+        // return new StreamOpCommand(new CmdOpFile(op.getPath()));
      }
 
     @Override
@@ -50,7 +51,7 @@ public class StreamOpTransformToCmdOp
         StreamOp result;
         if (isPushable) {
             List<CmdOp> args = subOps.stream().map(x -> (StreamOpCommand)x).map(StreamOpCommand::getCmdOp).toList();
-            result = new StreamOpCommand(new CmdOpGroup(args));
+            result = new StreamOpCommand(new CmdOpGroup(args, List.of()));
         } else {
             result = super.transform(op, subOps);
         }
@@ -86,7 +87,7 @@ public class StreamOpTransformToCmdOp
 
             // cmd[0] = resolvedCmdName;
             List<CmdArg> args = new ArrayList<>();
-            variant.getArgs().forEach(s -> args.add(CmdArg.ofString(s)));
+            variant.getArgs().forEach(s -> args.add(new CmdArgLiteral(s)));
             SysRuntime runtime = env.getRuntime();
 
             boolean canSubst = true;
@@ -97,16 +98,16 @@ public class StreamOpTransformToCmdOp
                 CmdOp newCmdOp;
                 CmdOp cmdOp = subCmd.getCmdOp();
 
-                if (supportsFile && cmdOp instanceof CmdOpFile fileOp) {
-                    args.add(CmdArg.ofPath(fileOp.getPath()));
+                if (false) { //supportsFile && cmdOp instanceof CmdOpFile fileOp) {
+                    // args.add(CmdArg.ofPath(fileOp.getPath()));
                     newCmdOp = new CmdOpExec(resolvedCmdName, args);
                 } else if (supportsStdIn) {
                     newCmdOp = new CmdOpExec(resolvedCmdName, args);
-                    newCmdOp = new CmdOpPipe(cmdOp, newCmdOp);
+                    newCmdOp = new CmdOpPipeline(cmdOp, newCmdOp);
                 } else {
                     // String[] parts = runtime.compileCommand(cmdOp);
                     // CmdOp subC = new CmdOpSubst(CmdOpExec.of(parts));
-                    args.add(CmdArg.ofCmd(cmdOp));
+                    args.add(new CmdArgCmdOp(cmdOp));
                     newCmdOp = new CmdOpExec(resolvedCmdName, args);
                 }
                 result = new StreamOpCommand(newCmdOp);

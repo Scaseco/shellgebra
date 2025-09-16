@@ -31,8 +31,9 @@ import org.aksw.jenax.dataaccess.sparql.creator.RDFDatabaseBuilder;
 import org.aksw.jenax.sparql.query.rx.RDFDataMgrEx;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipe;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpRedirectRight;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
 import org.aksw.shellgebra.algebra.common.TranscodeMode;
 import org.aksw.shellgebra.algebra.stream.op.CodecSysEnv;
 import org.aksw.shellgebra.algebra.stream.op.StreamOp;
@@ -274,34 +275,34 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
 //
 //
 //    }
-
-    protected ByteSourceSpec buildByteSourceCmd(List<StreamOp> args, Lang lang) {
-        // Inject a dummy codec 'cat' to cat immediate file arguments
-        // FIXME HACK 'cat' is certainly not a transcoding operation! Its something like StreamOpFile
-        args = args.stream()
-            .map(x -> x instanceof StreamOpFile f ? new StreamOpTranscode(TranscodeMode.DECODE, "cat", f) : x)
-            .toList();
-
-        StreamOpTransformToCmdOp sysCallTransform = sysCallTransform();
-
-        StreamOp javaOp = StreamOpConcat.of(args);
-        SysRuntime sysRuntime = SysRuntimeImpl.forCurrentOs();
-
-        ByteSource javaByteSource = new ByteSourceOverStreamOp(javaOp); // TODO Supply sysRuntime
-
-        // Try to compile the codec op to a system call.
-        StreamOp sysOp = StreamOpTransformer.transform(javaOp, sysCallTransform);
-
-        ByteSourceSpec result;
-        if (sysOp instanceof StreamOpCommand codecOp) {
-            CmdOp cmdOp = codecOp.getCmdOp();
-            // String[] cmd = SysRuntimeImpl.forBash().compileCommand(cmdOp);
-            result = new ByteSourceSpec(cmdOp, javaByteSource, lang);
-        } else {
-            result = new ByteSourceSpec(null, javaByteSource, lang);
-        }
-        return result;
-    }
+//
+//    protected ByteSourceSpec buildByteSourceCmd(List<StreamOp> args, Lang lang) {
+//        // Inject a dummy codec 'cat' to cat immediate file arguments
+//        // FIXME HACK 'cat' is certainly not a transcoding operation! Its something like StreamOpFile
+//        args = args.stream()
+//            .map(x -> x instanceof StreamOpFile f ? new StreamOpTranscode(TranscodeMode.DECODE, "cat", f) : x)
+//            .toList();
+//
+//        StreamOpTransformToCmdOp sysCallTransform = sysCallTransform();
+//
+//        StreamOp javaOp = StreamOpConcat.of(args);
+//        SysRuntime sysRuntime = SysRuntimeImpl.forCurrentOs();
+//
+//        ByteSource javaByteSource = new ByteSourceOverStreamOp(javaOp); // TODO Supply sysRuntime
+//
+//        // Try to compile the codec op to a system call.
+//        StreamOp sysOp = StreamOpTransformer.transform(javaOp, sysCallTransform);
+//
+//        ByteSourceSpec result;
+//        if (sysOp instanceof StreamOpCommand codecOp) {
+//            CmdOp cmdOp = codecOp.getCmdOp();
+//            // String[] cmd = SysRuntimeImpl.forBash().compileCommand(cmdOp);
+//            result = new ByteSourceSpec(cmdOp, javaByteSource, lang);
+//        } else {
+//            result = new ByteSourceSpec(null, javaByteSource, lang);
+//        }
+//        return result;
+//    }
 
     /** A list of binds for file arguments or a byte source with the input data - mutually exclusive. */
     // public record BindsOrStream(List<Bind> binds, ByteSourceCmd byteSource) {}
@@ -424,7 +425,9 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
             if (sysOp instanceof StreamOpCommand streamOpCmd) {
                 CmdOp cmdOp = streamOpCmd.getCmdOp();
                 String hostPathStr = hostPath.toString();
-                CmdOpRedirectRight redirectOp = new CmdOpRedirectRight(hostPathStr, cmdOp);
+                RedirectFile redirect = RedirectFile.fileFromStdIn(hostPathStr, OpenMode.WRITE_TRUNCATE);
+                // CmdOpRedirectRight redirectOp = new CmdOpRedirectRight(hostPathStr, cmdOp);
+                CmdOp redirectOp = CmdOp.appendRedirect(cmdOp, redirect);
 
                 SysRuntime runtime = getRuntime();
                 String[] cmd = runtime.compileCommand(redirectOp);
@@ -680,7 +683,7 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
 
     protected void runContainerViaSysCallWithInputStream(ByteSource byteSource, Lang lang) throws InterruptedException, IOException {
         GenericContainer<?> container = setupContainerSysCall("-", lang);
-        CmdOp cmdOp = CmdOpExec.of(container.buildCmdLine());
+        CmdOp cmdOp = CmdOpExec.ofLiteralArgs(container.buildCmdLine());
 
         SysRuntime runtime = getRuntime();
         String[] cmd = runtime.compileCommand(cmdOp);
@@ -707,7 +710,7 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
     protected void runContainerViaSysCall(CmdOp generatorCmd, Lang lang) throws NumberFormatException, IOException, InterruptedException {
         GenericContainer<?> container = setupContainerSysCall("-", lang);
         String[] cmdLine = container.buildCmdLine();
-        CmdOp pipe = new CmdOpPipe(generatorCmd, CmdOpExec.of(cmdLine));
+        CmdOp pipe = new CmdOpPipeline(generatorCmd, CmdOpExec.ofLiteralArgs(cmdLine));
 
         SysRuntime runtime = getRuntime();
         String[] cmd = runtime.compileCommand(pipe);

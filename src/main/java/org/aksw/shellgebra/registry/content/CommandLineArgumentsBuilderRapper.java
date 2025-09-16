@@ -23,7 +23,9 @@ public class CommandLineArgumentsBuilderRapper
         return map;
     }
 
+    // TODO Implement.
     public static Map<Lang, String> initOutLangMap() {
+        return null;
         /*
         ntriples        N-Triples (default)
         turtle          Turtle Terse RDF Triple Language

@@ -23,7 +23,7 @@ public class StreamOpTransformBase
 
     @Override
     public StreamOp transform(StreamOpTranscode op, StreamOp subOp) {
-        return new StreamOpTranscode(op.getName(), op.getTranscodeMode(), subOp);
+        return new StreamOpTranscode(op.getTranscodeMode(), op.getName(), subOp);
     }
 
     @Override

@@ -22,12 +22,12 @@ public class FileWriterTaskNoop
     public void start() {
         checkIfAbortHasBeenCalled();
         checkIfNew();
-        state.set(TaskState.COMPLETED);
+        state.set(TaskState.TERMINATED);
     }
 
     @Override
     public void abort() {
-        state.compareAndSet(TaskState.NEW, TaskState.ABORTED);
+        state.compareAndSet(TaskState.NEW, TaskState.TERMINATED);
     }
 
     @Override
