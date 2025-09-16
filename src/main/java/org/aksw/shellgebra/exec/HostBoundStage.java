@@ -31,7 +31,6 @@ public class HostBoundStage
 
     protected List<FileWriterTask> dependentTasks;
 
-
     public HostBoundStage(CmdOp cmdOp, ByteSource inputSource) {
         super();
         this.cmdOp = cmdOp;
@@ -98,7 +97,7 @@ public class HostBoundStage
 //            }
 //        }
 
-        FileWriterTask task = new FileWriterTaskFromProcessBuilder(outPath, pathLifeCycle, processBuilders, inputTasks, inputSource);
+        FileWriterTask task = new FileWriterTaskFromProcessBuilder(outPath, pathLifeCycle, processBuilders, inputTasks, inputSource, null);
         return task;
     }
 

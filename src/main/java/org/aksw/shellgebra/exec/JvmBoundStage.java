@@ -1,7 +1,5 @@
 package org.aksw.shellgebra.exec;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -25,14 +23,7 @@ public class JvmBoundStage
 
     @Override
     public ByteSource toByteSource() {
-        return new ByteSource() {
-            @Override
-            public InputStream openStream() throws IOException {
-                InputStream in = byteSource.openStream();
-                InputStream result = transform.apply(in);
-                return result;
-            }
-        };
+        return TransformedByteSource.transform(byteSource, transform);
     }
 
     @Override

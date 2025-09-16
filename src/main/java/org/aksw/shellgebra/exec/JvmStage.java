@@ -62,4 +62,9 @@ public class JvmStage
     public BoundStage fromNull() {
         return from(ByteSource.empty());
     }
+
+    @Override
+    public String toString() {
+        return "(jvmStage " +  transform.toString() + ")";
+    }
 }
