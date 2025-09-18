@@ -14,6 +14,10 @@ public interface BoundStage
     FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle);
     FileWriterTask runToHostPipe();
 
-    // XXX Add support for OutputStream destinations.
+    // XXX Perhaps add support for OutputStream destinations? Sketch:
     // BoundStage writeTo(Stage nextStage);
+    // BoundStage writeTo(OutputStream out);
+
+    // XXX Add support to just execute (without piping output to a sink)
+    // CompletableFuture<?> execute();
 }

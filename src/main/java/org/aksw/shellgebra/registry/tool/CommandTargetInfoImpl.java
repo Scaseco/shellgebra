@@ -3,64 +3,73 @@ package org.aksw.shellgebra.registry.tool;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-public class CommandTargetInfo {
+import org.aksw.shellgebra.registry.tool.model.CommandTargetInfo;
+
+public class CommandTargetInfoImpl
+    implements CommandTargetInfo
+{
     protected String command;
-    protected Boolean availableOnHost;
-    // protected Set<String> dockerImages;
+    protected Optional<Boolean> availableOnHost;
     protected Map<String, Boolean> imageToAvailability;
 
-    public CommandTargetInfo(String command) {
-        this(command, true, new LinkedHashMap<>());
+    public CommandTargetInfoImpl(String command) {
+        this(command, Optional.of(Boolean.TRUE) , new LinkedHashMap<>());
     }
 
-    private CommandTargetInfo(String command, Boolean availableOnHost, Map<String, Boolean> dockerImages) {
+    private CommandTargetInfoImpl(String command, Optional<Boolean> availableOnHost, Map<String, Boolean> dockerImages) {
         super();
         this.command = command;
         this.availableOnHost = availableOnHost;
         this.imageToAvailability = dockerImages;
     }
 
+    @Override
     public String getCommand() {
         return command;
     }
 
-    public void setAvailableOnHost(Boolean availableOnHost) {
-        this.availableOnHost = availableOnHost;
+    public CommandTargetInfoImpl setAvailabilityHost(Boolean availableOnHost) {
+        this.availableOnHost = Optional.ofNullable(availableOnHost);
+        return this;
     }
 
     /** Whether the command may be run on the host. */
-    public Boolean getAvailableOnHost() {
+    @Override
+    public Optional<Boolean> getAvailableOnHost() {
         return availableOnHost;
     }
 
-    public Set<String> getDockerImages() {
-        return imageToAvailability.keySet();
+    @Override
+    public Stream<String> getDockerImages() {
+        return imageToAvailability.keySet().stream();
     }
 
+    @Override
     public Stream<String> getAvailableImages() {
         return imageToAvailability.entrySet().stream().filter(e -> Boolean.TRUE.equals(e.getValue())).map(Entry::getKey);
     }
 
-    public CommandTargetInfo setDockerImageAvailability(String imageName, Boolean value) {
+    public CommandTargetInfoImpl setDockerImageAvailability(String imageName, Boolean value) {
         imageToAvailability.put(imageName, value);
         return this;
     }
 
-    public CommandTargetInfo addDockerImageAvailability(String imageName) {
+    public CommandTargetInfoImpl addAvailabilityDockerImage(String imageName) {
         setDockerImageAvailability(imageName, true);
         return this;
     }
 
-    public Boolean getDockerImageAvailability(String imageName) {
-        return imageToAvailability.get(imageName);
+    @Override
+    public Optional<Boolean> getDockerImageAvailability(String imageName) {
+        return Optional.ofNullable(imageToAvailability.get(imageName));
     }
 
     @Override
-    public CommandTargetInfo clone() {
-        return new CommandTargetInfo(command, availableOnHost, new LinkedHashMap<>(imageToAvailability));
+    public CommandTargetInfoImpl clone() {
+        return new CommandTargetInfoImpl(command, availableOnHost, new LinkedHashMap<>(imageToAvailability));
     }
 
     @Override

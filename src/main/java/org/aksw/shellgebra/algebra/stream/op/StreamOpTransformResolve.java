@@ -17,7 +17,7 @@ import org.aksw.shellgebra.registry.codec.CodecVariant;
 import org.aksw.shellgebra.registry.codec.JavaStreamTransform;
 import org.aksw.shellgebra.registry.content.ContentConvertRegistry;
 import org.aksw.shellgebra.registry.content.Tool;
-import org.aksw.shellgebra.registry.tool.ToolInfo;
+import org.aksw.shellgebra.registry.tool.ToolInfoImpl;
 import org.aksw.shellgebra.registry.tool.ToolRegistry;
 
 /**
@@ -68,14 +68,14 @@ public class StreamOpTransformResolve
             String toolName = variant.getToolName();
             String resolvedCmdName = StreamOpTransformToCmdOp.resolveCmdName(toolName, sysRuntime);
 
-            ToolInfo baseToolInfo = toolRegistry.getToolInfo(toolName).orElse(null);
+            ToolInfoImpl baseToolInfo = toolRegistry.getToolInfo(toolName).orElse(null);
             if (baseToolInfo != null) {
                 resolution.getTools().merge(baseToolInfo);
             }
 
             // ToolInfo resolvedToolInfo = new ToolInfo(toolName);
             if (resolvedCmdName != null) {
-                ToolInfo resolvedToolInfo = resolution.getTools().getOrCreate(toolName);
+                ToolInfoImpl resolvedToolInfo = resolution.getTools().getOrCreate(toolName);
                 resolvedToolInfo.getOrCreateCommand(resolvedCmdName);
                 resolution.getTools().merge(resolvedToolInfo);
             }
@@ -121,7 +121,7 @@ public class StreamOpTransformResolve
         List<Tool> tools = convertRegistry.getCmdConverter(spec);
 
         // Find resolution of the tools to commands (on host or in container)
-        List<Entry<Tool, ToolInfo>> toolInfos = tools.stream()
+        List<Entry<Tool, ToolInfoImpl>> toolInfos = tools.stream()
             .flatMap(tool -> toolRegistry.getToolInfo(tool.name()).map(info -> Map.entry(tool, info)).stream())
             .toList()
             ;

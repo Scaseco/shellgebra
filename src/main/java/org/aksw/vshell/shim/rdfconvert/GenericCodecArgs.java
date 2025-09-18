@@ -6,7 +6,9 @@ import java.util.List;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Unmatched;
 
-public class GenericCodecArgs {
+public class GenericCodecArgs
+    implements Args
+{
     @Option(names = {"-d", "--decompress"}, description = "Decompress")
     boolean decode;
 
@@ -29,11 +31,12 @@ public class GenericCodecArgs {
         return "GenericCodecArgs [decode=" + decode + ", unmatchedArgs=" + unmatchedArgs + "]";
     }
 
-    public List<String> toArgLine() {
-        List<String> result = CmdBuilder.newBuilder()
+    @Override
+    public ArgumentList toArgList() {
+        List<String> args = CmdBuilder.newBuilder()
             .ifTrue(decode, "-d")
             .args(unmatchedArgs)
             .build();
-        return result;
+        return ArgumentList.ofLiterals(args);
     }
 }

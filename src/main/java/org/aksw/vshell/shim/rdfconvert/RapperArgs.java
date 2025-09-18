@@ -8,8 +8,10 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Unmatched;
 
-/** Picocli model that mimicks rapper. */
-public class RapperArgs {
+/** Picocli model that mimics rapper. */
+public class RapperArgs
+    implements Args
+{
     @Option(names = "-i", description = "Input format")
     String inputFormat;
 
@@ -45,27 +47,29 @@ public class RapperArgs {
         return unmatchedArgs;
     }
 
-    public List<String> toArgLine() {
-        List<String> result = CmdBuilder.newBuilder()
+    @Override
+    public ArgumentList toArgList() {
+        List<String> strs = CmdBuilder.newBuilder()
             .opt("-i", inputFormat)
             .opt("-o", outputFormat)
             .arg(inputFile, "-")
             .arg(baseUrl)
             .args(unmatchedArgs)
             .build();
-        return result;
+        return ArgumentList.ofLiterals(strs);
     }
 
     public static RapperArgs parse(String[] args) {
-        RapperArgs model = new RapperArgs();
-        CommandLine cmd = new CommandLine(model);
-        cmd.parseArgs(args);
-        return model;
+        return ArgsParserPicocli.of(RapperArgs.class).parse(args);
+//        RapperArgs model = new RapperArgs();
+//        CommandLine cmd = new CommandLine(model);
+//        cmd.parseArgs(args);
+//        return model;
     }
 
     @Override
     public String toString() {
-        return "RapperArgs [inputFormat=" + inputFormat + ", outputFormat=" + outputFormat + ", inputFile=" + inputFile
-                + ", baseUrl=" + baseUrl + ", unmatchedArgs=" + unmatchedArgs + "]";
+        return "inputFormat=" + inputFormat + ", outputFormat=" + outputFormat + ", inputFile=" + inputFile
+                + ", baseUrl=" + baseUrl + ", unmatchedArgs=" + unmatchedArgs ;
     }
 }

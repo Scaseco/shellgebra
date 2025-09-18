@@ -14,8 +14,8 @@ import org.aksw.jenax.model.osreo.ImageIntrospection;
 import org.aksw.jenax.model.osreo.ShellSupport;
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformer;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
-import org.aksw.shellgebra.registry.tool.CommandTargetInfo;
-import org.aksw.shellgebra.registry.tool.ToolInfo;
+import org.aksw.shellgebra.registry.tool.CommandTargetInfoImpl;
+import org.aksw.shellgebra.registry.tool.ToolInfoImpl;
 import org.aksw.shellgebra.registry.tool.ToolInfoProviderImpl;
 import org.aksw.shellgebra.registry.tool.ToolRegistry;
 import org.apache.jena.rdf.model.Model;
@@ -45,7 +45,7 @@ public class ToolUsage {
         Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
         ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(model);
 
-        List<String> toolNames = tools.list().stream().map(ToolInfo::getName).toList();
+        List<String> toolNames = tools.list().stream().map(ToolInfoImpl::getName).toList();
         List<String> derivedImageNames = tools.list().stream().flatMap(tool -> tool.getCommandsByPath().values().stream())
             .flatMap(cmd -> cmd.getDockerImages().stream()).collect(Collectors.toList());
 
@@ -75,7 +75,7 @@ public class ToolUsage {
             ToolInfoProviderImpl enrichedRegistry, String toolName) {
         // ToolInfo baseToolInfo = baseRegistry.getToolInfo(toolName).orElseGet(() -> new ToolInfo(toolName));
         // ToolInfo toolInfo = enrichedRegistry.merge(baseToolInfo);
-        ToolInfo toolInfo = enrichedRegistry.getOrCreate(toolName);
+        ToolInfoImpl toolInfo = enrichedRegistry.getOrCreate(toolName);
 
         for (String imageName : imageNames) {
 
@@ -88,7 +88,7 @@ public class ToolUsage {
 
                 // boolean isAvailabeOnHost = hostCmd != null;
                 if (hostCmd != null) {
-                    toolInfo.getOrCreateCommand(hostCmd).setAvailableOnHost(true);
+                    toolInfo.getOrCreateCommand(hostCmd).setAvailabilityHost(true);
                     toolInfo.setAbsentOnHost(false);
                 } else {
                     toolInfo.setAbsentOnHost(true);
@@ -98,7 +98,7 @@ public class ToolUsage {
             // Only scan image if the tool is not declared to be absent.
             boolean isAbsent = toolInfo.isAbsentInDockerImage(imageName);
             if (!isAbsent) {
-                CommandTargetInfo imageCmd = toolInfo.findCommandByImage(imageName);
+                CommandTargetInfoImpl imageCmd = toolInfo.findCommandByImage(imageName);
                 Boolean availability = imageCmd == null ? null : imageCmd.getDockerImageAvailability(imageName);
 
                 if (availability == null) {
@@ -114,7 +114,7 @@ public class ToolUsage {
 
                             // String cmd = ContainerUtils.checkImageForCommand(imageName, toolName);
                             if (cmd != null) {
-                                toolInfo.getOrCreateCommand(cmd).addDockerImageAvailability(imageName);
+                                toolInfo.getOrCreateCommand(cmd).addAvailabilityDockerImage(imageName);
                                 // Once the command is located (regardless of the shell) we are finished here.
                                 break;
                             }

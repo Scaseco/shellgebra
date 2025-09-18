@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
+import org.aksw.shellgebra.registry.tool.model.ToolInfoProvider;
 
 /**
  * Registry to resolve tools to commands.
@@ -27,15 +28,21 @@ public class ToolRegistry {
         return defaultRegistry;
     }
 
+
+    record ToolObservation(String toolName, String platform, String command, String dockerImage) {}
+
     public static void loadDefaults(ToolRegistry registry) {
         ToolInfoProviderImpl toolProvider = new ToolInfoProviderImpl();
 
         toolProvider.getOrCreate("lbzip2")
             .getOrCreateCommand("/usr/bin/lbzip2")
-                .addDockerImageAvailability("nestio/lbzip2");
+                .addAvailabilityDockerImage("nestio/lbzip2");
 
         toolProvider.getOrCreate("gzip")
-            .getOrCreateCommand("/usr/bin/gzip");
+            .getOrCreateCommand("/usr/bin/gzip")
+                .setAvailabilityHost(null)
+                .setDockerImageAvailability("foo", null)
+                .setDockerImageAvailability("bar", null);
 
         toolProvider.getOrCreate("bzip2")
             .getOrCreateCommand("/usr/bin/bzip2");
@@ -47,6 +54,11 @@ public class ToolRegistry {
             .getOrCreateCommand("/usr/bin/rapper");
 
         /*
+         How to best separate candidate model from the availability assessment?
+         Could have an assment model with maps
+         Table<ExecSite, Command, Boolean> availabilities.
+         Command would have to be mapped back to the tool selector it corresponds to.
+         Tool selector: name + version - but version might be unknown.
 
          */
 
@@ -104,8 +116,8 @@ public class ToolRegistry {
 //        return result;
 //    }
 
-    public Optional<ToolInfo> getToolInfo(String name) {
-        Optional<ToolInfo> result = toolInfoProviders.stream()
+    public Optional<ToolInfoImpl> getToolInfo(String name) {
+        Optional<ToolInfoImpl> result = toolInfoProviders.stream()
             .map(provider -> provider.get(name))
             .flatMap(Optional::stream)
             .findFirst();

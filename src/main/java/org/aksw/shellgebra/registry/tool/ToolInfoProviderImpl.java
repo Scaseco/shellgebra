@@ -6,6 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.aksw.shellgebra.registry.tool.model.ToolInfo;
+import org.aksw.shellgebra.registry.tool.model.ToolInfoProvider;
+
 /**
  *
  * TODO Add sanity check whether different tools share the same command (shouldn't happen).
@@ -13,9 +16,9 @@ import java.util.Optional;
 public class ToolInfoProviderImpl
     implements ToolInfoProvider
 {
-    protected Map<String, ToolInfo> nameToToolInfo = new LinkedHashMap<>();
+    protected Map<String, ToolInfoImpl> nameToToolInfo = new LinkedHashMap<>();
 
-    private ToolInfoProviderImpl(Map<String, ToolInfo> nameToToolInfo) {
+    private ToolInfoProviderImpl(Map<String, ToolInfoImpl> nameToToolInfo) {
         super();
         this.nameToToolInfo = nameToToolInfo;
     }
@@ -23,19 +26,19 @@ public class ToolInfoProviderImpl
     public ToolInfoProviderImpl() {
     }
 
-    public Collection<ToolInfo> list() {
+    public Collection<ToolInfoImpl> list() {
         return nameToToolInfo.values();
     }
 
-    public ToolInfo getOrCreate(String toolName) {
-        return nameToToolInfo.computeIfAbsent(toolName, tn -> new ToolInfo(toolName));
+    public ToolInfoImpl getOrCreate(String toolName) {
+        return nameToToolInfo.computeIfAbsent(toolName, tn -> new ToolInfoImpl(toolName));
     }
 
-    public ToolInfo merge(ToolInfo toolInfo) {
-        ToolInfo result = getOrCreate(toolInfo.getName());
-        for (CommandTargetInfo cpi :  toolInfo.list()) {
-            CommandTargetInfo thisCpi = result.getOrCreateCommand(cpi.getCommand());
-            cpi.getDockerImages().forEach(thisCpi::addDockerImageAvailability);
+    public ToolInfoImpl merge(ToolInfoImpl toolInfo) {
+        ToolInfoImpl result = getOrCreate(toolInfo.getName());
+        for (CommandTargetInfoImpl cpi :  toolInfo.list()) {
+            CommandTargetInfoImpl thisCpi = result.getOrCreateCommand(cpi.getCommand());
+            cpi.getDockerImages().forEach(thisCpi::addAvailabilityDockerImage);
         }
         result.getAbsenceInDockerImages().addAll(toolInfo.getAbsenceInDockerImages());
 
@@ -48,9 +51,9 @@ public class ToolInfoProviderImpl
     }
 
     public static class Builder {
-        protected Map<String, ToolInfo> nameToToolInfo = new LinkedHashMap<>();
+        protected Map<String, ToolInfoImpl> nameToToolInfo = new LinkedHashMap<>();
 
-        public Builder add(ToolInfo toolInfo) {
+        public Builder add(ToolInfoImpl toolInfo) {
             nameToToolInfo.put(toolInfo.getName(), toolInfo);
             return this;
         }

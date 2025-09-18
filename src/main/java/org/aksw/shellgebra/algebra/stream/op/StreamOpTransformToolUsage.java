@@ -1,7 +1,7 @@
 package org.aksw.shellgebra.algebra.stream.op;
 
 import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformBase;
-import org.aksw.shellgebra.registry.tool.ToolInfo;
+import org.aksw.shellgebra.registry.tool.ToolInfoImpl;
 import org.aksw.shellgebra.registry.tool.ToolInfoProviderImpl;
 
 public class StreamOpTransformToolUsage
@@ -15,7 +15,7 @@ public class StreamOpTransformToolUsage
 
     @Override
     public StreamOp transform(StreamOpResolution op, StreamOp subOp) {
-        for (ToolInfo toolInfo : op.getResolution().getTools().list()) {
+        for (ToolInfoImpl toolInfo : op.getResolution().getTools().list()) {
             // tools.getOrCreate(toolInfo.getName())
             tools.merge(toolInfo);
         }

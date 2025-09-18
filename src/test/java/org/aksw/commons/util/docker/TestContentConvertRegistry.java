@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import org.aksw.shellgebra.registry.codec.JavaStreamTransform;
 import org.aksw.shellgebra.registry.content.ContentConvertRegistry;
 import org.aksw.shellgebra.registry.content.Tool;
-import org.aksw.shellgebra.registry.tool.ToolInfo;
+import org.aksw.shellgebra.registry.tool.ToolInfoImpl;
 import org.aksw.shellgebra.registry.tool.ToolRegistry;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -51,7 +51,7 @@ public class TestContentConvertRegistry {
         Tool tool = ContentConvertRegistry.get().getCmdConverter("ttl", "nt", null).get(0);
         System.err.println(tool.name() + ": " + tool.argsBuilder().build());
 
-        ToolInfo toolInfo = ToolRegistry.get().getToolInfo(tool.name()).orElse(null);
+        ToolInfoImpl toolInfo = ToolRegistry.get().getToolInfo(tool.name()).orElse(null);
         System.err.println(toolInfo.getCommandsByPath());
 
         

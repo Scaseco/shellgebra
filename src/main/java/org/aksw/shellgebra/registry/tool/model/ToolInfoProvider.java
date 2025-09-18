@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.registry.tool;
+package org.aksw.shellgebra.registry.tool.model;
 
 import java.util.Optional;
 

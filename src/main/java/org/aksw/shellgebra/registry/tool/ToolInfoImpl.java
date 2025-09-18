@@ -1,96 +1,120 @@
 package org.aksw.shellgebra.registry.tool;
 
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.aksw.shellgebra.registry.tool.model.CommandTargetInfo;
+import org.aksw.shellgebra.registry.tool.model.ToolInfo;
 
 // XXX Could separate host from image commands - but probably this would just increase complexity.
-public class ToolInfo {
+public class ToolInfoImpl
+    implements ToolInfo
+{
     protected String name;
-    protected Map<String, CommandTargetInfo> commandMap;
+    protected Map<String, CommandTargetInfoImpl> commandMap;
 
     // XXX absentOnHost can be true even though there may be a command - revise design to avoid inconsistency.
-    protected Boolean absentOnHost = null;
+    protected Optional<Boolean> absentOnHost = null;
 
     // Known absences in images.
     protected Set<String> absenceInDockerImages = new LinkedHashSet<>();
 
-    public ToolInfo(String name) {
+    public ToolInfoImpl(String name) {
         this(name, new LinkedHashMap<>(), new LinkedHashSet<>());
     }
 
-    private ToolInfo(String name, Map<String, CommandTargetInfo> commandMap, Set<String> absenceInDockerImages) {
+    private ToolInfoImpl(String name, Map<String, CommandTargetInfoImpl> commandMap, Set<String> absenceInDockerImages) {
         super();
         this.name = name;
         this.commandMap = commandMap;
         this.absenceInDockerImages = absenceInDockerImages;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
-    public Set<String> getAbsenceInDockerImages() {
-        return absenceInDockerImages;
+    @Override
+    public Stream<String> getAbsenceInDockerImages() {
+        return absenceInDockerImages.stream();
     }
 
+v    @Override
     public boolean isAbsentInDockerImage(String dockerImage) {
         return absenceInDockerImages.contains(dockerImage);
     }
 
     public void setAbsentOnHost(Boolean value) {
-        absentOnHost = value;
+        absentOnHost = Optional.ofNullable(value);
     }
 
-    public Boolean getAbsentOnHost() {
+    @Override
+    public Optional<Boolean> getAbsentOnHost() {
         return absentOnHost;
     }
 
-    public ToolInfo setAbsentInDockerImage(String dockerImage) {
+    public ToolInfoImpl setAbsentInDockerImage(String dockerImage) {
         this.absenceInDockerImages.add(dockerImage);
         return this;
     }
 
-    public CommandTargetInfo findCommandByImage(String imageName) {
-        CommandTargetInfo result = commandMap.values().stream()
-            .filter(cpi -> cpi.getDockerImages().contains(imageName))
+    @Override
+    public CommandTargetInfoImpl findCommandByImage(String imageName) {
+        CommandTargetInfoImpl result = commandMap.values().stream()
+            .filter(cpi -> cpi.getDockerImages().filter(img -> img.equals(imageName)))
             .findFirst().orElse(null);
         return result;
     }
 
-    public CommandTargetInfo findCommandOnHost() {
-        CommandTargetInfo result = commandMap.values().stream()
+    @Override
+    public CommandTargetInfoImpl findCommandOnHost() {
+        CommandTargetInfoImpl result = commandMap.values().stream()
             .filter(cpi -> Boolean.TRUE.equals(cpi.getAvailableOnHost()))
             .findFirst().orElse(null);
         return result;
     }
 
-    public Map<String, CommandTargetInfo> getCommandsByPath() {
-        return commandMap;
-    }
+//    public Map<String, CommandTargetInfoImpl> getCommandsByPath() {
+//        return commandMap;
+//    }
 
-    public Collection<CommandTargetInfo> list() {
-        return commandMap.values();
-    }
+//    public Collection<CommandTargetInfoImpl> list() {
+//        return commandMap.values();
+//    }
 
-    public CommandTargetInfo getOrCreateCommand(String commandPath) {
-        return commandMap.computeIfAbsent(commandPath, n -> new CommandTargetInfo(commandPath));
+    public CommandTargetInfoImpl getOrCreateCommand(String commandPath) {
+        return commandMap.computeIfAbsent(commandPath, n -> new CommandTargetInfoImpl(commandPath));
     }
 
     @Override
-    public ToolInfo clone() {
-        Map<String, CommandTargetInfo> newCmdMap = commandMap.entrySet().stream()
+    public ToolInfoImpl clone() {
+        Map<String, CommandTargetInfoImpl> newCmdMap = commandMap.entrySet().stream()
                 .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().clone(), (u, v) -> u, LinkedHashMap::new));
-        return new ToolInfo(name, newCmdMap, new LinkedHashSet<>(absenceInDockerImages));
+        return new ToolInfoImpl(name, newCmdMap, new LinkedHashSet<>(absenceInDockerImages));
     }
 
     @Override
     public String toString() {
         return "ToolInfo [name=" + name + ", commandTargets=" + commandMap.values() + ", absentOnHost=" + absentOnHost +  ", absences: " + absenceInDockerImages + "]";
+    }
+
+    @Override
+    public Stream<CommandTargetInfo> list() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Optional<CommandTargetInfo> getCommand(String commandPath) {
+        // TODO Auto-generated method stub
+        return Optional.empty();
     }
 
 //    public static class Builder {
