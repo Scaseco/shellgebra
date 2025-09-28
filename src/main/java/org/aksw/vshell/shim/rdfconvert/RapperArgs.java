@@ -3,7 +3,6 @@ package org.aksw.vshell.shim.rdfconvert;
 import java.util.ArrayList;
 import java.util.List;
 
-import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Unmatched;
@@ -49,22 +48,23 @@ public class RapperArgs
 
     @Override
     public ArgumentList toArgList() {
+        return renderArgList(this);
+    }
+
+    public static ArgumentList renderArgList(RapperArgs model) {
         List<String> strs = CmdBuilder.newBuilder()
-            .opt("-i", inputFormat)
-            .opt("-o", outputFormat)
-            .arg(inputFile, "-")
-            .arg(baseUrl)
-            .args(unmatchedArgs)
+            .opt("-i", model.getInputFormat())
+            .opt("-o", model.getOutputFormat())
+            .arg(model.getInputFile(), "-")
+            .arg(model.getBaseUrl())
+            .args(model.getUnmatchedArgs())
             .build();
         return ArgumentList.ofLiterals(strs);
     }
 
-    public static RapperArgs parse(String[] args) {
-        return ArgsParserPicocli.of(RapperArgs.class).parse(args);
-//        RapperArgs model = new RapperArgs();
-//        CommandLine cmd = new CommandLine(model);
-//        cmd.parseArgs(args);
-//        return model;
+    public static ArgsModular<RapperArgs> parse(String[] args) {
+        RapperArgs model = ArgsParserPicocli.of(RapperArgs::new).parse(args);
+        return new ArgsModular<>(model, RapperArgs::renderArgList);
     }
 
     @Override

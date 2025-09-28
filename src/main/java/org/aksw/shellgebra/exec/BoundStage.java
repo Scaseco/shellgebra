@@ -15,8 +15,9 @@ public interface BoundStage
     FileWriterTask runToHostPipe();
 
     // XXX Perhaps add support for OutputStream destinations? Sketch:
-    // BoundStage writeTo(Stage nextStage);
-    // BoundStage writeTo(OutputStream out);
+    // BoundStage writeTo(Stage nextStage); -- this is the same as setting this BoundStage as an input for the next one.
+    // Task writeTo(OutputStream out);  -- this should write the output - probably there is no further object we could follow up with.
+    // Task has methods start, abort, close().
 
     // XXX Add support to just execute (without piping output to a sink)
     // CompletableFuture<?> execute();

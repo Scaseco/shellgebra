@@ -33,10 +33,19 @@ public class GenericCodecArgs
 
     @Override
     public ArgumentList toArgList() {
+        return renderArgList(this);
+    }
+
+    public static ArgumentList renderArgList(GenericCodecArgs model) {
         List<String> args = CmdBuilder.newBuilder()
-            .ifTrue(decode, "-d")
-            .args(unmatchedArgs)
-            .build();
+                .ifTrue(model.isDecode(), "-d")
+                .args(model.getUnmatchedArgs())
+                .build();
         return ArgumentList.ofLiterals(args);
+    }
+
+    public static ArgsModular<GenericCodecArgs> parse(String[] args) {
+        GenericCodecArgs model = ArgsParserPicocli.of(GenericCodecArgs::new).parse(args);
+        return new ArgsModular<>(model, GenericCodecArgs::renderArgList);
     }
 }

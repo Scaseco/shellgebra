@@ -28,6 +28,10 @@ public class ArgsParserPicocli<T extends Args>
         return new ArgsParserPicocli<>(asInstanceSupplier(clazz));
     }
 
+    public static <T extends Args> ArgsParser<T> of(Supplier<T> instanceCreator) {
+        return new ArgsParserPicocli<>(instanceCreator);
+    }
+
     private static <T> Supplier<T> asInstanceSupplier(Class<T> clazz) {
         Constructor<T> ctor;
         try {
