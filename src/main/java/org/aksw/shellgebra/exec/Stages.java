@@ -1,9 +1,7 @@
 package org.aksw.shellgebra.exec;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;

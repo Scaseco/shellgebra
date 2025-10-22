@@ -7,7 +7,9 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Unmatched;
 
-/** Picocli model that mimics rapper. */
+/**
+ * Picocli model that mimics rapper args.
+ */
 public class RapperArgs
     implements Args
 {
@@ -17,10 +19,10 @@ public class RapperArgs
     @Option(names = "-o", description = "Output format")
     String outputFormat;
 
-    @Parameters(index = "0", description = "Input file (use '-' for stdin)")
+    @Parameters(index = "0", arity = "0..1", description = "Input file (use '-' for stdin)")
     String inputFile;
 
-    @Parameters(index = "1", description = "Base URL")
+    @Parameters(index = "1", arity = "0..1", description = "Base URL")
     String baseUrl;
 
     @Unmatched
