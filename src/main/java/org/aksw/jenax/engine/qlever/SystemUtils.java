@@ -4,13 +4,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.io.input.ProxyInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,15 +91,15 @@ public class SystemUtils {
         }
     }
 
-    public static void failIfNonZero(Process process) {
+    public static void failIfNonZero(Process process) throws ExecuteException {
         int exitValue = process.exitValue();
         failIfNonZero(exitValue);
     }
 
-    public static void failIfNonZero(int exitValue) {
+    public static void failIfNonZero(int exitValue) throws ExecuteException {
         if (exitValue != 0) {
             // TODO Check for non-zero exit value should also be made before read!
-            throw new RuntimeException("Process exited with non-zero code: " + exitValue);
+            throw new ExecuteException("Process exited with non-zero code: " + exitValue, exitValue);
         }
     }
 

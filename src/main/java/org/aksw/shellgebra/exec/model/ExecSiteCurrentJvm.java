@@ -15,4 +15,10 @@ public record ExecSiteCurrentJvm()
         }
         return INSTANCE;
     }
+
+    @Override
+    public <T> T accept(ExecSiteVisitor<T> visitor) {
+        T result = visitor.visit(this);
+        return result;
+    }
 }

@@ -1,7 +1,8 @@
-package org.aksw.vshell.shim.rdfconvert;
+package org.aksw.vshell.registry;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.aksw.shellgebra.exec.Stage;
@@ -28,15 +29,13 @@ public class JvmCommandRegistry {
         return this;
     }
 
-    public JvmCommand get(String commandName) {
-        return map.get(commandName);
+    public Optional<JvmCommand> get(String commandName) {
+        return Optional.ofNullable(map.get(commandName));
     }
 
     public JvmCommand require(String commandName) {
-        JvmCommand result = get(commandName);
-        if (result == null) {
-            throw new NoSuchElementException("Command not found: " + commandName);
-        }
+        JvmCommand result = get(commandName)
+            .orElseThrow(() -> new NoSuchElementException("Command not found: " + commandName));
         return result;
     }
 

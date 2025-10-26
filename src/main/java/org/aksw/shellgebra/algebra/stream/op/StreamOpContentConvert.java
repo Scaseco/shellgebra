@@ -2,24 +2,24 @@ package org.aksw.shellgebra.algebra.stream.op;
 
 import java.util.Objects;
 
-import org.aksw.shellgebra.algebra.common.OpSpecContentConvert;
+import org.aksw.shellgebra.algebra.common.OpSpecContentConvertRdf;
 
 /** Byte-level operation. Transform a stream of bytes into another one with a content type conversion applied. */
 public class StreamOpContentConvert
     extends StreamOp1
 {
-    protected OpSpecContentConvert contentConvertSpec;
+    protected OpSpecContentConvertRdf contentConvertSpec;
 
     public StreamOpContentConvert(String sourceFormat, String targetFormat, String baseIri, StreamOp subOp) {
-        this(new OpSpecContentConvert(sourceFormat, targetFormat, baseIri), subOp);
+        this(new OpSpecContentConvertRdf(sourceFormat, targetFormat, baseIri), subOp);
     }
 
-    public StreamOpContentConvert(OpSpecContentConvert contentConvertspec, StreamOp subOp) {
+    public StreamOpContentConvert(OpSpecContentConvertRdf contentConvertspec, StreamOp subOp) {
         super(subOp);
         this.contentConvertSpec = Objects.requireNonNull(contentConvertspec);
     }
 
-    public OpSpecContentConvert getContentConvertSpec() {
+    public OpSpecContentConvertRdf getContentConvertSpec() {
         return contentConvertSpec;
     }
 

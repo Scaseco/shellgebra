@@ -4,6 +4,7 @@ import org.aksw.shellgebra.algebra.stream.transform.StreamingRDFConverter;
 import org.aksw.shellgebra.exec.JvmStage;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
+import org.aksw.vshell.registry.JvmCommand;
 
 public class JvmCommandRapper
     implements JvmCommand

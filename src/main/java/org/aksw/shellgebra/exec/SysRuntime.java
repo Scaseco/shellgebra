@@ -26,19 +26,19 @@ public interface SysRuntime {
      * Resolve the first argument of the array against {@link #which(String)}.
      * Returned array is always a copy.
      */
-    default String[] resolveCommand(String... cmd) throws IOException, InterruptedException {
-        Objects.requireNonNull(cmd);
-        if (cmd.length == 0) {
+    default String[] resolveCommand(String... argv) throws IOException, InterruptedException {
+        Objects.requireNonNull(argv);
+        if (argv.length == 0) {
             throw new IllegalArgumentException("Command must not be an empty array.");
         }
 
-        String cmdName = cmd[0];
+        String cmdName = argv[0];
         String resolvedName = which(cmdName);
         if (resolvedName == null) {
             throw new RuntimeException("Command not found: " + cmdName);
         }
 
-        String[] result = Arrays.copyOf(cmd, cmd.length);
+        String[] result = Arrays.copyOf(argv, argv.length);
         result[0] = resolvedName;
         return result;
     }

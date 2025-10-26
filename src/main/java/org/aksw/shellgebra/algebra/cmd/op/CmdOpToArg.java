@@ -1,7 +1,8 @@
 package org.aksw.shellgebra.algebra.cmd.op;
 
+//Operator to transform a sub op into an argument string
+// $(sub-command)
 // TODO Deprecate - The proper model is to have an CmdArgWord with a TokenCmdOp.
-// Operator to transform a sub op into an argument string
 public class CmdOpToArg
     extends CmdOp1
 {

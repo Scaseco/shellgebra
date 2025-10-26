@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.aksw.shellgebra.algebra.common.OpSpecContentConvert;
+import org.aksw.shellgebra.algebra.common.OpSpecContentConvertRdf;
 import org.aksw.shellgebra.algebra.common.OpSpecTranscoding;
 import org.aksw.shellgebra.algebra.common.TranscodeMode;
 import org.aksw.shellgebra.algebra.stream.transform.StreamOpTransformToCmdOp;
@@ -93,7 +93,7 @@ public class StreamOpTransformResolve
 
     @Override
     public StreamOp transform(StreamOpContentConvert op, StreamOp subOp) {
-        OpSpecContentConvert spec = op.getContentConvertSpec();
+        OpSpecContentConvertRdf spec = op.getContentConvertSpec();
         Resolution1 resolution = processContentConvert(spec);
         StreamOpResolution result = new StreamOpResolution(resolution, subOp);
         return result;
@@ -102,13 +102,13 @@ public class StreamOpTransformResolve
     public Resolution1 processOpSpec(Object opSpec) {
         Resolution1 result = opSpec instanceof OpSpecTranscoding x
             ? processTranscode(x)
-            : opSpec instanceof OpSpecContentConvert y
+            : opSpec instanceof OpSpecContentConvertRdf y
                 ? processContentConvert(y)
                 : null;
         return result;
     }
 
-    public Resolution1 processContentConvert(OpSpecContentConvert spec) {
+    public Resolution1 processContentConvert(OpSpecContentConvertRdf spec) {
         Resolution1 resolution = new Resolution1();
 
         JavaStreamTransform converter = convertRegistry.getJavaConverter(spec).orElse(null);

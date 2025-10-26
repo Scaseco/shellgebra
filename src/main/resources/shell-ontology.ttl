@@ -37,9 +37,19 @@ r:which
   o:probeLocation "/bin/which", "/usr/bin/which" ;
   .
 
-r:image-nestio-lbzip2
+r:docker-image-nestio-lbzip2
   o:imageName "nestio/lbzip2" ;
   o:suppliesTool r:tool-lbzip2 ;
+  .
+
+# or
+#r:tool-provisioning-docker-nestio-lbzip2 ;
+#  o:imageName "nestio/lbzip2" ;
+#  o:suppliesTool r:tool-lbzip2 ;
+#  .
+
+r:tool-lbzip2
+  o:commandName "lbzip2" ;
   .
 
 r:encoding-bzip2

@@ -8,6 +8,8 @@ import java.io.PipedOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -237,27 +239,36 @@ public class ContainerUtils {
 //    }
 
 
-    public static boolean canRunEntrypoint(String imageName, String entrypoint, String commandPrefix) {
-        int exitCode = runCommand(imageName, entrypoint, commandPrefix, "exit 0");
+    public static boolean canRunEntrypoint(String imageName, String entrypoint, String[] commandPrefix) {
+        int exitCode = runCommand(imageName, entrypoint, commandPrefix, new String[]{"exit", "0"});
         return exitCode == 0;
     }
 
-    public static boolean hasCommand(String imageName, String entrypoint, String commandPrefix, String command) {
+    public static boolean hasCommand(String imageName, String entrypoint, String[] commandPrefix, String[] command) {
         int exitCode = runCommand(imageName, entrypoint, commandPrefix, command);
         return exitCode != 127;
     }
 
     // "exit 0"
-    public static int runCommand(String imageName, String entrypoint, String commandPrefix, String command) {
+    public static int runCommand(String imageName, String entrypoint, String[] commandPrefix, String[] command) {
+        // Merge commandPrefix and command into one array
+        String[] finalCmd;
+        if (commandPrefix == null || commandPrefix.length == 0) {
+            finalCmd = command;
+        } else {
+            List<String> parts = new ArrayList<>(commandPrefix.length + command.length);
+            parts.addAll(Arrays.asList(commandPrefix));
+            parts.addAll(Arrays.asList(command));
+            finalCmd = parts.toArray(String[]::new);
+        }
+
         try (GenericContainer<?> container = new GenericContainer<>(imageName)
                 .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint(entrypoint))
-                .withCommand(commandPrefix, command)) {
+                .withCommand(finalCmd)) {
 
             container.start();
             int exitCode = container.getCurrentContainerInfo().getState().getExitCodeLong().intValue();
             return exitCode;
-        } catch (Exception e) {
-            return -1;
         }
     }
     /* Alternative probing strategies:

@@ -1,4 +1,4 @@
-package org.aksw.vshell.shim.rdfconvert;
+package org.aksw.vshell.registry;
 
 import org.aksw.shellgebra.exec.Stage;
 
