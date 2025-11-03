@@ -1,12 +1,17 @@
 package org.aksw.vshell.registry;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.aksw.commons.util.docker.ContainerUtils;
+import org.aksw.commons.util.docker.ImageIntrospector;
+import org.aksw.jenax.model.osreo.ImageIntrospection;
+import org.aksw.jenax.model.osreo.ShellSupport;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
@@ -14,31 +19,60 @@ import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
 import org.testcontainers.containers.ContainerFetchException;
-
+import org.testcontainers.containers.ContainerLaunchException;
 
 public class ExecSiteResolver {
     private CommandRegistry candRegistry;
 
     private JvmCommandRegistry jvmCmdRegistry;
     private CommandAvailability cmdAvailability;
+    private ImageIntrospector dockerImageIntrospector;
 
-    public ExecSiteResolver(CommandRegistry candRegistry, JvmCommandRegistry jvmCmdRegistry, CommandAvailability cmdAvailability) {
+    public ExecSiteResolver(CommandRegistry candRegistry, JvmCommandRegistry jvmCmdRegistry,
+            CommandAvailability cmdAvailability, ImageIntrospector dockerImageIntrospector) {
         super();
         this.candRegistry = candRegistry;
         this.jvmCmdRegistry = jvmCmdRegistry;
         this.cmdAvailability = cmdAvailability;
+        this.dockerImageIntrospector = dockerImageIntrospector;
     }
 
     public Map<ExecSite, String> resolve(String virtualCmd) {
         Map<ExecSite, String> result = new LinkedHashMap<>();
-        Map<ExecSite, String> map = candRegistry.get(virtualCmd);
-        for (Entry<ExecSite, String> e : map.entrySet()) {
-            boolean isPresent = providesCommand(e.getValue(), e.getKey());
-            if (isPresent) {
-                result.put(e.getKey(), e.getValue());
+        Map<ExecSite, Collection<String>> map = candRegistry.get(virtualCmd).asMap();
+        for (Entry<ExecSite, Collection<String>> e : map.entrySet()) {
+            for (String cmd : e.getValue()) {
+                boolean isPresent = providesCommand(cmd, e.getKey());
+                if (isPresent) {
+                    result.put(e.getKey(), cmd);
+                }
             }
         }
         return result;
+    }
+
+    public boolean canRunPipeline(ExecSite execSite) {
+        return execSite.accept(new ExecSiteVisitor<Boolean>() {
+            @Override
+            public Boolean visit(ExecSiteDockerImage execSite) {
+                ImageIntrospection insp = dockerImageIntrospector.inspect(execSite.imageRef(),true);
+                ShellSupport bash = insp.getShellStatus().get("bash");
+                return bash != null;
+            }
+
+            @Override
+            public Boolean visit(ExecSiteCurrentHost execSite) {
+                // SysRuntimeImpl.forCurrentOs()execSite;
+                return true;
+            }
+
+            @Override
+            public Boolean visit(ExecSiteCurrentJvm execSite) {
+                return true;
+            }
+
+        });
+        // dockerImageIntrospector.inspect(execSite,
     }
 
     public boolean providesCommand(String command, ExecSite execSite) {
@@ -48,13 +82,24 @@ public class ExecSiteResolver {
         return execSite.accept(new ExecSiteVisitor<Boolean>() {
             @Override
             public Boolean visit(ExecSiteDockerImage execSite) {
-                String[] commandPrefix = null;
+                String imageRef = execSite.imageRef();
+                List<String> commandPrefix = null;
                 String entrypoint = null;
                 Boolean r = cmdAvailability.get(command, execSite);
                 if (r == null) {
+                    // TODO: We should also check whether the command works without a shell
+                    // e.g. if the default entry point already is a shell.
+                    ImageIntrospection ii = dockerImageIntrospector.inspect(imageRef, true);
+                    ShellSupport ss = ii.getShellStatus().get("bash");
+                    if (ss != null) {
+                        entrypoint = ss.getCommandPath();
+                        commandPrefix = Optional.ofNullable(ss.getCommandOption())
+                            .map(List::of).orElse(List.of());
+                    }
+
                     try {
-                        r = ContainerUtils.hasCommand(execSite.imageRef(), entrypoint, commandPrefix, new String[] {command});
-                    } catch (ContainerFetchException e) {
+                        r = ContainerUtils.hasCommand(imageRef, entrypoint, commandPrefix, command);
+                    } catch (ContainerFetchException | ContainerLaunchException e) {
                         r = false;
                     }
                     cmdAvailability.put(command, execSite, r);

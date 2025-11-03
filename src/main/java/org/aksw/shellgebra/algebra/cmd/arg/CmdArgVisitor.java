@@ -6,4 +6,5 @@ public interface CmdArgVisitor<T> {
     T visit(CmdArgPath arg);
     T visit(CmdArgCmdOp arg);
     T visit(CmdArgRedirect arg);
+    T visit(CmdArgWord arg);
 }

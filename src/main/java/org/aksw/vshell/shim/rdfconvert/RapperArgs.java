@@ -54,14 +54,14 @@ public class RapperArgs
     }
 
     public static ArgumentList renderArgList(RapperArgs model) {
-        List<String> strs = CmdBuilder.newBuilder()
+        ArgumentList result = CmdBuilder.newBuilder()
             .opt("-i", model.getInputFormat())
             .opt("-o", model.getOutputFormat())
-            .arg(model.getInputFile(), "-")
+            .fileOrLiteral(model.getInputFile(), "-")
             .arg(model.getBaseUrl())
             .args(model.getUnmatchedArgs())
             .build();
-        return ArgumentList.ofLiterals(strs);
+        return result;
     }
 
     public static ArgsModular<RapperArgs> parse(String[] args) {

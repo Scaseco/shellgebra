@@ -7,6 +7,6 @@ public interface CmdOpVisitor<T> {
     T visit(CmdOpGroup op);
     T visit(CmdOpVar op);
     // T visit(CmdOpSubst op);
-    T visit(CmdOpToArg op);
+    // T visit(CmdOpToArg op);
     // T visit(CmdOpRedirectRight op);
 }

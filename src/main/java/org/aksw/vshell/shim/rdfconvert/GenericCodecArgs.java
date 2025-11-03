@@ -37,11 +37,11 @@ public class GenericCodecArgs
     }
 
     public static ArgumentList renderArgList(GenericCodecArgs model) {
-        List<String> args = CmdBuilder.newBuilder()
-                .ifTrue(model.isDecode(), "-d")
-                .args(model.getUnmatchedArgs())
-                .build();
-        return ArgumentList.ofLiterals(args);
+        ArgumentList result = CmdBuilder.newBuilder()
+            .ifTrue(model.isDecode(), "-d")
+            .args(model.getUnmatchedArgs())
+            .build();
+        return result;
     }
 
     public static ArgsModular<GenericCodecArgs> parse(String[] args) {

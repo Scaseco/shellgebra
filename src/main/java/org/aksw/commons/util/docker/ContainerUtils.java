@@ -239,26 +239,40 @@ public class ContainerUtils {
 //    }
 
 
-    public static boolean canRunEntrypoint(String imageName, String entrypoint, String[] commandPrefix) {
-        int exitCode = runCommand(imageName, entrypoint, commandPrefix, new String[]{"exit", "0"});
+//    public static boolean canRunEntrypoint(String imageName, String entrypoint, String commandPrefix) {
+//        return canRunEntrypoint(imageName, entrypoint, new String[]{commandPrefix});
+//    }
+
+    public static boolean canRunEntrypoint(String imageName, String entrypoint, String... commandPrefix) {
+        return canRunEntrypoint(imageName, entrypoint, Arrays.asList(commandPrefix));
+    }
+
+    public static boolean canRunEntrypoint(String imageName, String entrypoint, List<String> commandPrefix) {
+        int exitCode = runCommand(imageName, entrypoint, commandPrefix, "exit", "0");
         return exitCode == 0;
     }
 
-    public static boolean hasCommand(String imageName, String entrypoint, String[] commandPrefix, String[] command) {
-        int exitCode = runCommand(imageName, entrypoint, commandPrefix, command);
-        return exitCode != 127;
+    // TODO Add a checked exception if there is an issue with the container
+    //      that is unrelated to the command.
+    public static boolean hasCommand(String imageName, String entrypoint, List<String> commandPrefix, String command) {
+        int exitCode = runCommand(imageName, entrypoint, commandPrefix, new String[]{command});
+        return exitCode != 127; // Command not found
+    }
+
+    public static int runCommand(String imageName, String entrypoint, List<String> commandPrefix, String... command) {
+        return runCommand(imageName, entrypoint, commandPrefix, Arrays.asList(command));
     }
 
     // "exit 0"
-    public static int runCommand(String imageName, String entrypoint, String[] commandPrefix, String[] command) {
+    public static int runCommand(String imageName, String entrypoint, List<String> commandPrefix, List<String> command) {
         // Merge commandPrefix and command into one array
         String[] finalCmd;
-        if (commandPrefix == null || commandPrefix.length == 0) {
-            finalCmd = command;
+        if (commandPrefix == null || commandPrefix.isEmpty()) {
+            finalCmd = command.toArray(String[]::new);
         } else {
-            List<String> parts = new ArrayList<>(commandPrefix.length + command.length);
-            parts.addAll(Arrays.asList(commandPrefix));
-            parts.addAll(Arrays.asList(command));
+            List<String> parts = new ArrayList<>(commandPrefix.size() + command.size());
+            parts.addAll(commandPrefix);
+            parts.addAll(command);
             finalCmd = parts.toArray(String[]::new);
         }
 

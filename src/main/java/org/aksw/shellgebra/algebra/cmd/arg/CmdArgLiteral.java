@@ -2,6 +2,7 @@ package org.aksw.shellgebra.algebra.cmd.arg;
 
 import java.util.Objects;
 
+@Deprecated
 public record CmdArgLiteral(String str)
     implements CmdArg
 {

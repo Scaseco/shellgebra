@@ -39,7 +39,7 @@ r:which
 
 r:docker-image-nestio-lbzip2
   o:imageName "nestio/lbzip2" ;
-  o:suppliesTool r:tool-lbzip2 ;
+  o:suppliesTool r:tool-lbzip2 ; # docker supplication of tool X (in version V) at location Y in image Z.
   .
 
 # or

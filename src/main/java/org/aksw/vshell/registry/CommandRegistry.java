@@ -1,10 +1,11 @@
 package org.aksw.vshell.registry;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import org.aksw.shellgebra.exec.model.ExecSite;
+
+import com.google.common.collect.Multimap;
 
 public interface CommandRegistry {
     /**
@@ -12,11 +13,11 @@ public interface CommandRegistry {
      * Candidate locations where the command is unavailable
      * (e.g. on the host) must have been filtered out.
      */
-    Map<ExecSite, String> get(String virtualCommandName);
+    Multimap<ExecSite, String> get(String virtualCommandName);
 
     /** Find the best matching command for the given exec site. */
-    default Optional<String> get(String virtualCommandName, ExecSite execSite) {
-        return Optional.ofNullable(get(virtualCommandName).get(execSite));
+    default Optional<Set<String>> get(String virtualCommandName, ExecSite execSite) {
+        return Optional.ofNullable((Set<String>)get(virtualCommandName).asMap().get(execSite));
     }
 
     /** Convenience method to get only a command's set of exec sites. */

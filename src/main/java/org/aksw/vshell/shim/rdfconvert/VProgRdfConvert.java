@@ -11,7 +11,7 @@ public class VProgRdfConvert {
         Args bzip2DecodeModel = GenericCodecArgs.parse(new String[]{"-d"});
         ArgumentVector bzip2DecodeCall = new ArgumentVector("/virt/bzip2", bzip2DecodeModel);
 
-        Args rapperModel = RapperArgs.parse(new String[]{"-i", "rdfxml", "-o", "nt", "-", "http://foo.bar/"});
+        Args rapperModel = RapperArgs.parse(new String[]{"-i", "rdfxml", "-o", "nt", "/home/user/file.rdf", "http://foo.bar/"});
         ArgumentVector rapperCall = new ArgumentVector("/virt/rapper", rapperModel);
 
         System.out.println(bzip2DecodeCall);

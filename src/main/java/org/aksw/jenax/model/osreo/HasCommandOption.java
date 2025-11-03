@@ -12,6 +12,6 @@ public interface HasCommandOption
     extends Resource
 {
     @Iri(OsreoTerms.commandOption)
-    String getCommandPrefix();
-    HasCommandOption setCommandPrefix(String commandPrefix);
+    String getCommandOption();
+    HasCommandOption setCommandOption(String commandOption);
 }

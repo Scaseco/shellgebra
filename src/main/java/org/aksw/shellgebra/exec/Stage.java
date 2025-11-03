@@ -8,6 +8,6 @@ public interface Stage {
     BoundStage from(FileWriterTask input);
     BoundStage from(BoundStage input);
 
-    // TODO Is there a difference between 0-byte input and no input on stdin?
+    // TODO Is there a difference between '0-byte input' and 'no input' on stdin?
     BoundStage fromNull();
 }

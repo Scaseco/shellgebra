@@ -1,15 +1,15 @@
 package org.aksw.vshell.registry;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import org.aksw.shellgebra.exec.model.ExecSite;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 /**
  * Registry / cache for whether a command is available on a certain exec site.
@@ -20,21 +20,27 @@ public class CommandRegistryImpl
     implements CommandRegistry
 {
     // value may be null to indicate absence of the command.
-    private Table<String, ExecSite, String> toolToSiteToCmd = HashBasedTable.create();
+    private Map<String, Multimap<ExecSite, String>> toolToSiteToCmd = new HashMap<>();// HashBasedTable.create();
 
     /** Return a snapshot of the set of exec sites where the command is
      *  known to be present.
      *  Return null if there is no entry for the command.
      *  Empty map if there is an entry with no known locations.
      */
-    public Optional<Map<ExecSite, String>> getKnownExecSites(String command) {
-        Map<ExecSite, String> tmp = null;
-        if (toolToSiteToCmd.containsRow(command)) {
-            tmp = toolToSiteToCmd.row(command).entrySet().stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableMap(Entry::getKey, Entry::getValue));
+    public Optional<Multimap<ExecSite, String>> getKnownExecSites(String command) {
+        Multimap<ExecSite, String> tmp = toolToSiteToCmd.get(command);
+        Multimap<ExecSite, String> result;
+        if (tmp != null) {
+            result = Multimaps.filterKeys(toolToSiteToCmd.get(command), k -> !tmp.get(k).isEmpty());
+        } else {
+            result = tmp;
         }
-        return Optional.ofNullable(tmp);
+//        if (toolToSiteToCmd.containsRow(command)) {
+//            tmp = toolToSiteToCmd.row(command).entrySet().stream()
+//                .filter(Objects::nonNull)
+//                .collect(Collectors.toUnmodifiableMap(Entry::getKey, Entry::getValue));
+//        }
+        return Optional.ofNullable(result);
     }
 
 //    public Optional<Set<CommandLocation>> getKnownLocations(String command) {
@@ -43,22 +49,22 @@ public class CommandRegistryImpl
 //            .collect(Collectors.toUnmodifiableSet()));
 //    }
 
-    public Optional<String> getAvailability(String command, ExecSite execSite) {
-        return Optional.ofNullable(toolToSiteToCmd.get(command, execSite));
+    public Optional<Set<String>> getAvailability(String command, ExecSite execSite) {
+        return Optional.ofNullable(toolToSiteToCmd.get(command)).map(mm -> (Set<String>)mm.get(execSite));
     }
 
     public CommandRegistryImpl put(String command, ExecSite execSite, String cmd) {
-        toolToSiteToCmd.put(command, execSite, cmd);
+        toolToSiteToCmd.computeIfAbsent(command, c -> LinkedHashMultimap.create()).put(execSite, cmd);
         return this;
     }
 
-    public CommandRegistryImpl putAll(String command, Map<ExecSite, String> cmdMap) {
-        toolToSiteToCmd.row(command).putAll(cmdMap);
+    public CommandRegistryImpl putAll(String command, Multimap<ExecSite, String> cmdMap) {
+        toolToSiteToCmd.computeIfAbsent(command, c -> LinkedHashMultimap.create()).putAll(cmdMap);
         return this;
     }
 
     @Override
-    public Map<ExecSite, String> get(String virtualCommandName) {
-        return getKnownExecSites(virtualCommandName).orElse(Map.of());
+    public Multimap<ExecSite, String> get(String virtualCommandName) {
+        return getKnownExecSites(virtualCommandName).orElse(Multimaps.unmodifiableMultimap(LinkedHashMultimap.create()));
     }
 }

@@ -1,10 +1,11 @@
 package org.aksw.vshell.registry;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.aksw.shellgebra.exec.model.ExecSite;
+
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 
 public class CommandRegistryUnion
     implements CommandRegistry
@@ -17,10 +18,10 @@ public class CommandRegistryUnion
     }
 
     @Override
-    public Map<ExecSite, String> get(String virtualCommandName) {
-        Map<ExecSite, String> result = new LinkedHashMap<>();
+    public Multimap<ExecSite, String> get(String virtualCommandName) {
+        Multimap<ExecSite, String> result = LinkedHashMultimap.create();
         for (CommandRegistry registry : registries) {
-            Map<ExecSite, String> contrib = registry.get(virtualCommandName);
+            Multimap<ExecSite, String> contrib = registry.get(virtualCommandName);
             contrib.forEach((k, v) -> {
                 if (!result.containsKey(k)) {
                     result.put(k, v);

@@ -16,7 +16,6 @@ import org.aksw.shellgebra.algebra.cmd.arg.CmdArgString;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpToArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
@@ -186,12 +185,12 @@ public class CmdOpVisitorToCmdString
 //        return new CmdString(op.getValue());
 //    }
 
-    @Override
-    public CmdString visit(CmdOpToArg op) {
-        String str = toArg(op.getSubOp().accept(this));
-        String result = strOps.quoteArg(str);
-        return new CmdString(result);
-    }
+//    @Override
+//    public CmdString visit(CmdOpToArg op) {
+//        String str = toArg(op.getSubOp().accept(this));
+//        String result = strOps.quoteArg(str);
+//        return new CmdString(result);
+//    }
 
     /** For proper stringification file nodes of exec nodes need to be replaced with strings.
      *  See {@link CmdOpTransformArguments}
