@@ -1,10 +1,10 @@
 package org.aksw.shellgebra.algebra.cmd.transformer;
 
-import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 
-public class CmdOpTransformer {
+public class CmdArgTransformer {
 
-    public static CmdOp transform(CmdOp op, CmdOpTransform cmdOpTransform, CmdArgTransform cmdArgTransform, TokenTransform tokenTransform) {
+    public static CmdArg transform(CmdArg arg, CmdArgTransform cmdArgTransform, CmdOpTransform cmdOpTransform, TokenTransform tokenTransform) {
         if (cmdArgTransform == null) {
             cmdArgTransform = new CmdArgTransformBase();
         }
@@ -17,8 +17,8 @@ public class CmdOpTransformer {
             tokenTransform = new TokenTransformBase();
         }
 
-        CmdOpVisitorApplyTransform visitor = new CmdOpVisitorApplyTransform(cmdOpTransform, cmdArgTransform, tokenTransform);
-        CmdOp result = op.accept(visitor);
+        CmdArgVisitorApplyTransform visitor = new CmdArgVisitorApplyTransform(cmdArgTransform, cmdOpTransform, tokenTransform);
+        CmdArg result = arg.accept(visitor);
         return result;
     }
 }
