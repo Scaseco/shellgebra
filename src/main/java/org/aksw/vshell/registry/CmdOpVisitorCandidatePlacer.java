@@ -15,7 +15,6 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpToArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.exec.model.ExecSite;
@@ -26,7 +25,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 
-public class CommandPlacer
+public class CmdOpVisitorCandidatePlacer
     implements CmdOpVisitor<PlacedCommand>
 {
     /** ExecSiteResolver can test exec sites for whether they provide a command. */
@@ -39,11 +38,15 @@ public class CommandPlacer
 
     private int nextVar = 0;
 
-    public CommandPlacer(CommandRegistry cmdRegistry, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
+    public CmdOpVisitorCandidatePlacer(CommandRegistry cmdRegistry, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
         super();
         this.cmdRegistry = cmdRegistry;
         this.execSiteResolver = execSiteResolver;
         this.preferredExecSites = preferredExecSites;
+    }
+
+    public Map<CmdOpVar, PlacedCommand> getVarToPlacement() {
+        return varToPlacement;
     }
 
     @Override
@@ -251,12 +254,6 @@ public class CommandPlacer
 
     @Override
     public PlacedCommand visit(CmdOpVar op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PlacedCommand visit(CmdOpToArg op) {
         // TODO Auto-generated method stub
         return null;
     }

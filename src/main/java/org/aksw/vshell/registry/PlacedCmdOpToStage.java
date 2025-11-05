@@ -32,8 +32,6 @@ public class PlacedCmdOpToStage
     private Map<CmdOpVar, PlacedCmd> varToPlacement;
     private FileMapper fileMapper;
 
-
-
     @Override
     public Stage visit(PlacedCmd op) {
         CmdOp cmdOp = op.cmdOp();

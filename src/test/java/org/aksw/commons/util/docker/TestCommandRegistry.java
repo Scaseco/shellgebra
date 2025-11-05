@@ -6,10 +6,14 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
+import org.aksw.vshell.registry.CandidatePlacement;
+import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
 import org.aksw.vshell.registry.CommandAvailability;
-import org.aksw.vshell.registry.CommandPlacer;
 import org.aksw.vshell.registry.CommandRegistryImpl;
 import org.aksw.vshell.registry.ExecSiteResolver;
+import org.aksw.vshell.registry.FinalPlacement;
+import org.aksw.vshell.registry.FinalPlacementInliner;
+import org.aksw.vshell.registry.FinalPlacer;
 import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandTranscode;
@@ -21,7 +25,10 @@ import org.junit.Test;
 public class TestCommandRegistry {
     @Test
     public void test01() {
-        System.setProperty("testcontainers.retryCount", "1");
+        String testcontainers_retryCount = System.getProperty("testcontainers.retryCount");
+        if (testcontainers_retryCount == null) {
+            System.setProperty("testcontainers.retryCount", "1");
+        }
 
         CompressorStreamFactory csf = new CompressorStreamFactory();
 
@@ -55,8 +62,17 @@ public class TestCommandRegistry {
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/virt/lbzip2", "-d");
 
         ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
-        CommandPlacer commandPlacer = new CommandPlacer(candidates, resolver, Set.of(qleverExecSite));
+
+        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, resolver, Set.of(qleverExecSite));
         PlacedCommand placedCommand = commandPlacer.visit(cmdOp);
+        CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
+
+        FinalPlacement placed = FinalPlacer.place(candidatePlacement);
+        FinalPlacement inlined = FinalPlacementInliner.inline(placed);
+
+        // Final step: convert to stage (or bound stage?)
+
+
         System.out.println(placedCommand);
 
         // System.out.println(resolver.resolve("/usr/bin/lbzip2"));

@@ -168,22 +168,4 @@ public class PlacedCommandProcessor
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public Stage visit(CmdOpGroup op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Stage visit(CmdOpVar op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Stage visit(CmdOpToArg op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

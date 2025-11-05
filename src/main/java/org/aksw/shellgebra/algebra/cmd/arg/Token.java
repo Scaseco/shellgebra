@@ -37,6 +37,8 @@ public sealed interface Token {
         }
     }
 
+    // This is string interpolation - not to be confused with process substition.
+    // Notes:
     public record TokenCmdOp(CmdOp cmdOp) implements Token {
         @Override
         public <T> T accept(TokenVisitor<T> visitor) {
