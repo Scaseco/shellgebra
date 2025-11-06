@@ -55,7 +55,9 @@ public class JvmStage
 
     @Override
     public BoundStage from(BoundStage input) {
-        return new JvmBoundStage(transform, input.toByteSource());
+        ByteSource rawByteSource = input.toByteSource();
+        ByteSource byteSource = TransformedByteSource.transform(rawByteSource, transform);
+        return new BoundStageByteSource(byteSource);
     }
 
     @Override

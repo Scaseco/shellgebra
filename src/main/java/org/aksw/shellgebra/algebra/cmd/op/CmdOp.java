@@ -65,10 +65,10 @@ public interface CmdOp {
             return op;
         }
 
-        @Override
-        public CmdOp visit(CmdOpToArg op) {
-            return op;
-        }
+//        @Override
+//        public CmdOp visit(CmdOpToArg op) {
+//            return op;
+//        }
     }
 
     public class CmdOpVisitorAddRedirect
@@ -110,5 +110,4 @@ public interface CmdOp {
             return result;
         }
     }
-
 }

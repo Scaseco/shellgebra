@@ -24,6 +24,6 @@ public class CandidatePlacer {
         this.preferredExecSites = preferredExecSites;
     }
 
-    public CandidatePlacement place()
+    // public CandidatePlacement place()
 
 }

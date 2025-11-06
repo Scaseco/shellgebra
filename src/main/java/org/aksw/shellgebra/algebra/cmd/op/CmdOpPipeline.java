@@ -11,16 +11,21 @@ import java.util.stream.Collectors;
  * foo | bar | ... | baz
  * </pre>
  */
-public class CmdOpPipeline
-    extends CmdOpN
+public record CmdOpPipeline(List<CmdOp> subOps)
+    implements CmdOpN
 {
-    @SafeVarargs
-    public <T extends CmdOp> CmdOpPipeline(T ...subOps) {
-        super(List.of(subOps));
+    public CmdOpPipeline {
+        subOps = Objects.requireNonNull(subOps);
     }
 
-    public CmdOpPipeline(List<CmdOp> subOps) {
-        super(subOps);
+    @SafeVarargs
+    public <T extends CmdOp> CmdOpPipeline(T ...subOps) {
+        this(List.of(subOps));
+    }
+
+    @Override
+    public List<CmdOp> getSubOps() {
+        return subOps;
     }
 
     @Override

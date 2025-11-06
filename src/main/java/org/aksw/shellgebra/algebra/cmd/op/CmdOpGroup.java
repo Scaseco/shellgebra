@@ -5,7 +5,8 @@ import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
 
-/** Command group - brace group (not a sub-shell).
+/**
+ * Command group - brace group (not a sub-shell).
  *
  * <pre>
  * { cmd1; ...; cmdN }

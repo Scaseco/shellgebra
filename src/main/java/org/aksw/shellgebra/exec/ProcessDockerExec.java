@@ -155,6 +155,7 @@ public class ProcessDockerExec extends Process {
         Long code = exitCode;
         if (code == null) {
             try {
+                // XXX This seems redundant - container termination event should set the exit code.
                 code = docker.inspectExecCmd(execId).exec().getExitCodeLong();
             } catch (Exception ignore) {
             }
@@ -191,7 +192,8 @@ public class ProcessDockerExec extends Process {
         if (!started)
             return true; // streaming started but no exit yet
         try {
-            return docker.inspectExecCmd(execId).exec().getExitCode() == null;
+            // XXX Waiting for exit code from termination event should be sufficient.
+            return docker.inspectExecCmd(execId).exec().getExitCodeLong() == null;
         } catch (Exception e) {
             return false;
         }
@@ -206,155 +208,3 @@ public class ProcessDockerExec extends Process {
         return buf.toString(StandardCharsets.UTF_8);
     }
 }
-
-//public class ProcessDockerExec extends Process {
-//    private final DockerClient docker;
-//    private final String containerId;
-//    private final String execId;
-//
-//    private final PipedInputStream stdoutIn = new PipedInputStream();
-//    private final PipedInputStream stderrIn = new PipedInputStream();
-//    private final PipedOutputStream stdinOut = new PipedOutputStream();
-//
-//    private final PipedOutputStream stdoutSink = new PipedOutputStream(stdoutIn);
-//    private final PipedOutputStream stderrSink = new PipedOutputStream(stderrIn);
-//    private final PipedInputStream stdinIn = new PipedInputStream(stdinOut);
-//
-//    private final CountDownLatch finished = new CountDownLatch(1);
-//    private volatile Integer exitCode = null;
-//    private volatile ResultCallback<Frame> callback;
-//
-//    public ProcessDockerExec(String containerId, String... cmd) throws IOException {
-//        this.docker = DockerClientFactory.instance().client();
-//        this.containerId = containerId;
-//
-//        ExecCreateCmdResponse created = docker.execCreateCmd(containerId).withAttachStdout(true).withAttachStderr(true)
-//                .withAttachStdin(true).withTty(false) // keep stdout/stderr split
-//                .withCmd(cmd).exec();
-//
-//        this.execId = created.getId();
-//
-//        // Start streaming
-//        this.callback = docker.execStartCmd(execId).withDetach(false).withTty(false).withStdIn(stdinIn)
-//                .exec(new ExecStartResultCallback(stdoutSink, stderrSink) {
-//                    @Override
-//                    public void onComplete() {
-//                        try {
-//                            stdoutSink.flush();
-//                            stderrSink.flush();
-//                        } catch (IOException ignore) {
-//                        }
-//                        exitCode = safeExitCode();
-//                        finished.countDown();
-//                        super.onComplete();
-//                    }
-//
-//                    @Override
-//                    public void onError(Throwable t) {
-//                        exitCode = safeExitCode();
-//                        finished.countDown();
-//                        super.onError(t);
-//                    }
-//                });
-//    }
-//
-//    private Integer safeExitCode() {
-//        try {
-//            return docker.inspectExecCmd(execId).exec().getExitCode();
-//        } catch (Exception e) {
-//            return null;
-//        }
-//    }
-//
-//    @Override
-//    public OutputStream getOutputStream() {
-//        return stdinOut;
-//    }
-//
-//    @Override
-//    public InputStream getInputStream() {
-//        return stdoutIn;
-//    }
-//
-//    @Override
-//    public InputStream getErrorStream() {
-//        return stderrIn;
-//    }
-//
-//    @Override
-//    public int waitFor() throws InterruptedException {
-//        finished.await();
-//        return exitValue();
-//    }
-//
-//    @Override
-//    public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
-//        boolean done = finished.await(timeout, unit);
-//        if (done)
-//            exitValue(); // may throw if still null
-//        return done;
-//    }
-//
-//    @Override
-//    public int exitValue() {
-//        Integer code = (exitCode != null) ? exitCode : safeExitCode();
-//        if (code == null)
-//            throw new IllegalThreadStateException("Process not yet finished");
-//        return code;
-//    }
-//
-//    @Override
-//    public void destroy() {
-//        // Best-effort TERM: try to get PID of exec and signal it.
-//        try {
-//            var insp = docker.inspectExecCmd(execId).exec();
-//            Integer pid = insp.getPid(); // available on modern Docker/daemon
-//            if (pid != null && pid > 0) {
-//                // send SIGTERM to that PID inside the container
-//                docker.execCreateCmd(containerId).withCmd("kill", "-TERM", String.valueOf(pid)).exec();
-//                docker.execStartCmd(execId).withDetach(true).exec(new ResultCallback.Adapter<>()); // fire & forget
-//            }
-//        } catch (Exception ignore) {
-//        }
-//        // Close stdin to signal EOF; many procs exit on that.
-//        try {
-//            stdinOut.close();
-//        } catch (IOException ignore) {
-//        }
-//    }
-//
-//    @Override
-//    public Process destroyForcibly() {
-//        // Best-effort KILL
-//        try {
-//            var insp = docker.inspectExecCmd(execId).exec();
-//            Integer pid = insp.getPid();
-//            if (pid != null && pid > 0) {
-//                docker.execCreateCmd(containerId).withCmd("kill", "-KILL", String.valueOf(pid)).exec();
-//                docker.execStartCmd(execId).withDetach(true).exec(new ResultCallback.Adapter<>());
-//            }
-//        } catch (Exception ignore) {
-//        }
-//        return this;
-//    }
-//
-//    @Override
-//    public boolean isAlive() {
-//        try {
-//            return docker.inspectExecCmd(execId).exec().getExitCodeLong() == null;
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
-//
-//    @Override
-//    public long pid() {
-//        try {
-//            var insp = docker.inspectExecCmd(execId).exec();
-//            Integer pid = insp.getPid();
-//            return (pid != null) ? pid : -1L;
-//        } catch (Exception e) {
-//            return -1L;
-//        }
-//    }
-//}

@@ -9,7 +9,6 @@ import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
 import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
 import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
 
-// List<Redirect> redirects
 public record CmdOpExec(List<CmdPrefix> prefixes, String name, List<CmdArg> args, List<Redirect> redirects)
     implements CmdOp
 {

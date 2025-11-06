@@ -1,8 +1,12 @@
 package org.aksw.commons.util.docker;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
@@ -16,6 +20,7 @@ import org.aksw.vshell.registry.FinalPlacementInliner;
 import org.aksw.vshell.registry.FinalPlacer;
 import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandRegistry;
+import org.aksw.vshell.registry.PlacedCmdOpToStage;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandTranscode;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.jena.rdf.model.Model;
@@ -24,7 +29,7 @@ import org.junit.Test;
 
 public class TestCommandRegistry {
     @Test
-    public void test01() {
+    public void test01() throws IOException {
         String testcontainers_retryCount = System.getProperty("testcontainers.retryCount");
         if (testcontainers_retryCount == null) {
             System.setProperty("testcontainers.retryCount", "1");
@@ -71,7 +76,10 @@ public class TestCommandRegistry {
         FinalPlacement inlined = FinalPlacementInliner.inline(placed);
 
         // Final step: convert to stage (or bound stage?)
-
+        FileMapper fileMapper = FileMapper.of("/tmp/shared");
+        Stage stage = PlacedCmdOpToStage.of(fileMapper).toStage(inlined);
+        String str = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        System.out.println(str);
 
         System.out.println(placedCommand);
 

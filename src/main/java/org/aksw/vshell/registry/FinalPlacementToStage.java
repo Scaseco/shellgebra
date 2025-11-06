@@ -32,9 +32,42 @@ public class FinalPlacementToStage {
         Worker worker = new Worker(execSiteResolver);
 
 
-
         return null;
     }
+
+    static class ExecSiteToStage
+        implements ExecSiteVisitor<Stage> {
+
+        private CmdOp cmdOp;
+        private FileMapper fileMapper;
+
+        public ExecSiteToStage(CmdOp op) {
+            super();
+            this.cmdOp = op;
+        }
+
+        @Override
+        public Stage visit(ExecSiteDockerImage execSite) {
+            String imageRef = execSite.imageRef();
+            Stage r = Stages.docker(imageRef, cmdOp, fileMapper);
+            return r;
+        }
+
+        @Override
+        public Stage visit(ExecSiteCurrentHost execSite) {
+            Stage r = Stages.host(cmdOp);
+            return r;
+        }
+
+        @Override
+        public Stage visit(ExecSiteCurrentJvm execSite) {
+
+            // JvmCommandRegistry.get().
+            Stage r = Stages.javaIn(null);
+            return r;
+        }
+    }
+
 
     public static class Worker
         implements CmdOpVisitor<Stage>
@@ -72,36 +105,5 @@ public class FinalPlacementToStage {
             return null;
         }
 
-    }
-
-    static class ExecSiteToStage
-        implements ExecSiteVisitor<Stage> {
-
-        private CmdOp cmdOp;
-        private FileMapper fileMapper;
-
-        public ExecSiteToStage(CmdOp op) {
-            super();
-            this.cmdOp = op;
-        }
-
-        @Override
-        public Stage visit(ExecSiteDockerImage execSite) {
-            String imageRef = execSite.imageRef();
-            Stages.docker(imageRef, cmdOp, fileMapper);
-
-        }
-
-        @Override
-        public Stage visit(ExecSiteCurrentHost execSite) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Stage visit(ExecSiteCurrentJvm execSite) {
-            // TODO Auto-generated method stub
-            return null;
-        }
     }
 }
