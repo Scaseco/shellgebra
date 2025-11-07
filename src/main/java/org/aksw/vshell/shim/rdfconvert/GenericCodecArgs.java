@@ -37,7 +37,7 @@ public class GenericCodecArgs
     }
 
     public static ArgumentList renderArgList(GenericCodecArgs model) {
-        ArgumentList result = CmdBuilder.newBuilder()
+        ArgumentList result = ArgumentListBuilder.newBuilder()
             .ifTrue(model.isDecode(), "-d")
             .args(model.getUnmatchedArgs())
             .build();

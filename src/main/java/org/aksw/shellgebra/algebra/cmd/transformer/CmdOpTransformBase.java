@@ -9,6 +9,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
 public class CmdOpTransformBase
     implements CmdOpTransform
@@ -31,9 +32,9 @@ public class CmdOpTransformBase
 
     @Override
     public CmdOp transform(CmdOpExec op, List<CmdArg> subOps) {
-        CmdOp result = (IterableUtils.equalsByReference(subOps, op.getArgs()))
+        CmdOp result = (IterableUtils.equalsByReference(subOps, op.args().args()))
             ? op
-            : new CmdOpExec(op.getName(), subOps, op.redirects());
+            : new CmdOpExec(op.getName(), new ArgumentList(subOps), op.redirects());
         return result;
     }
 

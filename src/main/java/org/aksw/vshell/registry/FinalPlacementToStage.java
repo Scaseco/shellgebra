@@ -29,7 +29,7 @@ public class FinalPlacementToStage {
     }
 
     public Stage toStage(FinalPlacement placement) {
-        Worker worker = new Worker(execSiteResolver);
+        CmdOpVisitorFinalPlacementToStage worker = new CmdOpVisitorFinalPlacementToStage(execSiteResolver);
 
 
         return null;
@@ -69,41 +69,41 @@ public class FinalPlacementToStage {
     }
 
 
-    public static class Worker
-        implements CmdOpVisitor<Stage>
-    {
-        private ExecSiteResolver execSiteResolver;
-
-        public Worker(ExecSiteResolver execSiteResolver) {
-            super();
-            this.execSiteResolver = execSiteResolver;
-        }
-
-        @Override
-        public Stage visit(CmdOpExec op) {
-
-
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Stage visit(CmdOpPipeline op) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Stage visit(CmdOpGroup op) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Stage visit(CmdOpVar op) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-    }
+//    public static class CmdOpVisitorFinalPlacementToStage
+//        implements CmdOpVisitor<Stage>
+//    {
+//        private ExecSiteResolver execSiteResolver;
+//
+//        public CmdOpVisitorFinalPlacementToStage(ExecSiteResolver execSiteResolver) {
+//            super();
+//            this.execSiteResolver = execSiteResolver;
+//        }
+//
+//        @Override
+//        public Stage visit(CmdOpExec op) {
+//
+//
+//            // TODO Auto-generated method stub
+//            return null;
+//        }
+//
+//        @Override
+//        public Stage visit(CmdOpPipeline op) {
+//            // TODO Auto-generated method stub
+//            return null;
+//        }
+//
+//        @Override
+//        public Stage visit(CmdOpGroup op) {
+//            // TODO Auto-generated method stub
+//            return null;
+//        }
+//
+//        @Override
+//        public Stage visit(CmdOpVar op) {
+//            // TODO Auto-generated method stub
+//            return null;
+//        }
+//
+//    }
 }

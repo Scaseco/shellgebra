@@ -15,7 +15,7 @@ public class FinalPlacementInliner {
     public static FinalPlacement inline(FinalPlacement inPlacement) {
         PlacedCmd root = inPlacement.cmdOp();
         Map<CmdOpVar, PlacedCmd> inMap = inPlacement.placements();
-        Worker worker = new Worker(inMap);
+        FinalPlacementInlinerWorker worker = new FinalPlacementInlinerWorker(inMap);
 
         CmdOp cmdOp = root.cmdOp();
         ExecSite execSite = root.execSite();
@@ -25,11 +25,11 @@ public class FinalPlacementInliner {
         return new FinalPlacement(tmp, outMap);
     }
 
-    static class Worker {
+    static class FinalPlacementInlinerWorker {
         private Map<CmdOpVar, PlacedCmd> inMap;
         private Map<CmdOpVar, PlacedCmd> outMap = new HashMap<>();
 
-        public Worker(Map<CmdOpVar, PlacedCmd> inMap) {
+        public FinalPlacementInlinerWorker(Map<CmdOpVar, PlacedCmd> inMap) {
             super();
             this.inMap = inMap;
         }

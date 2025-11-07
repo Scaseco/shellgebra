@@ -48,7 +48,7 @@ public class CmdOpVisitorApplyTransform
 
     @Override
     public CmdOp visit(CmdOpExec op) {
-        List<CmdArg> inArgs = op.args();
+        List<CmdArg> inArgs = op.args().args();
         List<CmdArg> outArgs = new ArrayList<>(inArgs.size());
         for (CmdArg inArg : inArgs) {
             CmdArg outArg = CmdArgTransformer.transform(inArg, cmdArgTransform, cmdOpTransform, tokenTransform);

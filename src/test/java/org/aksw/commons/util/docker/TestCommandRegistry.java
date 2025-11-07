@@ -75,16 +75,22 @@ public class TestCommandRegistry {
         FinalPlacement placed = FinalPlacer.place(candidatePlacement);
         FinalPlacement inlined = FinalPlacementInliner.inline(placed);
 
+        System.out.println(inlined);
+        if (true) {
+            return;
+        }
+
         // Final step: convert to stage (or bound stage?)
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
         Stage stage = PlacedCmdOpToStage.of(fileMapper).toStage(inlined);
         String str = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         System.out.println(str);
-
         System.out.println(placedCommand);
 
-        // System.out.println(resolver.resolve("/usr/bin/lbzip2"));
+        // Issue: For the qlever use case, we don't want a stage.
+        // instead we want: the expression, with allocated file names and file writer tasks.
 
+        // System.out.println(resolver.resolve("/usr/bin/lbzip2"));
         // CommandRegistry hostRegistry = new CommandRegistryOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
         // CommandRegistry jvmRegistry = new CommandRegistryOverLocator(ExecSites.jvm(), new CommandLocatorJvmRegistry(jvmCmdRegistry));
         // CommandRegistry baseRegistry = new CommandRegistryUnion(List.of(jvmRegistry, candidates, hostRegistry));

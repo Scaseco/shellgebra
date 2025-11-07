@@ -3,6 +3,7 @@ package org.aksw.shellgebra.algebra.cmd.arg;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenLiteral;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 
 /**
  * Argument to a CmdOpExec.
@@ -26,5 +27,10 @@ public interface CmdArg {
 
     public static CmdArg ofVarName(String varName) {
         return new CmdArgWord(StringEscapeType.SINGLE_QUOTED, new TokenVar(varName));
+    }
+
+    // Process substition such as <(cat /tmp/foo.txt).
+    public static CmdArg of(CmdOp cmdOp) {
+        return new CmdArgCmdOp(cmdOp);
     }
 }

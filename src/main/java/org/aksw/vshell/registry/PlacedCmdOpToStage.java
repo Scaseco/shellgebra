@@ -6,7 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgPath;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
+import org.aksw.shellgebra.algebra.cmd.arg.StringEscapeType;
+import org.aksw.shellgebra.algebra.cmd.arg.Token;
+import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
@@ -16,6 +21,8 @@ import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedCmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedGroup;
 import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.Stages;
 import org.aksw.shellgebra.exec.model.ExecSite;
@@ -68,6 +75,9 @@ public class PlacedCmdOpToStage {
             // Then substitute the variable with a named pipe for that stage.
 
             Map<CmdOpVar, Stage> varToStage = new HashMap<>();
+            // Map<CmdOpVar, String> varToFileName = new HashMap<>();
+            // Map<CmdOpVar, FileWriterTask> varToFileWriterTask = new HashMap<>();
+            Map<CmdOpVar, TokenPath> tokenToPath = new HashMap<>();
             for (CmdOpVar v : cmdOpVars) {
                 PlacedCmd childPlacement = varToPlacement.get(v);
 
@@ -75,25 +85,40 @@ public class PlacedCmdOpToStage {
                 Stage stage = childPlacement.accept(this);
 
                 String pathStr = fileMapper.allocateTempFilename("tmpfile", "pipe");
-                CmdArgPath cmdArgPath = new CmdArgPath(pathStr);
+                tokenToPath.put(v, new TokenPath(pathStr));
+                // CmdArg cmdArgPath = CmdArg.ofPathString(pathStr);
 
-
-
+                // stage.for
                 varToStage.put(v, stage);
+                // varToPlacement.put(v, op)
             }
+
+            CmdOp finalCmdOp = CmdOpTransformer.transform(cmdOp, null, new CmdArgTransformBase() {
+                @Override
+                public CmdArg transform(CmdArgCmdOp token, CmdOp subOp) {
+                    Token t = subOp instanceof CmdOpVar v
+                        ? tokenToPath.get(v)
+                        : null;
+                    CmdArg r = t == null
+                        ? super.transform(token, subOp)
+                        : new CmdArgWord(StringEscapeType.ESCAPED, t);
+                    return r;
+                }
+            }, null);
 
             ExecSite execSite = op.getExecSite();
             Stage stage = execSite.accept(new ExecSiteVisitor<Stage>() {
                 @Override
                 public Stage visit(ExecSiteDockerImage execSite) {
                     String imageRef = execSite.imageRef();
-                    Stage r = Stages.docker(imageRef, cmdOp, fileMapper);
+                    Stage r = Stages.docker(imageRef, finalCmdOp, fileMapper);
+
                     return r;
                 }
 
                 @Override
                 public Stage visit(ExecSiteCurrentHost execSite) {
-                    Stage r = Stages.host(cmdOp);
+                    Stage r = Stages.host(finalCmdOp);
                     return r;
                 }
 

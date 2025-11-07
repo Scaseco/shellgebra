@@ -21,6 +21,14 @@ public record ArgumentList(List<CmdArg> args) {
         return args.size();
     }
 
+    public static ArgumentList of(CmdArg ... args) {
+        return new ArgumentList(List.of(args));
+    }
+
+    public static ArgumentList of(List<CmdArg> args) {
+        return new ArgumentList(List.copyOf(args));
+    }
+
     public static ArgumentList ofLiterals(List<String> args) {
         List<CmdArg> tmp = args.stream().map(CmdArgLiteral::new).map(x -> (CmdArg)x).toList();
         return new ArgumentList(tmp);

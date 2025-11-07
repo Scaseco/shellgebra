@@ -6,9 +6,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
 public interface CmdOp {
     <T> T accept(CmdOpVisitor<T> visitor);
+
+    public static String toStrings(ArgumentList argList) {
+        return toStrings(argList.args());
+    }
 
     public static String toStrings(Collection<?> ...collections) {
         return Stream.of(collections).flatMap(Collection::stream).map(Object::toString).collect(Collectors.joining(" "));

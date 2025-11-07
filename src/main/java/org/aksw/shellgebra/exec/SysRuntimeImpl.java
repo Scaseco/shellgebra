@@ -67,7 +67,7 @@ public class SysRuntimeImpl
     @Override
     public CmdString compileString(CmdOp op) {
         // Transform file arguments to properly quoted strings
-        CmdOp tmpOp = CmdOpTransformer.transform(op, new CmdOpTransformArguments(this));
+        CmdOp tmpOp = CmdOpTransformer.transform(op, new CmdOpTransformArguments(this), null, null);
         CmdString result = tmpOp.accept(stringifier);
         return result;
     }

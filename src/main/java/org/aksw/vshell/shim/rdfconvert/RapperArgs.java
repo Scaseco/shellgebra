@@ -54,7 +54,7 @@ public class RapperArgs
     }
 
     public static ArgumentList renderArgList(RapperArgs model) {
-        ArgumentList result = CmdBuilder.newBuilder()
+        ArgumentList result = ArgumentListBuilder.newBuilder()
             .opt("-i", model.getInputFormat())
             .opt("-o", model.getOutputFormat())
             .fileOrLiteral(model.getInputFile(), "-")

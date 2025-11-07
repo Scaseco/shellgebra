@@ -8,6 +8,8 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.aksw.shellgebra.unused.algebra.plan.OutputStreamTransform;
+import org.aksw.vshell.registry.CmdOpVisitorExecJvm;
+import org.aksw.vshell.registry.JvmCommandRegistry;
 
 public class Stages {
     public static Stage pipeline(Stage ...stages) {
@@ -25,6 +27,20 @@ public class Stages {
     public static Stage docker(String imageRef, CmdOp cmdOp, FileMapper fileMapper) {
         ContainerPathResolver containerPathResolver = ContainerPathResolver.create();
         return new DockerStage(imageRef, cmdOp, fileMapper, containerPathResolver);
+    }
+
+    public static Stage jvm(JvmCommandRegistry cmdRegistry, CmdOp cmdOp) {
+        // Resolve the cmdOp against the registry.
+        CmdOpVisitorExecJvm execVisitor = new CmdOpVisitorExecJvm();
+        Stage result = cmdOp.accept(execVisitor);
+        return result;
+    }
+
+    /** Create a stage from the command using the global command registry .*/
+    public static Stage jvm(CmdOp cmdOp) {
+        JvmCommandRegistry jvmCmdRegistry = JvmCommandRegistry.get();
+        Stage result = jvm(jvmCmdRegistry, cmdOp);
+        return result;
     }
 
 //    public static Stage javaIn(Function<? super InputStream, ? extends InputStream> transform) {

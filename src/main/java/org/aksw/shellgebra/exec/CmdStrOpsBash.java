@@ -7,6 +7,12 @@ import java.util.stream.Stream;
 public class CmdStrOpsBash
     implements CmdStrOps
 {
+    private static final CmdStrOpsBash instance = new CmdStrOpsBash();
+
+    public static CmdStrOps get() {
+        return instance;
+    }
+
     @Override
     public String subst(String str) {
         return "<(" + str + ")";
@@ -30,6 +36,46 @@ public class CmdStrOpsBash
             result = result.replaceAll(" ", "\\\\ ");
         }
 
+        return result;
+    }
+
+    @Override
+    public String escapeTokenNoQuote(String token) {
+        // Escape white spaces, newlines, quotes and double quotes.
+        String result = token
+            .replaceAll(" ", "\\\\ ")
+            .replaceAll("'", "\\\\'")
+            .replaceAll("\"", "\\\\\"")
+            .replaceAll("\n", "\\\\\n");
+        return result;
+    }
+
+    @Override
+    public String escapeTokenSingleQuote(String token) {
+        String result = token;
+
+//      result = result
+//          .replaceAll("\\{", "\\\\{")
+//          .replaceAll("\\|", "\\\\|")
+//          .replaceAll("\\}", "\\\\}");
+
+        boolean containsSingleQuote = result.contains("'");
+        if (containsSingleQuote) {
+            // Escape single quotes
+            result = result.replaceAll("\\'", "'\"'\"'"); // ' -> '"'"'
+        } else {
+            // Escape any white spaces
+            result = result
+                .replaceAll(" ", "\\\\ ")
+                .replaceAll("\n", "\\\\\n");
+        }
+
+        return result;
+    }
+
+    @Override
+    public String escapeTokenDoubleQuote(String token) {
+        String result = token.replaceAll("\"", "\\\"");
         return result;
     }
 

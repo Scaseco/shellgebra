@@ -5,10 +5,7 @@ import java.util.List;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgPath;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgString;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitor;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
 import org.aksw.shellgebra.algebra.cmd.arg.Token;
@@ -53,20 +50,5 @@ public class CmdArgVisitorApplyTransform
         }
         CmdArg result = cmdArgTransform.transform(arg, outTokens);
         return result;
-    }
-
-    @Override
-    public CmdArg visit(CmdArgLiteral arg) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public CmdArg visit(CmdArgString arg) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public CmdArg visit(CmdArgPath arg) {
-        throw new UnsupportedOperationException();
     }
 }
