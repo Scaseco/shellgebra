@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
+import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.model.ExecSite;
@@ -35,19 +38,8 @@ public class TestCommandRegistry {
             System.setProperty("testcontainers.retryCount", "1");
         }
 
-        CompressorStreamFactory csf = new CompressorStreamFactory();
-
-        JvmCommandRegistry jvmCmdRegistry = new JvmCommandRegistry();
-        JvmCommand bzip2Cmd = JvmCommandTranscode.of(csf, CompressorStreamFactory.BZIP2);
-        jvmCmdRegistry.put("/jvm/bzip2", bzip2Cmd);
-        // jvmCmdRegistry.put("/virt/bzip2", bzip2Cmd);
-
-        CommandRegistryImpl candidates = new CommandRegistryImpl();
-        candidates.put("/virt/lbzip2", ExecSites.docker("nestio/lbzip2"), "/usr/bin/lbzip2");
-
-        // Note: There can be multiple candidates per exec site.
-        candidates.put("/virt/lbzip2", ExecSites.host(), "/usr/bin/lbzip2");
-        candidates.put("/virt/lbzip2", ExecSites.jvm(), "/jvm/bzip2");
+        JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
+        CommandRegistryImpl candidates = initCmdCandRegistry(new CommandRegistryImpl());
 
         CommandAvailability cmdAvailability = new CommandAvailability();
         // TODO Have image introspector write into cmdAvailability without having to know about exec sites.
@@ -60,26 +52,36 @@ public class TestCommandRegistry {
         ExecSiteResolver resolver = new ExecSiteResolver(candidates, jvmCmdRegistry,
             cmdAvailability, imageIntrospector);
 
-        // execSiteResolver.providesCommand(null, null)
-        // CommandRegistry dockerRegistry = new CommandRe
-
+        // Some command expression.
         System.out.println(resolver.resolve("/virt/lbzip2"));
-        CmdOpExec cmdOp = CmdOpExec.ofLiterals("/virt/lbzip2", "-d");
+        CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-d");
+        CmdOp cmdOp2 = CmdOpGroup.of(
+            CmdOpExec.ofLiterals("/virt/bzip2", "-d"),
+            CmdOpExec.ofLiterals("/usr/bin/echo", "done.")
+        );
+        // TODO Do not use CmdOpExec.ofLiterals
+        // Instead: use a command registry with shim-parsers so that arguments are validated.
 
+        CmdOp cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
+
+        // Try to resolve the command on a certain docker image.
         ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
 
         CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, resolver, Set.of(qleverExecSite));
-        PlacedCommand placedCommand = commandPlacer.visit(cmdOp);
+        PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
         CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
 
         FinalPlacement placed = FinalPlacer.place(candidatePlacement);
+        System.out.println("Placed: " + placed);
+
         FinalPlacement inlined = FinalPlacementInliner.inline(placed);
 
-        System.out.println(inlined);
+        System.out.println("Inlined: " + inlined);
         if (true) {
             return;
         }
 
+        // pb.redirectError(Redirect.)
         // Final step: convert to stage (or bound stage?)
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
         Stage stage = PlacedCmdOpToStage.of(fileMapper).toStage(inlined);
@@ -94,5 +96,27 @@ public class TestCommandRegistry {
         // CommandRegistry hostRegistry = new CommandRegistryOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
         // CommandRegistry jvmRegistry = new CommandRegistryOverLocator(ExecSites.jvm(), new CommandLocatorJvmRegistry(jvmCmdRegistry));
         // CommandRegistry baseRegistry = new CommandRegistryUnion(List.of(jvmRegistry, candidates, hostRegistry));
+    }
+
+    public static JvmCommandRegistry initJvmCmdRegistry(JvmCommandRegistry jvmCmdRegistry) {
+        CompressorStreamFactory csf = new CompressorStreamFactory();
+
+        JvmCommand bzip2Cmd = JvmCommandTranscode.of(csf, CompressorStreamFactory.BZIP2);
+        jvmCmdRegistry.put("/jvm/bzip2", bzip2Cmd);
+        // jvmCmdRegistry.put("/virt/bzip2", bzip2Cmd);
+        return jvmCmdRegistry;
+    }
+
+    public static CommandRegistryImpl initCmdCandRegistry(CommandRegistryImpl candidates) {
+        candidates.put("/virt/lbzip2", ExecSites.docker("nestio/lbzip2"), "/usr/bin/lbzip2");
+
+        // Note: There can be multiple candidates per exec site.
+        candidates.put("/virt/lbzip2", ExecSites.host(), "/usr/bin/lbzip2");
+        candidates.put("/virt/lbzip2", ExecSites.jvm(), "/jvm/bzip2");
+
+        candidates.put("/virt/bzip2", ExecSites.jvm(), "/jvm/bzip2");
+
+        candidates.put("/usr/bin/echo", ExecSites.host(), "/usr/bin/echo");
+        return candidates;
     }
 }

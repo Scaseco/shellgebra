@@ -20,6 +20,14 @@ public record CmdOpGroup(List<CmdOp> subOps, List<Redirect> redirects)
         Objects.requireNonNull(redirects);
     }
 
+    public CmdOpGroup(List<CmdOp> subOps) {
+        this(subOps, List.of());
+    }
+
+    public static CmdOpGroup of(CmdOp ...subOps) {
+        return new CmdOpGroup(List.of(subOps), List.of());
+    }
+
     @Override
     public <T> T accept(CmdOpVisitor<T> visitor) {
         T result = visitor.visit(this);

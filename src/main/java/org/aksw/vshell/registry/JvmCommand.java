@@ -1,7 +1,9 @@
 package org.aksw.vshell.registry;
 
 import org.aksw.shellgebra.exec.Stage;
+import org.aksw.vshell.shim.rdfconvert.Args;
 
 public interface JvmCommand {
-    public Stage newStage(String... args);
+    Args parseArgs(String ...args);
+    Stage newStage(String... args);
 }

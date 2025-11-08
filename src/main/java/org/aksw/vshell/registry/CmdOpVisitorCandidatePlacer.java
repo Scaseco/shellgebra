@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
@@ -93,22 +94,45 @@ public class CmdOpVisitorCandidatePlacer
         boolean checkPresenceInImages = true;
 
         // Check which docker images provide the command.
-
-
         opToSites.put(op, execSites);
         return new PlacedCommand(op, execSites);
     }
 
     @Override
     public PlacedCommand visit(CmdOpPipeline op) {
+         List<CmdOp> subOps = op.subOps();
+         PlacedCommand result = process(subOps, CmdOpPipeline::new);
+         return result;
+    }
+
+
+    @Override
+    public PlacedCommand visit(CmdOpGroup op) {
+        List<CmdOp> subOps = op.subOps();
+        PlacedCommand result = process(subOps, CmdOpGroup::new);
+        return result;
+    }
+
+    @Override
+    public PlacedCommand visit(CmdOpVar op) {
+        throw new RuntimeException("var resolution not supported.");
+    }
+
+    protected PlacedCommand process(List<CmdOp> subOps, Function<List<CmdOp>, CmdOp> ctor) {
         // Check whether this operation can be handled on the preferred sites
         // - they need to provide a bash
         // If not then check which children can do the op
         // if there still are none then try a default image (e.g. ubuntu)
-        List<CmdOp> subOps = op.getSubOps();
         List<PlacedCommand> placements = new ArrayList<>(subOps.size());
         for (CmdOp subOp : subOps) {
             PlacedCommand contrib = subOp.accept(this);
+            // Sanity checks - there must be a placement (or bailout to a prior exception - such as command not found).
+            if (contrib == null) {
+                throw new RuntimeException("Null returned as placement for: " + subOp);
+            }
+            if (contrib.execSites().isEmpty()) {
+                throw new IllegalStateException("Empty set of exec sites returned for: " + subOp);
+            }
             placements.add(contrib);
         }
 
@@ -118,16 +142,12 @@ public class CmdOpVisitorCandidatePlacer
         Set<ExecSite> nextSet;
         List<PlacedCommand> childStreaks = new ArrayList<>(subOps.size());
 
+        int currentStreakOffset = 0;
         int n = placements.size();
-        int offset = 0;
-        for (int i = 0; i < n; ++i) {
+        int i;
+        for (i = 0; i < n; ++i) {
             PlacedCommand pc = placements.get(i);
             Set<ExecSite> rawContrib = pc.execSites();
-
-            // Sanity check - there must be a placement (or bailout to a prior exception - such as command not found).
-            if (rawContrib.isEmpty()) {
-                throw new IllegalStateException("Should not happen");
-            }
 
             // If there is a previous execSite then
             // remove execSites that cannot run a pipeline
@@ -148,10 +168,13 @@ public class CmdOpVisitorCandidatePlacer
 
             if (nextSet.isEmpty()) {
                 // Need to place the current streak.
-                PlacedCommand placed = doPlacement(preferredExecSites, currentSet, childStreaks);
+                List<PlacedCommand> currentStreak = placements.subList(currentStreakOffset, i);
+                PlacedCommand placed = doPlacement(ctor, preferredExecSites, currentSet, currentStreak);
                 childStreaks.add(placed);
                 currentSet = rawContrib;
+                currentStreakOffset = i;
             } else {
+                currentSet = nextSet;
                 // Note: We have checked that there are exec sites in the intersection
                 // that can run a pipeline
                 continue;
@@ -160,7 +183,8 @@ public class CmdOpVisitorCandidatePlacer
 
         // Place the remainder (if any).
         if (currentSet != null) {
-            PlacedCommand placed = doPlacement(preferredExecSites, currentSet, childStreaks);
+            List<PlacedCommand> currentStreak = placements.subList(currentStreakOffset, i);
+            PlacedCommand placed = doPlacement(ctor, preferredExecSites, currentSet, currentStreak);
             childStreaks.add(placed);
         }
 
@@ -203,7 +227,8 @@ public class CmdOpVisitorCandidatePlacer
 //                }
             }
 
-            result = new PlacedCommand(new CmdOpPipeline(newSubOps), parentExecSites);
+            CmdOp newCmdOp = ctor.apply(newSubOps);
+            result = new PlacedCommand(newCmdOp, parentExecSites);
             // TODO Do we need a placed pipeline? We could put the whole pipeline into a cmd and place it...
             // The main question is whether we want to have separate phases for candidate exec site selection
             // and stage generation...
@@ -225,7 +250,7 @@ public class CmdOpVisitorCandidatePlacer
 //
 //    }
 
-    protected PlacedCommand doPlacement(Set<ExecSite> preferredExecSites, Set<ExecSite> candidateExecSites, List<PlacedCommand> subPlacements) {
+    protected PlacedCommand doPlacement(Function<List<CmdOp>, CmdOp> ctor, Set<ExecSite> preferredExecSites, Set<ExecSite> candidateExecSites, List<PlacedCommand> streak) {
         if (candidateExecSites.isEmpty()) {
             throw new IllegalArgumentException("Candidate exec site set must not be empty.");
         }
@@ -235,26 +260,14 @@ public class CmdOpVisitorCandidatePlacer
         }
 
         // ExecSite selectedExecSite = effectiveExecSites.iterator().next();
-        List<CmdOp> placedSubOps = subPlacements.stream().map(PlacedCommand::cmdOp).toList();
+        List<CmdOp> placedSubOps = streak.stream().map(PlacedCommand::cmdOp).toList();
 
         // <() / =()
-        CmdOpPipeline partPipeline = new CmdOpPipeline(placedSubOps);
+        CmdOp part = ctor.apply(placedSubOps);
         // PlacedCmd placed = new PlacedCmd(partPipeline, selectedExecSite);
-        PlacedCommand placed = new PlacedCommand(partPipeline, effectiveExecSites);
+        PlacedCommand placed = new PlacedCommand(part, effectiveExecSites);
         // varToPlacement.put(cmdOpVar, new PlacedCmd(partPipeline, selectedExecSite));
 
         return placed;
-    }
-
-    @Override
-    public PlacedCommand visit(CmdOpGroup op) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PlacedCommand visit(CmdOpVar op) {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

@@ -112,6 +112,7 @@ public class CmdOpVisitorApplyTransform
 
     @Override
     public CmdOp visit(CmdOpVar op) {
-        throw new UnsupportedOperationException();
+        CmdOp result = cmdOpTransform.transform(op);
+        return result;
     }
 }

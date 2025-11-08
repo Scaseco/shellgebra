@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
 import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
 import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
@@ -27,12 +26,19 @@ public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args
         return ofLiterals(argv[0], Arrays.asList(argv).subList(1, argv.length));
     }
 
+    /**
+     * Create a CmdOpExec with all arguments interpreted as string literals.
+     *
+     * @param name
+     * @param args
+     * @return
+     */
     public static CmdOpExec ofLiterals(String name, String... args) {
         return ofLiterals(name, Arrays.asList(args));
     }
 
     public static CmdOpExec ofLiterals(String name, List<String> args) {
-        return new CmdOpExec(List.of(), name, ArgumentList.of(args.stream().<CmdArg>map(CmdArgLiteral::new).toList())); // , List.of());
+        return new CmdOpExec(List.of(), name, ArgumentList.of(args.stream().<CmdArg>map(CmdArg::ofLiteral).toList())); // , List.of());
     }
 
 //    public static CmdOpExec ofLiterals(String name, List<String> args, List<Redirect> redirects) {
@@ -81,6 +87,6 @@ public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args
 
     @Override
     public String toString() {
-        return "(exec " + "(" + getName() + ")" + CmdOp.toStrings(args) + ")";
+        return "(exec " + "(" + getName() + (args.size() == 0 ? "" : " ") + CmdOp.toStrings(args) + "))";
     }
 }

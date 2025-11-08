@@ -18,10 +18,13 @@ public record CmdOpPipeline(List<CmdOp> subOps)
         subOps = Objects.requireNonNull(subOps);
     }
 
-    @SafeVarargs
-    public <T extends CmdOp> CmdOpPipeline(T ...subOps) {
-        this(List.of(subOps));
+    public static CmdOpPipeline of(CmdOp ...subOps) {
+        return new CmdOpPipeline(List.of(subOps));
     }
+//    @SafeVarargs
+//    public <T extends CmdOp> CmdOpPipeline(T ...subOps) {
+//        this(List.of(subOps));
+//    }
 
     @Override
     public List<CmdOp> getSubOps() {

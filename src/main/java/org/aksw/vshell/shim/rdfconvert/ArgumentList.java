@@ -1,9 +1,11 @@
 package org.aksw.vshell.shim.rdfconvert;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
 
 /**
  * A model that captures structured arguments. This record is used
@@ -30,7 +32,25 @@ public record ArgumentList(List<CmdArg> args) {
     }
 
     public static ArgumentList ofLiterals(List<String> args) {
-        List<CmdArg> tmp = args.stream().map(CmdArgLiteral::new).map(x -> (CmdArg)x).toList();
+        List<CmdArg> tmp = args.stream().map(CmdArg::ofLiteral).map(x -> (CmdArg)x).toList();
         return new ArgumentList(tmp);
+    }
+
+    /** Get redirect arguments. */
+    // Split into redirects and plain args (TODO cache on demand).
+    public List<Redirect> getRedirects() {
+        List<Redirect> result = args.stream()
+            .map(arg -> arg instanceof CmdArgRedirect ca ? ca.redirect() : null)
+            .filter(Objects::nonNull)
+            .toList();
+        return result;
+    }
+
+    /** Get non-redirect arguments. */
+    public List<CmdArg> getRealArgs() {
+        List<CmdArg> result = args.stream()
+            .filter(arg -> !(arg instanceof CmdArgRedirect))
+            .toList();
+        return result;
     }
 }
