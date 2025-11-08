@@ -6,7 +6,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 
 import com.google.common.io.ByteSource;
 
-public class HostStage
+public class StageHost
     implements Stage
 {
     protected CmdOp cmdOp;
@@ -17,28 +17,28 @@ public class HostStage
     // - a local file
     protected List<FileWriterTask> dependentTasks;
 
-    public HostStage(CmdOp cmdOp) {
+    public StageHost(CmdOp cmdOp) {
         super();
         this.cmdOp = cmdOp;
     }
 
     @Override
     public BoundStage from(ByteSource byteSource) {
-        return new HostBoundStage(cmdOp, byteSource);
+        return new BoundStageHost(cmdOp, byteSource);
     }
 
     @Override
     public BoundStage from(FileWriterTask inputTask) {
-        return new HostBoundStage(cmdOp, inputTask);
+        return new BoundStageHost(cmdOp, inputTask);
     }
 
     @Override
     public BoundStage from(BoundStage execBuilder) {
-        return new HostBoundStage(cmdOp, execBuilder);
+        return new BoundStageHost(cmdOp, execBuilder);
     }
 
     @Override
     public BoundStage fromNull() {
-        return new HostBoundStage(cmdOp);
+        return new BoundStageHost(cmdOp);
     }
 }

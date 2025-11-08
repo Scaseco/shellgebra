@@ -9,13 +9,13 @@ import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 
 import com.google.common.io.ByteSource;
 
-public class JvmBoundStage
+public class BoundStageJvm
     implements BoundStage
 {
     private InputStreamTransform transform;
     private ByteSource byteSource;
 
-    public JvmBoundStage(InputStreamTransform transform, ByteSource byteSource) {
+    public BoundStageJvm(InputStreamTransform transform, ByteSource byteSource) {
         super();
         this.transform = Objects.requireNonNull(transform);
         this.byteSource = Objects.requireNonNull(byteSource);

@@ -35,10 +35,10 @@ import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.google.common.io.ByteSource;
 
-public class DockerBoundStage
+public class BoundStageDocker
     implements BoundStage
 {
-    private static final Logger logger = LoggerFactory.getLogger(DockerBoundStage.class);
+    private static final Logger logger = LoggerFactory.getLogger(BoundStageDocker.class);
 
     // A Docker image reference consists of several components that describe where the image is stored and its identity. These components are:
     // https://docs.docker.com/reference/cli/docker/image/tag/ - [HOST[:PORT]/]NAMESPACE/REPOSITORY[:TAG]
@@ -56,7 +56,7 @@ public class DockerBoundStage
     protected BoundStage inputExecBuilder;
 
     // List<Bind> binds
-    public DockerBoundStage(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver, FileWriterTask inputTask, BoundStage inputExecBuilder) {
+    public BoundStageDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver, FileWriterTask inputTask, BoundStage inputExecBuilder) {
         super();
         this.imageRef = imageRef;
         this.cmdOp = cmdOp;

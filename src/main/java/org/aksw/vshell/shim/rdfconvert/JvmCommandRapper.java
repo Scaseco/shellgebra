@@ -1,7 +1,7 @@
 package org.aksw.vshell.shim.rdfconvert;
 
 import org.aksw.shellgebra.algebra.stream.transform.StreamingRDFConverter;
-import org.aksw.shellgebra.exec.JvmStage;
+import org.aksw.shellgebra.exec.StageJvm;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.aksw.vshell.registry.JvmCommand;
@@ -21,6 +21,6 @@ public class JvmCommandRapper
         RapperArgs model = parseArgs(args);
         InputStreamTransform transform = StreamingRDFConverter.converter(
                 model.getInputFormat(), model.getOutputFormat(), model.getBaseUrl());
-        return new JvmStage(transform);
+        return new StageJvm(transform);
     }
 }

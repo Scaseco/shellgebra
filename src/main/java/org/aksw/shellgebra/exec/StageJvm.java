@@ -11,19 +11,19 @@ import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 
 import com.google.common.io.ByteSource;
 
-public class JvmStage
+public class StageJvm
     implements Stage
 {
     private InputStreamTransform transform;
 
-    public JvmStage(InputStreamTransform transform) {
+    public StageJvm(InputStreamTransform transform) {
         super();
         this.transform = Objects.requireNonNull(transform);
     }
 
     @Override
     public BoundStage from(ByteSource input) {
-        return new JvmBoundStage(transform, input);
+        return new BoundStageJvm(transform, input);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class JvmStage
                 return result;
             }
         };
-        return new JvmBoundStage(transform, bs);
+        return new BoundStageJvm(transform, bs);
     }
 
     @Override

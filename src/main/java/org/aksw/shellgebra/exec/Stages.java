@@ -17,21 +17,21 @@ public class Stages {
     }
 
     public static Stage pipeline(List<Stage> stages) {
-        return new PipelineStage(stages);
+        return new StagePipeline(stages);
     }
 
     public static Stage host(CmdOp cmdOp) {
-        return new HostStage(cmdOp);
+        return new StageHost(cmdOp);
     }
 
     public static Stage docker(String imageRef, CmdOp cmdOp, FileMapper fileMapper) {
         ContainerPathResolver containerPathResolver = ContainerPathResolver.create();
-        return new DockerStage(imageRef, cmdOp, fileMapper, containerPathResolver);
+        return new StageDocker(imageRef, cmdOp, fileMapper, containerPathResolver);
     }
 
-    public static Stage jvm(JvmCommandRegistry cmdRegistry, CmdOp cmdOp) {
+    public static Stage jvm(JvmCommandRegistry jvmCmdRegistry, CmdOp cmdOp) {
         // Resolve the cmdOp against the registry.
-        CmdOpVisitorExecJvm execVisitor = new CmdOpVisitorExecJvm();
+        CmdOpVisitorExecJvm execVisitor = new CmdOpVisitorExecJvm(jvmCmdRegistry);
         Stage result = cmdOp.accept(execVisitor);
         return result;
     }
@@ -49,7 +49,7 @@ public class Stages {
 //    }
 
     public static Stage javaIn(InputStreamTransform transform) {
-        return new JvmStage(transform);
+        return new StageJvm(transform);
     }
 
     public static Stage javaOut(OutputStreamTransform transform) {

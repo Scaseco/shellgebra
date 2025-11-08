@@ -77,14 +77,15 @@ public class TestCommandRegistry {
         FinalPlacement inlined = FinalPlacementInliner.inline(placed);
 
         System.out.println("Inlined: " + inlined);
-        if (true) {
-            return;
-        }
+//        if (true) {
+//            return;
+//        }
 
         // pb.redirectError(Redirect.)
         // Final step: convert to stage (or bound stage?)
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
-        Stage stage = PlacedCmdOpToStage.of(fileMapper).toStage(inlined);
+        // TODO PlacedCmdOpToStage should probably accept a resolver as argument!
+        Stage stage = PlacedCmdOpToStage.of(jvmCmdRegistry, fileMapper).toStage(inlined);
         String str = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         System.out.println(str);
         System.out.println(placedCommand);

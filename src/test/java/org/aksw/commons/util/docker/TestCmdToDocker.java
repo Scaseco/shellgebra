@@ -3,7 +3,7 @@ package org.aksw.commons.util.docker;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgPath;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
@@ -14,6 +14,7 @@ import org.aksw.shellgebra.exec.CmdOpRewriter;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.Stages;
 import org.aksw.shellgebra.exec.SysRuntime;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,9 +29,9 @@ import com.github.dockerjava.api.model.Volume;
 public class TestCmdToDocker {
     @Test
     public void testBindFiles() {
-        CmdOp cmdOp = new CmdOpPipeline(
-            new CmdOpExec("/usr/bin/cat", new CmdArgPath("/host/bar.bz2")),
-            new CmdOpExec("/usr/bin/lbzip -dc", List.of(), List.of(RedirectFile.fileToStdOut("/host/out", OpenMode.WRITE_TRUNCATE))));
+        CmdOp cmdOp = CmdOpPipeline.of(
+            new CmdOpExec("/usr/bin/cat", ArgumentList.of(CmdArg.ofPathString("/host/bar.bz2"))),
+            new CmdOpExec("/usr/bin/lbzip -dc", ArgumentList.of(), List.of(RedirectFile.fileToStdOut("/host/out", OpenMode.WRITE_TRUNCATE))));
 
         FileMapper fileMapper = FileMapper.of("/shared");
 

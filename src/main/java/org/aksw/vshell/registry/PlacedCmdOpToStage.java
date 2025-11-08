@@ -14,6 +14,7 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedCmd;
@@ -36,19 +37,21 @@ import com.google.common.io.ByteSource;
 public class PlacedCmdOpToStage {
 
     private FileMapper fileMapper;
+    private JvmCommandRegistry jvmCmdRegistry;
 
-    public PlacedCmdOpToStage(FileMapper fileMapper) {
+    public PlacedCmdOpToStage(JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
         super();
+        this.jvmCmdRegistry = jvmCmdRegistry;
         this.fileMapper = fileMapper;
     }
 
-    public static PlacedCmdOpToStage of(FileMapper fileMapper) {
-        return new PlacedCmdOpToStage(fileMapper);
+    public static PlacedCmdOpToStage of(JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
+        return new PlacedCmdOpToStage(jvmCmdRegistry, fileMapper);
     }
 
     public Stage toStage(FinalPlacement placement) {
         Map<CmdOpVar, PlacedCmd> varToPlacement = placement.placements();
-        PlacedCmdOpVisitorToStage visitor = new PlacedCmdOpVisitorToStage(varToPlacement, fileMapper);
+        PlacedCmdOpVisitorToStage visitor = new PlacedCmdOpVisitorToStage(varToPlacement, jvmCmdRegistry, fileMapper);
         PlacedCmd root = placement.cmdOp();
         Stage result = root.accept(visitor);
         return result;
@@ -58,12 +61,24 @@ public class PlacedCmdOpToStage {
         implements PlacedCmdOpVisitor<Stage>
     {
         private Map<CmdOpVar, PlacedCmd> varToPlacement;
+        private JvmCommandRegistry jvmCmdRegistry;
         private FileMapper fileMapper;
 
-        public PlacedCmdOpVisitorToStage(Map<CmdOpVar, PlacedCmd> varToPlacement, FileMapper fileMapper) {
+        public PlacedCmdOpVisitorToStage(Map<CmdOpVar, PlacedCmd> varToPlacement, JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
             super();
             this.varToPlacement = varToPlacement;
+            this.jvmCmdRegistry = jvmCmdRegistry;
             this.fileMapper = fileMapper;
+        }
+
+        public Stage resolveVar(CmdOpVar cmdOpVar) {
+            PlacedCmd placedCmd = varToPlacement.get(cmdOpVar);
+            if (placedCmd == null) {
+                throw new RuntimeException("Unresolvable variable: " + cmdOpVar);
+            }
+
+            Stage result = placedCmd.accept(this);
+            return result;
         }
 
         @Override
@@ -112,7 +127,6 @@ public class PlacedCmdOpToStage {
                 public Stage visit(ExecSiteDockerImage execSite) {
                     String imageRef = execSite.imageRef();
                     Stage r = Stages.docker(imageRef, finalCmdOp, fileMapper);
-
                     return r;
                 }
 
@@ -124,7 +138,9 @@ public class PlacedCmdOpToStage {
 
                 @Override
                 public Stage visit(ExecSiteCurrentJvm execSite) {
-                    throw new RuntimeException("TODO Resolve");
+                    CmdOpVisitor<Stage> cmdOpVisitorToStage = new CmdOpVisitorExecJvm(jvmCmdRegistry, PlacedCmdOpVisitorToStage.this::resolveVar);
+                    Stage r = finalCmdOp.accept(cmdOpVisitorToStage);
+                    return r;
                 }
             });
             return stage;

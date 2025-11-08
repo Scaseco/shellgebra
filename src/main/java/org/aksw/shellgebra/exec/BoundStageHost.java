@@ -17,10 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 
-public class HostBoundStage
+public class BoundStageHost
     implements BoundStage
 {
-    private static final Logger logger = LoggerFactory.getLogger(HostStage.class);
+    private static final Logger logger = LoggerFactory.getLogger(StageHost.class);
 
     protected CmdOp cmdOp;
 
@@ -31,25 +31,25 @@ public class HostBoundStage
 
     protected List<FileWriterTask> dependentTasks;
 
-    public HostBoundStage(CmdOp cmdOp, ByteSource inputSource) {
+    public BoundStageHost(CmdOp cmdOp, ByteSource inputSource) {
         super();
         this.cmdOp = cmdOp;
         this.inputSource = inputSource;
     }
 
-    public HostBoundStage(CmdOp cmdOp, FileWriterTask inputTask) {
+    public BoundStageHost(CmdOp cmdOp, FileWriterTask inputTask) {
         super();
         this.cmdOp = cmdOp;
         this.inputTask = inputTask;
     }
 
-    public HostBoundStage(CmdOp cmdOp, BoundStage inputExecBuilder) {
+    public BoundStageHost(CmdOp cmdOp, BoundStage inputExecBuilder) {
         super();
         this.cmdOp = cmdOp;
         this.inputExecBuilder = inputExecBuilder;
     }
 
-    public HostBoundStage(CmdOp cmdOp) {
+    public BoundStageHost(CmdOp cmdOp) {
         super();
         this.cmdOp = cmdOp;
     }

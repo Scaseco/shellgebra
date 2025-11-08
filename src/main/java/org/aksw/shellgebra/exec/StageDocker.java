@@ -10,7 +10,7 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import com.github.dockerjava.api.model.AccessMode;
 import com.google.common.io.ByteSource;
 
-public class DockerStage
+public class StageDocker
     implements Stage
 {
     // A Docker image reference consists of several components that describe where the image is stored and its identity. These components are:
@@ -20,7 +20,7 @@ public class DockerStage
     protected FileMapper fileMapper;
     protected ContainerPathResolver containerPathResolver;
 
-    public DockerStage(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver) {
+    public StageDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver) {
         super();
         this.imageRef = imageRef;
         this.cmdOp = cmdOp;
@@ -46,16 +46,16 @@ public class DockerStage
 
     @Override
     public BoundStage from(FileWriterTask inputTask) {
-        return new DockerBoundStage(imageRef, cmdOp, fileMapper, containerPathResolver, inputTask, null);
+        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, inputTask, null);
     }
 
     @Override
     public BoundStage from(BoundStage input) {
-        return new DockerBoundStage(imageRef, cmdOp, fileMapper, containerPathResolver, null, input);
+        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, null, input);
     }
 
     @Override
     public BoundStage fromNull() {
-        return new DockerBoundStage(imageRef, cmdOp, fileMapper, containerPathResolver, (FileWriterTask)null, null);
+        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, (FileWriterTask)null, null);
     }
 }

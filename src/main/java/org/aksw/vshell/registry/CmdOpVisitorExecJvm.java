@@ -12,7 +12,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.exec.PipelineStage;
+import org.aksw.shellgebra.exec.StagePipeline;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.io.StageGroup;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
@@ -52,7 +52,7 @@ public class CmdOpVisitorExecJvm
         List<Stage> stages = toStages(subOps);
         Stage result = stages.size() == 1
             ? stages.get(0)
-            : new PipelineStage(stages);
+            : new StagePipeline(stages);
         return result;
     }
 

@@ -4,12 +4,12 @@ import java.util.List;
 
 import com.google.common.io.ByteSource;
 
-public class PipelineStage
+public class StagePipeline
     implements Stage
 {
     private List<Stage> stages;
 
-    public PipelineStage(List<Stage> stages) {
+    public StagePipeline(List<Stage> stages) {
         super();
         this.stages = stages;
     }
