@@ -9,16 +9,16 @@ import java.util.stream.Stream;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgPath;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgString;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitor;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitorRenderAsBashString;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectVisitor;
 import org.aksw.shellgebra.exec.CmdStrOps;
 
 
@@ -30,6 +30,38 @@ public class CmdOpVisitorToCmdString
     implements CmdOpVisitor<CmdString>
 {
     protected CmdStrOps strOps;
+
+
+    public class CmdArgToString
+        implements CmdArgVisitor<String> {
+        @Override
+        public String visit(CmdArgCmdOp arg) {
+            String str = arg.cmdOp().accept(CmdOpVisitorToCmdString.this).scriptString();
+            return "<(" + str + ")";
+        }
+
+        @Override
+        public String visit(CmdArgRedirect arg) {
+            RedirectVisitor<String> visitor = new RedirectVisitorToString(strOps);
+            String str = arg.redirect().accept(visitor);
+            return str;
+            // String str = arg.cmdOp().accept(CmdOpVisitorToCmdString.this).scriptString();
+            // return "<(" + str + ")";
+        }
+
+        @Override
+        public String visit(CmdArgWord arg) {
+            CmdArgVisitor<String> visitor = new CmdArgVisitorRenderAsBashString(strOps);
+            String str = arg.accept(visitor);
+            return str;
+//        	String str = switch(arg.escapeType()) {
+//        	case ESCAPED -> TokenVisitorRenderToString
+//        	};
+//            // TODO Auto-generated method stub
+//            return null;
+        }
+
+    }
 
 //    public String toString(Redirect redirect) {
 //        String result = switch (redirect) {
@@ -71,39 +103,52 @@ public class CmdOpVisitorToCmdString
 
     @Override
     public CmdString visit(CmdOpExec op) {
-        // TODO Convert args to literals
-        // CmdString result = new CmdString(strOps.quoteArg(str));
-        List<CmdArg> args = op.getArgs();
-        List<String> argStrs = new ArrayList<>(1 + args.size());
-        argStrs.add(op.getName());
-        for (CmdArg arg : args) {
-            if (arg instanceof CmdArgCmdOp x) {
-                CmdString base = x.cmdOp().accept(this);
-                String str = toArg(base);
-                String result = strOps.quoteArg(str);
-                argStrs.add(result);
-//                CmdString part = x.cmdOp().accept(this);
-//                argStrs.addAll(Arrays.asList(part.cmd()));
-            } else if (arg instanceof CmdArgPath x) {
-                argStrs.add(strOps.quoteArg(x.path()));
-            } else if (arg instanceof CmdArgString x) {
-                argStrs.add(strOps.quoteArg(x.str()));
-            } else if (arg instanceof CmdArgLiteral x) {
-                argStrs.add(x.str());
-            } else if (arg instanceof CmdArgRedirect x) {
-                argStrs.add(RedirectVisitorToString.toString(strOps, x.redirect()));
-            } else {
-                throw new RuntimeException("shouldn't come here");
-            }
+        List<CmdArg> inArgs = op.args().args();
+        CmdArgVisitor<String> visitor = new CmdArgVisitorRenderAsBashString(strOps);
+        List<String> outArgv = new ArrayList<>(inArgs.size() + 1);
+        outArgv.add(op.name());
+        for (CmdArg inArg : inArgs) {
+            String str = inArg.accept(visitor);
+            outArgv.add(str);
         }
+        return new CmdString(outArgv.toArray(String[]::new));
+        // String str = arg.accept(visitor);
+        //return str;
 
-        for (Redirect redirect : op.redirects()) {
-            argStrs.add(RedirectVisitorToString.toString(strOps, redirect));
-        }
 
-        // CmdOpTransformLib.transformAllArgs(argStrs, this, args, this::toArg);
-        CmdString result = new CmdString(argStrs.toArray(String[]::new));// strOps.call(op.getName(), argStrs);
-        return result;
+//        // TODO Convert args to literals
+//        // CmdString result = new CmdString(strOps.quoteArg(str));
+//        List<CmdArg> args = op.getArgs();
+//        List<String> argStrs = new ArrayList<>(1 + args.size());
+//        argStrs.add(op.getName());
+//        for (CmdArg arg : args) {
+//            if (arg instanceof CmdArgCmdOp x) {
+//                CmdString base = x.cmdOp().accept(this);
+//                String str = toArg(base);
+//                String result = strOps.quoteArg(str);
+//                argStrs.add(result);
+////                CmdString part = x.cmdOp().accept(this);
+////                argStrs.addAll(Arrays.asList(part.cmd()));
+//            } else if (arg instanceof CmdArgPath x) {
+//                argStrs.add(strOps.quoteArg(x.path()));
+//            } else if (arg instanceof CmdArgString x) {
+//                argStrs.add(strOps.quoteArg(x.str()));
+//            } else if (arg instanceof CmdArgLiteral x) {
+//                argStrs.add(x.str());
+//            } else if (arg instanceof CmdArgRedirect x) {
+//                argStrs.add(RedirectVisitorToString.toString(strOps, x.redirect()));
+//            } else {
+//                throw new RuntimeException("shouldn't come here");
+//            }
+//        }
+//
+//        for (Redirect redirect : op.redirects()) {
+//            argStrs.add(RedirectVisitorToString.toString(strOps, redirect));
+//        }
+//
+//        // CmdOpTransformLib.transformAllArgs(argStrs, this, args, this::toArg);
+//        CmdString result = new CmdString(argStrs.toArray(String[]::new));// strOps.call(op.getName(), argStrs);
+//        return result;
     }
 
     @Override

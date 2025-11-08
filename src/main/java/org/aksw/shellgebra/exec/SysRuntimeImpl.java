@@ -10,10 +10,8 @@ import java.util.stream.Stream;
 import org.aksw.jenax.engine.qlever.SystemUtils;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.algebra.cmd.transform.CmdOpTransformArguments;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
-import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,8 +65,8 @@ public class SysRuntimeImpl
     @Override
     public CmdString compileString(CmdOp op) {
         // Transform file arguments to properly quoted strings
-        CmdOp tmpOp = CmdOpTransformer.transform(op, new CmdOpTransformArguments(this), null, null);
-        CmdString result = tmpOp.accept(stringifier);
+        // CmdOp tmpOp = CmdOpTransformer.transform(op, new CmdOpTransformArguments(this), null, null);
+        CmdString result = op.accept(stringifier);
         return result;
     }
 

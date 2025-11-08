@@ -31,7 +31,7 @@ public class TestCmdToDocker {
     public void testBindFiles() {
         CmdOp cmdOp = CmdOpPipeline.of(
             new CmdOpExec("/usr/bin/cat", ArgumentList.of(CmdArg.ofPathString("/host/bar.bz2"))),
-            new CmdOpExec("/usr/bin/lbzip -dc", ArgumentList.of(), List.of(RedirectFile.fileToStdOut("/host/out", OpenMode.WRITE_TRUNCATE))));
+            new CmdOpExec("/usr/bin/lbzip -dc", ArgumentList.of(CmdArg.redirect(RedirectFile.fileToStdOut("/host/out", OpenMode.WRITE_TRUNCATE)))));
 
         FileMapper fileMapper = FileMapper.of("/shared");
 

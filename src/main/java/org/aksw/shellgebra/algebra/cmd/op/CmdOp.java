@@ -1,10 +1,12 @@
 package org.aksw.shellgebra.algebra.cmd.op;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
@@ -51,8 +53,13 @@ public interface CmdOp {
 
         @Override
         public CmdOp visit(CmdOpExec op) {
-            List<Redirect> finalRedirects = combine(op.redirects());
-            return new CmdOpExec(op.prefixes(), op.name(), op.args(), finalRedirects);
+            List<CmdArg> newArgs = new ArrayList<>(op.args().args());
+            for (Redirect redirect : additions) {
+                newArgs.add(CmdArg.redirect(redirect));
+            }
+            return new CmdOpExec(op.prefixes(), op.name(), ArgumentList.of(newArgs));
+            // List<Redirect> finalRedirects = combine(op.redirects());
+            // return new CmdOpExec(op.prefixes(), op.name(), op.args(), finalRedirects);
         }
 
         public List<Redirect> combine(List<Redirect> base) {

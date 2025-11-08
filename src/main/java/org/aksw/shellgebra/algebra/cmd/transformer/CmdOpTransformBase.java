@@ -34,7 +34,7 @@ public class CmdOpTransformBase
     public CmdOp transform(CmdOpExec op, List<CmdArg> subOps) {
         CmdOp result = (IterableUtils.equalsByReference(subOps, op.args().args()))
             ? op
-            : new CmdOpExec(op.getName(), new ArgumentList(subOps), op.redirects());
+            : new CmdOpExec(op.getName(), new ArgumentList(subOps)); //, op.redirects());
         return result;
     }
 

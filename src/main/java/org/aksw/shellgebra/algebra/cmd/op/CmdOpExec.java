@@ -6,10 +6,9 @@ import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
-public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args, List<Redirect> redirects)
+public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args) // , List<Redirect> redirects)
     implements CmdOp
 {
 //    public static CmdOpExec of(String... cmd) {
@@ -53,22 +52,22 @@ public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args
         this(List.of(), name, args);
     }
 
-    public CmdOpExec(String name, ArgumentList args, List<? extends Redirect> redirects) {
-        this(List.of(), name, args, List.<Redirect>copyOf(redirects));
-    }
+//    public CmdOpExec(String name, ArgumentList args) { //  List<? extends Redirect> redirects) {
+//        this(List.of(), name, args); // List.<Redirect>copyOf(redirects));
+//    }
 
-    public CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args) {
-        this(prefixes, name, args, List.of());
-    }
+//    public CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args) {
+//        this(prefixes, name, args);
+//    }
 
     // List<Redirect> redirects
-    public CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args, List<Redirect> redirects) {
+    public CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args) { //, List<Redirect> redirects) {
         // super();
         // super(args);
         this.prefixes = List.copyOf(prefixes);
         this.name = Objects.requireNonNull(name);
         this.args = args;
-        this.redirects = List.<Redirect>copyOf(redirects);
+        // this.redirects = List.<Redirect>copyOf(redirects);
     }
 
     public String getName() {
