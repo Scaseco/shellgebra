@@ -3,9 +3,9 @@ package org.aksw.commons.util.docker;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import org.aksw.commons.util.docker.ImageIntrospectorImpl.Entrypoint;
 import org.aksw.jenax.model.osreo.ImageIntrospection;
 import org.aksw.jenax.model.osreo.LocatorCommand;
 import org.aksw.jenax.model.osreo.OsreoUtils;
@@ -39,6 +39,11 @@ public class ImageIntrospectorSystem
     protected List<LocatorCommand> locatorCommands;
 
     protected Table<String, Entrypoint, Boolean> imageToEntrypoints = HashBasedTable.create();
+
+    // protected Map<String, Map<Entrypoint, Boolean>> imageToEntrypoints;
+    // protected Map<String, Table<Entrypoint, String, Boolean>> imageToKeepAlive;
+
+
     // protected Table<Entrypoint, String, Boolean> cmdAvailability = HashBasedTable.create();
 
     // Not ideal having this class here because it uses ExecSite and is more high level.

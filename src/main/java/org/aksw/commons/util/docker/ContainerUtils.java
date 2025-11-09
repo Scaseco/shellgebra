@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.aksw.jenax.engine.qlever.SystemUtils;
+import org.aksw.shellgebra.exec.SysRuntimeDocker;
+import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -271,10 +273,18 @@ public class ContainerUtils {
             finalCmd = command.toArray(String[]::new);
         } else {
             List<String> parts = new ArrayList<>(commandPrefix.size() + command.size());
+            // parts.add(entrypoint);
             parts.addAll(commandPrefix);
             parts.addAll(command);
+
+            // String strArg = String.join(" ", command);
+            // parts.add(strArg);
             finalCmd = parts.toArray(String[]::new);
         }
+
+//        try (SysRuntimeDocker sys = SysRuntimeFactoryDocker.create().create(imageName)) {
+//        	sys.
+//        }
 
         try (GenericContainer<?> container = new GenericContainer<>(imageName)
                 .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint(entrypoint))

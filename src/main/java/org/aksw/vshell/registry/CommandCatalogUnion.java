@@ -7,12 +7,12 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
-public class CommandRegistryUnion
-    implements CommandRegistry
+public class CommandCatalogUnion
+    implements CommandCatalog
 {
-    private List<CommandRegistry> registries;
+    private List<CommandCatalog> registries;
 
-    public CommandRegistryUnion(List<CommandRegistry> registries) {
+    public CommandCatalogUnion(List<CommandCatalog> registries) {
         super();
         this.registries = List.copyOf(registries);
     }
@@ -20,7 +20,7 @@ public class CommandRegistryUnion
     @Override
     public Multimap<ExecSite, String> get(String virtualCommandName) {
         Multimap<ExecSite, String> result = LinkedHashMultimap.create();
-        for (CommandRegistry registry : registries) {
+        for (CommandCatalog registry : registries) {
             Multimap<ExecSite, String> contrib = registry.get(virtualCommandName);
             contrib.forEach((k, v) -> {
                 if (!result.containsKey(k)) {

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.commons.util.docker.ImageIntrospector;
@@ -22,27 +23,50 @@ import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
 
 public class ExecSiteResolver {
-    private CommandRegistry candRegistry;
+    private CommandCatalog cmdCatalog;
 
     private JvmCommandRegistry jvmCmdRegistry;
     private CommandAvailability cmdAvailability;
     private ImageIntrospector dockerImageIntrospector;
 
-    public ExecSiteResolver(CommandRegistry candRegistry, JvmCommandRegistry jvmCmdRegistry,
+    public ExecSiteResolver(CommandCatalog cmdCatalog, JvmCommandRegistry jvmCmdRegistry,
             CommandAvailability cmdAvailability, ImageIntrospector dockerImageIntrospector) {
         super();
-        this.candRegistry = candRegistry;
+        this.cmdCatalog = cmdCatalog;
         this.jvmCmdRegistry = jvmCmdRegistry;
         this.cmdAvailability = cmdAvailability;
         this.dockerImageIntrospector = dockerImageIntrospector;
     }
 
+    public CommandCatalog getCommandCatalog() {
+        return cmdCatalog;
+    }
+
+    // XXX Should this method exist or is it API creep?
+    public JvmCommandRegistry getJvmCmdRegistry() {
+        return jvmCmdRegistry;
+    }
+
+    public Optional<String> resolve(String virtualCmd, ExecSite execSite) {
+        String result = null;
+        Set<String> candLocations = cmdCatalog.get(virtualCmd, execSite).orElse(null);
+        for (String cmd : candLocations) {
+            boolean isPresent = providesCommand(cmd, execSite);
+            if (isPresent) {
+                result = cmd;
+                break;
+            }
+        }
+        return Optional.ofNullable(result);
+    }
+
     public Map<ExecSite, String> resolve(String virtualCmd) {
         Map<ExecSite, String> result = new LinkedHashMap<>();
-        Map<ExecSite, Collection<String>> map = candRegistry.get(virtualCmd).asMap();
+        Map<ExecSite, Collection<String>> map = cmdCatalog.get(virtualCmd).asMap();
         for (Entry<ExecSite, Collection<String>> e : map.entrySet()) {
+            ExecSite execSite = e.getKey();
             for (String cmd : e.getValue()) {
-                boolean isPresent = providesCommand(cmd, e.getKey());
+                boolean isPresent = providesCommand(cmd, execSite);
                 if (isPresent) {
                     result.put(e.getKey(), cmd);
                 }

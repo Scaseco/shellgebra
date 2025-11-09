@@ -2,9 +2,11 @@ package org.aksw.shellgebra.exec;
 
 import java.nio.file.Path;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 
 import com.github.dockerjava.api.model.AccessMode;
@@ -19,13 +21,15 @@ public class StageDocker
     protected CmdOp cmdOp;
     protected FileMapper fileMapper;
     protected ContainerPathResolver containerPathResolver;
+    protected Function<CmdOpVar, Stage> varResolver;
 
-    public StageDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver) {
+    public StageDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver, Function<CmdOpVar, Stage> varResolver) {
         super();
         this.imageRef = imageRef;
         this.cmdOp = cmdOp;
         this.fileMapper = fileMapper;
         this.containerPathResolver = containerPathResolver;
+        this.varResolver = varResolver;
     }
 
     @Override
@@ -46,16 +50,16 @@ public class StageDocker
 
     @Override
     public BoundStage from(FileWriterTask inputTask) {
-        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, inputTask, null);
+        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, inputTask, null, varResolver);
     }
 
     @Override
     public BoundStage from(BoundStage input) {
-        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, null, input);
+        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, null, input, varResolver);
     }
 
     @Override
     public BoundStage fromNull() {
-        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, (FileWriterTask)null, null);
+        return new BoundStageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, (FileWriterTask)null, null, varResolver);
     }
 }

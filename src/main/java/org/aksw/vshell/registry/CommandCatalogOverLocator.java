@@ -12,13 +12,13 @@ import com.google.common.collect.Multimaps;
  * Combine a locator with an exec-site instance.
  * The results returned by the locator will associated with the preset execSiet.
  */
-public class CommandRegistryOverLocator
-    implements CommandRegistry
+public class CommandCatalogOverLocator
+    implements CommandCatalog
 {
     private ExecSite execSite;
     private CommandLocator locator;
 
-    public CommandRegistryOverLocator(ExecSite execSite, CommandLocator locator) {
+    public CommandCatalogOverLocator(ExecSite execSite, CommandLocator locator) {
         super();
         this.execSite = execSite;
         this.locator = locator;

@@ -8,18 +8,33 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.jenax.engine.qlever.SystemUtils;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
+import org.aksw.shellgebra.algebra.cmd.arg.Token;
+import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.exec.FileWriterTaskBase.PathLifeCycle;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.riot.Lang;
 import org.slf4j.Logger;
@@ -47,6 +62,7 @@ public class BoundStageDocker
     // protected String imageTag;
     // protected List<String> cmd;
     protected CmdOp cmdOp;
+    protected Function<CmdOpVar, Stage> varResolver;
     protected List<Bind> binds;
     protected String workingDirectory;
     protected ContainerPathResolver containerPathResolver;
@@ -56,7 +72,7 @@ public class BoundStageDocker
     protected BoundStage inputExecBuilder;
 
     // List<Bind> binds
-    public BoundStageDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver, FileWriterTask inputTask, BoundStage inputExecBuilder) {
+    public BoundStageDocker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, ContainerPathResolver containerPathResolver, FileWriterTask inputTask, BoundStage inputExecBuilder, Function<CmdOpVar, Stage> varResolver) {
         super();
         this.imageRef = imageRef;
         this.cmdOp = cmdOp;
@@ -65,6 +81,8 @@ public class BoundStageDocker
         this.containerPathResolver = containerPathResolver;
         this.inputTask = inputTask;
         this.inputExecBuilder = inputExecBuilder;
+
+        this.varResolver = varResolver;
         // this.workingDirectory = workingDirectory;
         // this.containerPathResolver = containerPathResolver;
     }
@@ -91,12 +109,16 @@ public class BoundStageDocker
 
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
 
+        // TODO Variables need to be resolved - typically involves named pipes.
+
+
         // CmdOp op = new CmdOpExec("/usr/bin/bash", new CmdArgLiteral("-c"), new CmdArgCmdOp(cmdOp));
         CmdString cmdString = runtime.compileString(cmdOp);
 
         String[] cmdParts = new String[] {
             "/bin/bash", "-c",
-            List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
+            // List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
+            cmdString.scriptString()
         };
 
 
@@ -146,6 +168,25 @@ public class BoundStageDocker
         };
     }
 
+    public static String extractSimpleCatPath(CmdOp cmdOp) {
+        if (cmdOp instanceof CmdOpExec exec) {
+            if ("/virt/cat".equals(exec.name())) {
+                if (exec.args().size() == 1) {
+                    CmdArg a = exec.args().args().get(0);
+                    if (a instanceof CmdArgWord w) {
+                        if (w.tokens().size() == 1) {
+                            Token t = w.tokens().get(0);
+                            if (t instanceof TokenPath tp) {
+                                 return tp.path();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     protected FileWriterTask execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) {
         // Closer closer = Closer.create();
 
@@ -175,6 +216,45 @@ public class BoundStageDocker
             inputTasks.add(itask);
         }
 
+
+
+        Set<CmdOpVar> vars = CmdOps.accVars(cmdOp);
+        // Map<CmdOpVar, Stage> varToStage = new LinkedHashMap<>();
+        Map<CmdOpVar, String> varToContainerPath = new LinkedHashMap<>();
+        // List<FileWriterTask> subTasks = new ArrayList<>();
+        for (CmdOpVar v : vars) {
+            Stage stage = varResolver.apply(v);
+            // varToStage.put(v, stage);
+            Entry<Path, String> pair = fileMapper.allocateTempFile("", "", AccessMode.ro);
+            Path hostPath = pair.getKey();
+            String containerPath = pair.getValue();
+            FileWriterTask fwt = stage.fromNull().execToFile(hostPath, PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe()));
+            varToContainerPath.put(v, containerPath);
+            inputTasks.add(fwt);
+            // substitutions.put(v, CmdOp.);
+            // String containerPath = fileMapper.allocate(itask.getOutputPath().toAbsolutePath().toString(), AccessMode.ro);
+
+            // stage.
+            // stage.fromNull().runToHostPipe()
+        }
+
+        tmpOp = CmdOpTransformer.transform(tmpOp, new CmdOpTransformBase() {
+            @Override
+            public CmdOp transform(CmdOpVar op) {
+                String containerPath = varToContainerPath.get(op);
+                return new CmdOpExec("/virt/cat", ArgumentList.of(CmdArg.ofPathString(containerPath)));
+            }
+        }, new CmdArgTransformBase() {
+            @Override
+            public CmdArg transform(CmdArgCmdOp arg, CmdOp subOp) {
+                String path = extractSimpleCatPath(subOp);
+                CmdArg r = path != null
+                    ? CmdArg.ofPathString(path)
+                    : super.transform(arg, subOp);
+                return r;
+            }
+        }, null);
+
         // SysRuntimeImpl.forCurrentOs().createNamedPipe(outPipePath);
         CmdOp effectiveOp = CmdOp.appendRedirect(tmpOp, RedirectFile.fileToStdOut(outContainerPath, OpenMode.WRITE_TRUNCATE));
 
@@ -192,7 +272,6 @@ public class BoundStageDocker
         }
 
         FileWriterTask task = new FileWriterTaskFromContainer(container, outPath, pathLifeCycle, inputTasks);
-
         return task;
     }
 

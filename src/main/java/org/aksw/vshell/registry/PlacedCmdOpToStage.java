@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
@@ -37,21 +38,29 @@ import com.google.common.io.ByteSource;
 public class PlacedCmdOpToStage {
 
     private FileMapper fileMapper;
-    private JvmCommandRegistry jvmCmdRegistry;
+    private ExecSiteResolver resolver;
 
-    public PlacedCmdOpToStage(JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
+    public PlacedCmdOpToStage(FileMapper fileMapper, ExecSiteResolver resolver) {
         super();
-        this.jvmCmdRegistry = jvmCmdRegistry;
-        this.fileMapper = fileMapper;
+        this.fileMapper = Objects.requireNonNull(fileMapper);
+        this.resolver = Objects.requireNonNull(resolver);
     }
 
-    public static PlacedCmdOpToStage of(JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
-        return new PlacedCmdOpToStage(jvmCmdRegistry, fileMapper);
+//    private JvmCommandRegistry jvmCmdRegistry;
+
+//    public PlacedCmdOpToStage(JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
+//        super();
+//        this.jvmCmdRegistry = jvmCmdRegistry;
+//        this.fileMapper = fileMapper;
+//    }
+
+    public static PlacedCmdOpToStage of(FileMapper fileMapper, ExecSiteResolver resolver) {
+        return new PlacedCmdOpToStage(fileMapper, resolver);
     }
 
     public Stage toStage(FinalPlacement placement) {
         Map<CmdOpVar, PlacedCmd> varToPlacement = placement.placements();
-        PlacedCmdOpVisitorToStage visitor = new PlacedCmdOpVisitorToStage(varToPlacement, jvmCmdRegistry, fileMapper);
+        PlacedCmdOpVisitorToStage visitor = new PlacedCmdOpVisitorToStage(varToPlacement, fileMapper, resolver);
         PlacedCmd root = placement.cmdOp();
         Stage result = root.accept(visitor);
         return result;
@@ -61,15 +70,25 @@ public class PlacedCmdOpToStage {
         implements PlacedCmdOpVisitor<Stage>
     {
         private Map<CmdOpVar, PlacedCmd> varToPlacement;
-        private JvmCommandRegistry jvmCmdRegistry;
         private FileMapper fileMapper;
+        private ExecSiteResolver resolver;
 
-        public PlacedCmdOpVisitorToStage(Map<CmdOpVar, PlacedCmd> varToPlacement, JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
+        public PlacedCmdOpVisitorToStage(Map<CmdOpVar, PlacedCmd> varToPlacement, FileMapper fileMapper, ExecSiteResolver resolver) {
             super();
             this.varToPlacement = varToPlacement;
-            this.jvmCmdRegistry = jvmCmdRegistry;
             this.fileMapper = fileMapper;
+            this.resolver = resolver;
         }
+
+//        private JvmCommandRegistry jvmCmdRegistry;
+//        private FileMapper fileMapper;
+
+//        public PlacedCmdOpVisitorToStage(Map<CmdOpVar, PlacedCmd> varToPlacement, JvmCommandRegistry jvmCmdRegistry, FileMapper fileMapper) {
+//            super();
+//            this.varToPlacement = varToPlacement;
+//            this.jvmCmdRegistry = jvmCmdRegistry;
+//            this.fileMapper = fileMapper;
+//        }
 
         public Stage resolveVar(CmdOpVar cmdOpVar) {
             PlacedCmd placedCmd = varToPlacement.get(cmdOpVar);
@@ -125,8 +144,11 @@ public class PlacedCmdOpToStage {
             Stage stage = execSite.accept(new ExecSiteVisitor<Stage>() {
                 @Override
                 public Stage visit(ExecSiteDockerImage execSite) {
+
+
+
                     String imageRef = execSite.imageRef();
-                    Stage r = Stages.docker(imageRef, finalCmdOp, fileMapper);
+                    Stage r = Stages.docker(imageRef, finalCmdOp, fileMapper, PlacedCmdOpVisitorToStage.this::resolveVar);
                     return r;
                 }
 
@@ -138,7 +160,11 @@ public class PlacedCmdOpToStage {
 
                 @Override
                 public Stage visit(ExecSiteCurrentJvm execSite) {
-                    CmdOpVisitor<Stage> cmdOpVisitorToStage = new CmdOpVisitorExecJvm(jvmCmdRegistry, PlacedCmdOpVisitorToStage.this::resolveVar);
+                    // CommandCatalog cmdCatalog = resolver.getCommandCatalog();
+                    JvmCommandRegistry jvmCmdRegistry = resolver.getJvmCmdRegistry();
+                    // cmdCatalog.get(finalCmdOp
+
+                    CmdOpVisitor<Stage> cmdOpVisitorToStage = new CmdOpVisitorExecJvm(resolver, PlacedCmdOpVisitorToStage.this::resolveVar);
                     Stage r = finalCmdOp.accept(cmdOpVisitorToStage);
                     return r;
                 }

@@ -13,10 +13,11 @@ import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
+import org.aksw.shellgebra.exec.shell.ShellEnv;
 import org.aksw.vshell.registry.CandidatePlacement;
 import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
 import org.aksw.vshell.registry.CommandAvailability;
-import org.aksw.vshell.registry.CommandRegistryImpl;
+import org.aksw.vshell.registry.CommandRegistry;
 import org.aksw.vshell.registry.ExecSiteResolver;
 import org.aksw.vshell.registry.FinalPlacement;
 import org.aksw.vshell.registry.FinalPlacementInliner;
@@ -39,7 +40,7 @@ public class TestCommandRegistry {
         }
 
         JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
-        CommandRegistryImpl candidates = initCmdCandRegistry(new CommandRegistryImpl());
+        CommandRegistry candidates = initCmdCandRegistry(new CommandRegistry());
 
         CommandAvailability cmdAvailability = new CommandAvailability();
         // TODO Have image introspector write into cmdAvailability without having to know about exec sites.
@@ -85,7 +86,9 @@ public class TestCommandRegistry {
         // Final step: convert to stage (or bound stage?)
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
         // TODO PlacedCmdOpToStage should probably accept a resolver as argument!
-        Stage stage = PlacedCmdOpToStage.of(jvmCmdRegistry, fileMapper).toStage(inlined);
+        ShellEnv shellEnv = new ShellEnv(); // Perhaps pass a shellEnv for book keeping of streams / file writers?
+
+        Stage stage = PlacedCmdOpToStage.of(fileMapper, resolver).toStage(inlined);
         String str = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         System.out.println(str);
         System.out.println(placedCommand);
@@ -108,16 +111,16 @@ public class TestCommandRegistry {
         return jvmCmdRegistry;
     }
 
-    public static CommandRegistryImpl initCmdCandRegistry(CommandRegistryImpl candidates) {
-        candidates.put("/virt/lbzip2", ExecSites.docker("nestio/lbzip2"), "/usr/bin/lbzip2");
+    public static CommandRegistry initCmdCandRegistry(CommandRegistry registry) {
+        registry.put("/virt/lbzip2", ExecSites.docker("nestio/lbzip2"), "/usr/bin/lbzip2");
 
         // Note: There can be multiple candidates per exec site.
-        candidates.put("/virt/lbzip2", ExecSites.host(), "/usr/bin/lbzip2");
-        candidates.put("/virt/lbzip2", ExecSites.jvm(), "/jvm/bzip2");
+        registry.put("/virt/lbzip2", ExecSites.host(), "/usr/bin/lbzip2");
+        registry.put("/virt/lbzip2", ExecSites.jvm(), "/jvm/bzip2");
 
-        candidates.put("/virt/bzip2", ExecSites.jvm(), "/jvm/bzip2");
+        registry.put("/virt/bzip2", ExecSites.jvm(), "/jvm/bzip2");
 
-        candidates.put("/usr/bin/echo", ExecSites.host(), "/usr/bin/echo");
-        return candidates;
+        registry.put("/usr/bin/echo", ExecSites.host(), "/usr/bin/echo");
+        return registry;
     }
 }

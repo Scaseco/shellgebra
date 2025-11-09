@@ -126,4 +126,9 @@ public class SysRuntimeImpl
         String resolvedCmd = which("mkfifo");
         SystemUtils.runAndWait(logger::info, resolvedCmd, absPathStr);
     }
+
+    @Override
+    public void close() {
+        throw new RuntimeException("This runtime must not be closed. Wrap this with a close shield.");
+    }
 }

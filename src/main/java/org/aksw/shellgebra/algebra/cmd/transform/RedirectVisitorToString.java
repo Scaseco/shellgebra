@@ -27,7 +27,7 @@ public class RedirectVisitorToString
         //   However, the current approach would incorrectly escape the whitespace when trying to quote the whole command.
         String result = switch (openMode) {
         case READ -> fdStr(fd, 0) + "<" + arg;
-        case WRITE_TRUNCATE -> fdStr(fd, 1) + ">" + arg;
+        case WRITE_TRUNCATE -> fdStr(fd, 1) + "> " + arg;
         case WRITE_APPEND -> fdStr(fd, 1) + ">>" + arg;
         case CLOBBER -> fdStr(fd, 1) + ">|" + arg;
         case READ_WRITE -> fdStr(fd, 1) + "<>" + arg;

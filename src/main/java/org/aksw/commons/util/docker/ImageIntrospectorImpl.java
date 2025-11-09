@@ -1,5 +1,6 @@
 package org.aksw.commons.util.docker;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +10,10 @@ import org.aksw.jenax.model.osreo.LocatorCommand;
 import org.aksw.jenax.model.osreo.OsreoUtils;
 import org.aksw.jenax.model.osreo.Shell;
 import org.aksw.jenax.model.osreo.ShellSupport;
+import org.aksw.shellgebra.exec.CmdStrOpsBash;
+import org.aksw.shellgebra.exec.ListBuilder;
+import org.aksw.shellgebra.exec.SysRuntimeCore;
+import org.aksw.shellgebra.exec.SysRuntimeCoreDocker;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.vshell.registry.CommandAvailability;
@@ -18,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
+import org.testcontainers.containers.GenericContainer;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -25,17 +31,18 @@ import com.google.common.collect.Table;
 public class ImageIntrospectorImpl
     implements ImageIntrospector
 {
-    record Entrypoint(String imageName, String command, List<String> options) {}
+
+
 
     // record CmdAvailability(String command, Entrypoint entrypoint, Boolean);
 
     private static final Logger logger = LoggerFactory.getLogger(ImageIntrospectorImpl.class);
     protected Model model;
 
-    protected List<Shell> shells;
-    protected List<LocatorCommand> locatorCommands;
+    protected List<Shell> shellCatalog;
+    protected List<LocatorCommand> locatorCatalog;
 
-    protected Table<String, Entrypoint, Boolean> imageToEntrypoints = HashBasedTable.create();
+    protected Table<String, Argv, Boolean> imageToEntrypoints = HashBasedTable.create();
     // protected Table<Entrypoint, String, Boolean> cmdAvailability = HashBasedTable.create();
 
     // Not ideal having this class here because it uses ExecSite and is more high level.
@@ -50,8 +57,8 @@ public class ImageIntrospectorImpl
 
     public ImageIntrospectorImpl(List<Shell> shells, List<LocatorCommand> locatorCommands, CommandAvailability cmdAvailability) {
         super();
-        this.shells = shells;
-        this.locatorCommands = locatorCommands;
+        this.shellCatalog = shells;
+        this.locatorCatalog = locatorCommands;
         this.cmdAvailability = cmdAvailability;
     }
 
@@ -69,45 +76,72 @@ public class ImageIntrospectorImpl
         return result;
     }
 
-    public boolean canRunEntrypoint(String imageName, String entrypoint, List<String> commandOptions) {
-        Entrypoint ep = new Entrypoint(imageName, entrypoint, commandOptions);
+    // public Entrypoint toEntrypoint(String entrypoint, List<String> commandOptions)
+
+    public boolean canRunEntrypoint(String imageName, Argv ep) {
+//         Entrypoint ep = new Entrypoint(entrypoint, commandOptions);
         Boolean result = imageToEntrypoints.get(imageName, ep);
         if (result == null) {
             try {
-                result = ContainerUtils.canRunEntrypoint(imageName, entrypoint, commandOptions);
+                result = ContainerUtils.canRunEntrypoint(imageName, ep.command(), ep.args());
             } catch (ContainerFetchException | ContainerLaunchException e) {
                 result = false;
             }
-            imageToEntrypoints.put(entrypoint, ep, result);
+            imageToEntrypoints.put(imageName, ep, result);
             // Also declare the entrypoint as an available command
             // cmdAvailability.put(ep, entrypoint, result);
-            cmdAvailability.put(entrypoint, ExecSites.docker(imageName), result);
+            cmdAvailability.put(ep.command(), ExecSites.docker(imageName), result);
         }
         return result;
     }
 
+    public boolean hasCommandRaw(SysRuntimeCore sysRuntime, String command) throws InterruptedException, IOException {
+        int exitCode = sysRuntime.runCmd(new String[]{command});
+        return exitCode != 127;
+    }
+
+    public boolean hasCommand(SysRuntimeCoreDocker sysRuntime, String command) {
+        String imageName = sysRuntime.getImageRef();
+        ExecSite execSite = ExecSites.docker(imageName);
+        Boolean result = cmdAvailability.get(command, execSite);
+        if (result == null) {
+            try {
+                // result = sysRuntime.runCmd(new String[]{command});
+                result = hasCommandRaw(sysRuntime, command);
+                // result = ContainerUtils.hasCommand(imageName, shellLocation, commandOptions, command);
+                cmdAvailability.put(command, execSite, result);
+            } catch (ContainerFetchException | ContainerLaunchException e) {
+                result = false;
+            } catch (InterruptedException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return result;
+    }
+
+    @Deprecated
     public boolean hasCommand(String imageName, String shellLocation, List<String> commandOptions, String command) {
         ExecSite execSite = ExecSites.docker(imageName);
         Boolean result = cmdAvailability.get(command, execSite);
         if (result == null) {
             try {
                 result = ContainerUtils.hasCommand(imageName, shellLocation, commandOptions, command);
+                cmdAvailability.put(command, execSite, result);
             } catch (ContainerFetchException | ContainerLaunchException e) {
                 result = false;
             }
-            cmdAvailability.put(command, execSite, result);
         }
         return result;
     }
 
     protected void findShell(ImageIntrospection result, String imageName) {
-        for (Shell shell : shells) {
+        for (Shell shell : shellCatalog) {
             findShell(result, imageName, shell);
         }
     }
 
     protected void findShell(ImageIntrospection result, String imageName, String shellName) {
-        List<Shell> matches = shells.stream().filter(sh -> sh.getLabel().equals(shellName)).toList();
+        List<Shell> matches = shellCatalog.stream().filter(sh -> sh.getLabel().equals(shellName)).toList();
         for (Shell match : matches) {
             findShell(result, imageName, match);
         }
@@ -115,13 +149,14 @@ public class ImageIntrospectorImpl
 
     protected void findShell(ImageIntrospection result, String imageName, Shell shell) {
         String shellName = shell.getLabel();
-        List<String> commandOption = Arrays.asList(shell.getCommandOption());
+        List<String> commandOptions = Arrays.asList(shell.getCommandOption());
 
         logger.info("Probing image [{}] for shell [{}]" , imageName, shellName);
 
         Set<String> shellProbeLocations = shell.getProbeLocations();
         for (String shellLocation : shellProbeLocations) {
-            boolean canRunEntrypoint = canRunEntrypoint(imageName, shellLocation, commandOption);
+            Argv entrypoint = Argv.of(shellLocation, commandOptions);
+            boolean canRunEntrypoint = canRunEntrypoint(imageName, entrypoint);
 
             logger.info("Probe image [{}] for shell [{}]: {}", imageName, shellName,
                 (canRunEntrypoint ? "" : "not ") + " found");
@@ -134,26 +169,122 @@ public class ImageIntrospectorImpl
                 sh.setShellType(shell);
                 sh.setCommandOption(shell.getCommandOption());
 
-                // Check for the locator command
-                String builtInLocator = shell.getLocatorCommand();
-                if (builtInLocator != null) {
-                    sh.setLocatorCommand(builtInLocator); // TODO Verify?
-                } else {
-                    for (LocatorCommand locatorCommand : locatorCommands) {
-                        for (String locatorLocation : locatorCommand.getProbeLocations()) {
-                            boolean hasCommand = hasCommand(imageName, shellLocation, commandOption, locatorLocation);
-                            logger.info("Probe locator [{}] for shell [{}] with option [{}] using locator [{}]: {}", imageName, shellLocation, commandOption, locatorLocation,
-                                    (canRunEntrypoint ? "" : "not ") + " found");
+                // TODO Try to keep the container alive with the given entry point.
+                try (SysRuntimeCoreDocker runtime = findKeepAlive(imageName, entrypoint)){
+                    // Check for the locator command
+                    String builtInLocator = shell.getLocatorCommand();
+                    if (builtInLocator != null) {
+                        sh.setLocatorCommand(builtInLocator); // TODO Verify?
+                    } else {
+                        for (LocatorCommand locatorCommand : locatorCatalog) {
+                            for (String locatorLocation : locatorCommand.getProbeLocations()) {
+                                boolean hasCommand = hasCommand(runtime,  locatorLocation);
+                                logger.info("Probe locator [{}] for shell [{}] with option [{}] using locator [{}]: {}", imageName, shellLocation, commandOptions, locatorLocation,
+                                        (canRunEntrypoint ? "" : "not ") + " found");
 
-                            if (hasCommand) {
-                                sh.setLocatorCommand(locatorLocation);
+                                if (hasCommand) {
+                                    sh.setLocatorCommand(locatorLocation);
+                                }
                             }
                         }
                     }
+                    // break outer; // This would stop after finding the first shell.
+                    break;
                 }
-                // break outer; // This would stop after finding the first shell.
-                break;
             }
         }
     }
+
+    public static SysRuntimeCoreDocker findKeepAlive(String imageRef, Argv entrypoint) {
+        List<String[]> keepAliveCatalog = getKeepAliveCatalog();
+        SysRuntimeCoreDocker result = startKeptAlive(imageRef, entrypoint, keepAliveCatalog);
+        return result;
+    }
+
+    // public GenericContainer<?> startKeptAlive(DockerImageName image) {
+    public static SysRuntimeCoreDocker startKeptAlive(String imageRef, Argv entrypoint, List<String[]> candKeepAliveCmds) {
+        Exception last = null;
+        // List<String[]> candidates = getKeepAliveCatalog();
+
+        String ep = entrypoint.command();
+
+        SysRuntimeCoreDocker result = null;
+        for (String[] cmd : candKeepAliveCmds) {
+            // Move any entrypoint arguments to the beginning of the command for consistency with CLI:
+            // Works: docker run --rm --entrypoint /usr/bin/sh ubuntu:24.04 -c 'which which'
+            // Not possible: docker run --rm --entrypoint '/usr/bin/sh -c' ubuntu:24.04 'which which'
+
+            String str = String.join(" ", cmd);
+
+            String[] finalCmd = ListBuilder.forString().addAll(entrypoint.args()).add(str).buildArray();
+            try {
+                GenericContainer<?> c = new GenericContainer<>(imageRef)
+                        .withCreateContainerCmdModifier(x -> x.withEntrypoint(ep))
+                        .withCommand(finalCmd);
+                c.start();
+                result = new SysRuntimeCoreDocker(c, CmdStrOpsBash.get());
+                break;
+            } catch (Exception e) {
+                last = e; // try next
+            }
+        }
+
+        if (result != null) {
+            return result;
+        }
+
+        throw new IllegalStateException(
+            "Could not find a portable keep-alive command (image may be distroless/scratch).",
+            last
+        );
+    }
+
+    public static List<String[]> getKeepAliveCatalog() {
+        List<String[]> candidates = Arrays.asList(new String[][]{
+            // GNU coreutils (PATH lookup)
+            // BusyBox/Alpine (PATH lookup)
+            {"sleep", "365d"},
+            {"/bin/sleep", "365d"},
+            {"/usr/bin/sleep", "365d"},
+            // Absolute paths (cover usrmerge + busybox)
+            {"sleep", "infinity"},
+            {"/bin/sleep", "infinity"},
+            {"/usr/bin/sleep", "infinity"},
+            // Tail fallback (very common)
+            {"tail", "-f", "/dev/null"},
+            {"/bin/tail", "-f", "/dev/null"},
+            {"/usr/bin/tail", "-f", "/dev/null"},
+            // If BusyBox is present as a single binary:
+            {"/bin/busybox", "sleep", "365d"},
+            {"/usr/bin/busybox", "sleep", "365d"},
+            // Last-resort shell loop IF a shell exists
+            {"sh", "-c", "while :; do sleep 1h; done"},
+            {"/bin/sh", "-c", "while :; do sleep 1h; done"},
+            {"/usr/bin/sh", "-c", "while :; do sleep 1h; done"}
+        });
+//        List<String[]> candidates = Arrays.asList(new String[][]{
+//            // GNU coreutils (PATH lookup)
+//            {"sleep", "infinity"},
+//            // BusyBox/Alpine (PATH lookup)
+//            {"sleep", "365d"},
+//            // Absolute paths (cover usrmerge + busybox)
+//            {"/bin/sleep", "infinity"},
+//            {"/usr/bin/sleep", "infinity"},
+//            {"/bin/sleep", "365d"},
+//            {"/usr/bin/sleep", "365d"},
+//            // Tail fallback (very common)
+//            {"tail", "-f", "/dev/null"},
+//            {"/bin/tail", "-f", "/dev/null"},
+//            {"/usr/bin/tail", "-f", "/dev/null"},
+//            // If BusyBox is present as a single binary:
+//            {"/bin/busybox", "sleep", "365d"},
+//            {"/usr/bin/busybox", "sleep", "365d"},
+//            // Last-resort shell loop IF a shell exists
+//            {"sh", "-c", "while :; do sleep 1h; done"},
+//            {"/bin/sh", "-c", "while :; do sleep 1h; done"},
+//            {"/usr/bin/sh", "-c", "while :; do sleep 1h; done"}
+//        });
+        return candidates;
+    }
+
 }

@@ -24,4 +24,12 @@ public class SysRuntimeWrapperBase<X extends SysRuntime>
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public void close() {
+        X d = getDelegate();
+        if (d != null) {
+            d.close();
+        }
+    }
 }

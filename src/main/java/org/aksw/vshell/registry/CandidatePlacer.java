@@ -11,13 +11,13 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 
 public class CandidatePlacer {
-    private CommandRegistry cmdRegistry;
+    private CommandCatalog cmdRegistry;
     private ExecSiteResolver execSiteResolver;
     private Set<ExecSite> preferredExecSites;
     private Map<CmdOp, Set<ExecSite>> opToSites = new IdentityHashMap<>();
     private Map<CmdOpVar, PlacedCommand> varToPlacement = new HashMap<>();
 
-    public CandidatePlacer(CommandRegistry cmdRegistry, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
+    public CandidatePlacer(CommandCatalog cmdRegistry, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
         super();
         this.cmdRegistry = cmdRegistry;
         this.execSiteResolver = execSiteResolver;

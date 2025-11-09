@@ -6,13 +6,13 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 
 import com.google.common.collect.Multimap;
 
-public class CommandRegistryCached
-    implements CommandRegistry
+public class CommandCatalogCached
+    implements CommandCatalog
 {
-    private CommandRegistry baseRegistry;
-    private CommandRegistryImpl dynamicRegistry;
+    private CommandCatalog baseRegistry;
+    private CommandRegistry dynamicRegistry;
 
-    public CommandRegistryCached(CommandRegistry baseRegistry, CommandRegistryImpl dynamicRegistry) {
+    public CommandCatalogCached(CommandCatalog baseRegistry, CommandRegistry dynamicRegistry) {
         super();
         this.baseRegistry = Objects.requireNonNull(baseRegistry);
         this.dynamicRegistry = Objects.requireNonNull(dynamicRegistry);

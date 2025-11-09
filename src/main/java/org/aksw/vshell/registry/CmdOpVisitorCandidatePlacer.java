@@ -31,7 +31,7 @@ public class CmdOpVisitorCandidatePlacer
 {
     /** ExecSiteResolver can test exec sites for whether they provide a command. */
     // private CommandReg
-    private CommandRegistry cmdRegistry;
+    private CommandCatalog cmdRegistry;
     private ExecSiteResolver execSiteResolver;
     private Set<ExecSite> preferredExecSites;
     private Map<CmdOp, Set<ExecSite>> opToSites = new IdentityHashMap<>();
@@ -39,7 +39,7 @@ public class CmdOpVisitorCandidatePlacer
 
     private int nextVar = 0;
 
-    public CmdOpVisitorCandidatePlacer(CommandRegistry cmdRegistry, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
+    public CmdOpVisitorCandidatePlacer(CommandCatalog cmdRegistry, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
         super();
         this.cmdRegistry = cmdRegistry;
         this.execSiteResolver = execSiteResolver;

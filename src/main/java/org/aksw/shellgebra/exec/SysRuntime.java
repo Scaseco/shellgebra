@@ -8,7 +8,9 @@ import java.util.Objects;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 
-public interface SysRuntime {
+public interface SysRuntime
+    extends AutoCloseable
+{
     String which(String cmdName) throws IOException, InterruptedException;
 
     /** Quote a filename for use as an argument.*/
@@ -48,4 +50,7 @@ public interface SysRuntime {
         CmdString cmdString = runtime.compileString(cmdOp);
         return cmdString;
     }
+
+    @Override
+    public void close();
 }

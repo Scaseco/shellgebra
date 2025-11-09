@@ -18,18 +18,18 @@ public class FinalPlacer {
         CmdOp cmdOp = root.cmdOp();
         Set<ExecSite> execSites = root.execSites();
 
-        Worker worker = new Worker(candPlacement.placements());
+        FinalPlacerWorker worker = new FinalPlacerWorker(candPlacement.placements());
 
         PlacedCmd tmp = worker.place(cmdOp, execSites);
         Map<CmdOpVar, PlacedCmd> outMap = worker.getOutMap();
         return new FinalPlacement(tmp, outMap);
     }
 
-    static class Worker {
+    static class FinalPlacerWorker {
         private Map<CmdOpVar, PlacedCommand> inMap;
         private Map<CmdOpVar, PlacedCmd> outMap = new HashMap<>();
 
-        public Worker(Map<CmdOpVar, PlacedCommand> inMap) {
+        public FinalPlacerWorker(Map<CmdOpVar, PlacedCommand> inMap) {
             super();
             this.inMap = inMap;
         }
