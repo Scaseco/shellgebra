@@ -56,6 +56,12 @@ public class FileMapper {
         return binds;
     }
 
+    public String getContainerPath(String hostPath) {
+        String result = getBinds().stream().filter(b -> b.getPath().equals(hostPath))
+            .map(Bind::getVolume).map(Volume::getPath).findFirst().orElse(null);
+        return result;
+    }
+
 //    public String allocateReadOnly(String hostPath) {
 //        return allocate(hostPath, AccessMode.ro);
 //    }

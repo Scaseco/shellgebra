@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -105,7 +106,7 @@ public class BoundStageDocker
 
     protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp cmdOp) throws IOException {
         String userStr = getUserString();
-        logger.info("Setting up container with UID:GID=" + userStr);
+        logger.info("Setting up container " + imageRef + " with UID:GID=" + userStr);
 
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
 
@@ -225,10 +226,13 @@ public class BoundStageDocker
         for (CmdOpVar v : vars) {
             Stage stage = varResolver.apply(v);
             // varToStage.put(v, stage);
-            Entry<Path, String> pair = fileMapper.allocateTempFile("", "", AccessMode.ro);
-            Path hostPath = pair.getKey();
-            String containerPath = pair.getValue();
-            FileWriterTask fwt = stage.fromNull().execToFile(hostPath, PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe()));
+//            Entry<Path, String> pair = fileMapper.allocateTempFile("", "", AccessMode.ro);
+//            Path hostPath = pair.getKey();
+//            String containerPath = pair.getValue();
+//            FileWriterTask fwt = stage.fromNull().execToFile(hostPath, PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe()));
+            FileWriterTask fwt = stage.fromNull().runToHostPipe();
+            String containerPath = fileMapper.getContainerPath(fwt.getOutputPath().toAbsolutePath().toString());
+            Objects.requireNonNull(containerPath);
             varToContainerPath.put(v, containerPath);
             inputTasks.add(fwt);
             // substitutions.put(v, CmdOp.);
