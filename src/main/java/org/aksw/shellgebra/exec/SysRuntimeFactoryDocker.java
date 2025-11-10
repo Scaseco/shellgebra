@@ -25,6 +25,18 @@ public class SysRuntimeFactoryDocker {
         return new SysRuntimeFactoryDocker(imageIntrospector);
     }
 
+    public SysRuntimeCore createCore(String imageRef) {
+        ImageIntrospection introspection = imageIntrospector.inspect(imageRef, true);
+        ShellSupport bash = introspection.getShellStatus().get("bash");
+        if (bash == null) {
+            throw new RuntimeException("No bash found");
+        }
+//
+        Argv entrypointArgv = Argv.of(bash.getCommandPath(), ListBuilder.forString().addAllNonNull(bash.getCommandOption()).buildList());
+        SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, entrypointArgv);
+        return core;
+    }
+
     public SysRuntimeDocker create(String imageRef) {
         ImageIntrospection introspection = imageIntrospector.inspect(imageRef, true);
         ShellSupport bash = introspection.getShellStatus().get("bash");

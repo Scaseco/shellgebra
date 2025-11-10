@@ -12,6 +12,13 @@ public record Argv(List<String> argv) {
         argv = List.copyOf(Objects.requireNonNull(argv));
     }
 
+    public static Argv of(String... argv) {
+        if (argv.length == 0) {
+            throw new IllegalArgumentException("At least on item expected.");
+        }
+        return new Argv(List.of(argv));
+    }
+
     public static Argv of(String command, String ...args) {
         return of(command, List.of(args));
     }
@@ -33,5 +40,9 @@ public record Argv(List<String> argv) {
 
     public String[] newArgv() {
         return argv.toArray(String[]::new);
+    }
+
+    public String[] newArgs() {
+        return args().toArray(String[]::new);
     }
 }

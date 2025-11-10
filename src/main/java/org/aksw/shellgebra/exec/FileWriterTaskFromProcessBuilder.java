@@ -14,14 +14,14 @@ import com.google.common.io.ByteSource;
 
 /** Writer task based on a system process created from a system call. */
 public class FileWriterTaskFromProcessBuilder extends FileWriterTaskViaExecutor {
-    private List<ProcessBuilderBase> processBuilders;
+    private List<ProcessBuilder> processBuilders;
     private List<Process> processes;
 
     private List<FileWriterTask> inputTasks;
     private ByteSource inputSource;
     private OutputStreamTransform outputTransform;
 
-    public FileWriterTaskFromProcessBuilder(Path outputPath, PathLifeCycle pathLifeCycle, List<ProcessBuilderBase> processBuilders, List<FileWriterTask> inputTasks, ByteSource inputSource, OutputStreamTransform outputTransform) {
+    public FileWriterTaskFromProcessBuilder(Path outputPath, PathLifeCycle pathLifeCycle, List<ProcessBuilder> processBuilders, List<FileWriterTask> inputTasks, ByteSource inputSource, OutputStreamTransform outputTransform) {
         super(outputPath, pathLifeCycle);
         this.processBuilders = processBuilders;
         this.inputTasks = inputTasks;
@@ -43,7 +43,7 @@ public class FileWriterTaskFromProcessBuilder extends FileWriterTaskViaExecutor 
             inputTask.start();
         }
 
-        processes = ProcessBuilderBase.startPipeline(processBuilders);
+        processes = ProcessBuilder.startPipeline(processBuilders);
 
         if (inputSource != null) {
             Process firstProcess = processes.get(0);

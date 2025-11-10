@@ -37,6 +37,8 @@ public class SysRuntimeCoreDocker
     public String execCmd(String... argv) throws IOException, InterruptedException {
         Container.ExecResult execResult = container.execInContainer(StandardCharsets.UTF_8, argv);
         String result = execResult.getStdout();
+        // Remove trailing newline
+        result = result.replaceAll("\n$", "");
         return result;
     }
 

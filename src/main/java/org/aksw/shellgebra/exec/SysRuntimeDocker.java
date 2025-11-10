@@ -33,7 +33,6 @@ public class SysRuntimeDocker
         String[] argv = ListBuilder.forString().addAll(locatorCommand.argv()).add(cmdName).buildArray();
         String result = execCmd(argv);
         // Remove any trailing newlines.
-        result = result.replaceAll("\n+$", "");
         return result;
     }
 

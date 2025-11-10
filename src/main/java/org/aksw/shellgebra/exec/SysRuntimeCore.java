@@ -1,9 +1,10 @@
 package org.aksw.shellgebra.exec;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 public interface SysRuntimeCore
-    extends AutoCloseable
+    extends Closeable
 {
     // TODO Abstract as Process and make other variants default implementations.
     // Process execProcess(String... argv);

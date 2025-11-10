@@ -10,6 +10,10 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.Stage;
+import org.aksw.shellgebra.exec.SysRuntimeCore;
+import org.aksw.shellgebra.exec.SysRuntimeCoreExecSiteFactory;
+import org.aksw.shellgebra.exec.SysRuntimeCoreExecSiteFactoryPool;
+import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
@@ -30,6 +34,8 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
 import org.junit.Test;
+
+import junit.framework.Assert;
 
 public class TestCommandRegistry {
     @Test
@@ -100,6 +106,21 @@ public class TestCommandRegistry {
         // CommandRegistry hostRegistry = new CommandRegistryOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
         // CommandRegistry jvmRegistry = new CommandRegistryOverLocator(ExecSites.jvm(), new CommandLocatorJvmRegistry(jvmCmdRegistry));
         // CommandRegistry baseRegistry = new CommandRegistryUnion(List.of(jvmRegistry, candidates, hostRegistry));
+    }
+
+    @Test
+    public void test02() throws IOException, InterruptedException {
+        JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
+        SysRuntimeFactoryDocker dockerFactory = SysRuntimeFactoryDocker.create();
+
+        String expectedStr = "Hello world";
+        String actualStr;
+        try (SysRuntimeCoreExecSiteFactory f = new SysRuntimeCoreExecSiteFactoryPool(jvmCmdRegistry, dockerFactory)) {
+            try (SysRuntimeCore r = f.getRuntime(ExecSites.docker("nestio/lbzip2"))) {
+                actualStr = r.execCmd("echo", expectedStr);
+            }
+        }
+        Assert.assertEquals(expectedStr,actualStr);
     }
 
     public static JvmCommandRegistry initJvmCmdRegistry(JvmCommandRegistry jvmCmdRegistry) {

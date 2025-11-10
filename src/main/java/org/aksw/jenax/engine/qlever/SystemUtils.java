@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,6 +29,15 @@ public class SystemUtils {
 
     public static Process run(Consumer<String> logger, String ...cmd) throws IOException, InterruptedException {
         return run(new ProcessBuilder(cmd), logger);
+    }
+
+    public static int runCmd(String ...cmd) throws IOException, InterruptedException {
+        Process p = run(new ProcessBuilder(cmd), logger::info);
+        try (OutputStream out = OutputStream.nullOutputStream()) {
+            p.getInputStream().transferTo(out);
+        }
+        int result = p.exitValue();
+        return result;
     }
 
     // FIXME If the process exists fast then the reader thread still doesn't get all messages
