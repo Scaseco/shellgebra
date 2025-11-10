@@ -36,6 +36,8 @@ public class SysRuntimeFactoryDocker {
         String locatorCmd = bash.getLocatorCommand();
         Argv locatorArgv = locatorCmd == null ? null : Argv.of(locatorCmd);
 
+        Argv existsCmd = Argv.of("test", "-e");
+
 //        Argv loc = null;
 //        String str = bash.getLocatorCommand();
 //        if (str != null) {
@@ -50,7 +52,7 @@ public class SysRuntimeFactoryDocker {
 //        }
 
         SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, entrypointArgv);
-        SysRuntimeDocker result = new SysRuntimeDocker(core, locatorArgv);
+        SysRuntimeDocker result = new SysRuntimeDocker(core, locatorArgv, existsCmd);
         return result;
     }
 }

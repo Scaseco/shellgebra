@@ -12,6 +12,7 @@ public interface SysRuntime
     extends AutoCloseable
 {
     String which(String cmdName) throws IOException, InterruptedException;
+    boolean exists(String cmdName) throws IOException, InterruptedException;
 
     /** Quote a filename for use as an argument.*/
     String quoteFileArgument(String fileName);

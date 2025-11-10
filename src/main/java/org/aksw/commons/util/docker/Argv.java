@@ -12,8 +12,8 @@ public record Argv(List<String> argv) {
         argv = List.copyOf(Objects.requireNonNull(argv));
     }
 
-    public static Argv of(String command) {
-        return new Argv(List.of(command));
+    public static Argv of(String command, String ...args) {
+        return of(command, List.of(args));
     }
 
     public static Argv of(String command, List<String> args) {

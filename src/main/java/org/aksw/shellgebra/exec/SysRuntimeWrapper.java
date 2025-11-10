@@ -16,6 +16,11 @@ public interface SysRuntimeWrapper<X extends SysRuntime>
     }
 
     @Override
+    default boolean exists(String cmdName) throws IOException, InterruptedException {
+        return getDelegate().exists(cmdName);
+    }
+
+    @Override
     default String[] compileCommand(CmdOp op) {
         return getDelegate().compileCommand(op);
     }

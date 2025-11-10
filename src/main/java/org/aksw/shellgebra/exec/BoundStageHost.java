@@ -54,7 +54,7 @@ public class BoundStageHost
         this.cmdOp = cmdOp;
     }
 
-    protected List<ProcessBuilder> setupProcessBuilders(CmdOp cmdOp) {
+    protected List<ProcessBuilderBase> setupProcessBuilders(CmdOp cmdOp) {
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
         CmdOp op = new CmdOpExec("/usr/bin/bash", new CmdArgLiteral("-c"), new CmdArgCmdOp(cmdOp));
         CmdString cmdString = runtime.compileString(cmdOp);
@@ -65,13 +65,13 @@ public class BoundStageHost
 
         List.of(cmdParts).stream().forEach(p -> System.out.println("[" + p + "]"));
 
-        ProcessBuilder result = new ProcessBuilder(cmdParts);
+        ProcessBuilderBase result = new ProcessBuilderBase(cmdParts);
         return List.of(result);
     }
 
     protected FileWriterTask execToPathInternal(Path outPath, PathLifeCycle pathLifeCycle) {
         List<FileWriterTask> inputTasks = new ArrayList<>();
-        List<ProcessBuilder> processBuilders = setupProcessBuilders(cmdOp);
+        List<ProcessBuilderBase> processBuilders = setupProcessBuilders(cmdOp);
 //        List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
 //
 //        // Configure input from a file.
@@ -113,7 +113,7 @@ public class BoundStageHost
 
     @Override
     public ByteSource toByteSource() {
-        List<ProcessBuilder> processBuilders;
+        List<ProcessBuilderBase> processBuilders;
         try {
             processBuilders = setupProcessBuilders(cmdOp);
         } catch (Exception e) {

@@ -14,16 +14,18 @@ public class SysRuntimeDocker
     // private CmdStrOps cmdStrOps;
     private SysRuntimeCoreDocker core;
     private Argv locatorCommand;
+    private Argv existsCommand;
 
     // private String[] shellCommand;
 
-    public SysRuntimeDocker(SysRuntimeCoreDocker core, Argv locatorCommand) {
+    public SysRuntimeDocker(SysRuntimeCoreDocker core, Argv locatorCommand, Argv existsCommand) {
         super();
 //        this.container = container;
 //        this.locatorCommand = locatorCommand;
 //        this.cmdStrOps = cmdStrOps;
         this.core = core;
         this.locatorCommand = locatorCommand;
+        this.existsCommand = existsCommand;
     }
 
     @Override
@@ -34,6 +36,18 @@ public class SysRuntimeDocker
         result = result.replaceAll("\n+$", "");
         return result;
     }
+
+    @Override
+    public boolean exists(String cmdName) throws IOException, InterruptedException {
+        String[] argv = ListBuilder.forString().addAll(existsCommand.argv()).add(cmdName).buildArray();
+        int exitValue = core.runCmd(argv);
+        return exitValue == 0;
+        // String result = execCmd(argv);
+        // Remove any trailing newlines.
+        // result = result.replaceAll("\n+$", "");
+        // return result;
+    }
+
 
     protected String execCmd(String... argv) throws UnsupportedOperationException, IOException, InterruptedException {
         String result = core.execCmd(argv);//execInContainer(StandardCharsets.UTF_8, argv);

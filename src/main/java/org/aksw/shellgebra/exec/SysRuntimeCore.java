@@ -8,6 +8,8 @@ public interface SysRuntimeCore
     // TODO Abstract as Process and make other variants default implementations.
     // Process execProcess(String... argv);
 
+    IProcessBuilder<?> newProcessBuilder();
+
     String execCmd(String... argv) throws IOException, InterruptedException;
     int runCmd(String... argv) throws IOException, InterruptedException;
 

@@ -31,7 +31,18 @@ public class TestSysRuntimeDocker {
         String str;
         try (SysRuntime sys = f.create("ubuntu:24.04")) {
             str = sys.which("cat");
+            // System.out.println(sys.exists("/foo/bar"));
         }
         Assert.assertEquals("/usr/bin/cat", str);
+    }
+
+    @Test
+    public void test02() throws IOException, InterruptedException {
+        SysRuntimeFactoryDocker f = SysRuntimeFactoryDocker.create();
+        boolean b;
+        try (SysRuntime sys = f.create("ubuntu:24.04")) {
+            b = sys.exists("/usr/bin/cat");
+        }
+        Assert.assertTrue(b);
     }
 }
