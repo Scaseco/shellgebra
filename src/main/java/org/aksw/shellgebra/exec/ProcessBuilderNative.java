@@ -8,7 +8,16 @@ import java.util.Map;
 public class ProcessBuilderNative
     implements IProcessBuilder<ProcessBuilderNative>
 {
-    private ProcessBuilder delegate = new ProcessBuilder();
+    private ProcessBuilder delegate;
+
+    public ProcessBuilderNative() {
+        this(new ProcessBuilder());
+    }
+
+    public ProcessBuilderNative(ProcessBuilder delegate) {
+        super();
+        this.delegate = delegate;
+    }
 
     private ProcessBuilder getDelegate() {
         return delegate;
@@ -59,7 +68,7 @@ public class ProcessBuilderNative
     }
 
     @Override
-    public Process build() throws IOException {
+    public Process start() throws IOException {
         return getDelegate().start();
     }
 }

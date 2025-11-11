@@ -19,5 +19,5 @@ public interface IProcessBuilder<X extends IProcessBuilder<X>> {
 
     X redirectErrorStream(boolean redirectErrorStream);
 
-    Process build() throws IOException;
+    Process start() throws IOException;
 }

@@ -9,6 +9,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.SysRuntimeCore;
 import org.aksw.shellgebra.exec.SysRuntimeCoreExecSiteFactory;
@@ -26,6 +27,7 @@ import org.aksw.vshell.registry.ExecSiteResolver;
 import org.aksw.vshell.registry.FinalPlacement;
 import org.aksw.vshell.registry.FinalPlacementInliner;
 import org.aksw.vshell.registry.FinalPlacer;
+import org.aksw.vshell.registry.JvmCmdTest;
 import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandExecutor;
 import org.aksw.vshell.registry.JvmCommandExecutorImpl;
@@ -128,25 +130,49 @@ public class TestCommandRegistry {
     }
 
     @Test
-    public void testJvmWhich() throws IOException {
+    public void testJvmWhichDirect() throws IOException {
         JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
         JvmContext context = new JvmContext(jvmCmdRegistry);
         context.getEnvironment().put("PATH", "/jvm:/bin");
         JvmCommandExecutor executor = new JvmCommandExecutorImpl(context);
+
         executor.run("which", "bzip2");
 
-        System.out.println("GOT:" + executor.exec("which", "bzip2"));
+        String expectedStr = "/jvm/bzip2";
+        String actualStr = executor.exec("which", "bzip2");
+        Assert.assertEquals(expectedStr, actualStr);
+
+
+        int actualValue = executor.run("test", "-e", actualStr);
+        Assert.assertEquals(0, actualValue);
+    }
+
+    @Test
+    public void testJvmWhichProcess() throws IOException {
+        JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
+        JvmContext context = new JvmContext(jvmCmdRegistry);
+        context.getEnvironment().put("PATH", "/jvm:/bin");
+        JvmCommandExecutor executor = new JvmCommandExecutorImpl(context);
+
+        IProcessBuilder<?> builder = executor.newProcessBuilder("which", "bzip2");
+        // SystemUtils
+
+//        String expectedStr = "/jvm/bzip2";
+//        String actualStr = executor.exec("which", "bzip2");
+        // Assert.assertEquals(expectedStr, actualStr);
     }
 
     public static JvmCommandRegistry initJvmCmdRegistry(JvmCommandRegistry jvmCmdRegistry) {
+        // Core command: which - resolve short name to fully qualified command name.
+        jvmCmdRegistry.put("/bin/which", new JvmCommandWhich());
+
+        // Core command: test - return 0 if name is fully qualified command name - 1 otherwise.
+        jvmCmdRegistry.put("/bin/test", new JvmCmdTest());
+
         CompressorStreamFactory csf = new CompressorStreamFactory();
 
         JvmCommand bzip2Cmd = JvmCommandTranscode.of(csf, CompressorStreamFactory.BZIP2);
         jvmCmdRegistry.put("/jvm/bzip2", bzip2Cmd);
-
-        jvmCmdRegistry.put("/bin/which", new JvmCommandWhich());
-
-        // jvmCmdRegistry.put("/virt/bzip2", bzip2Cmd);
         return jvmCmdRegistry;
     }
 

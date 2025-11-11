@@ -3,6 +3,7 @@ package org.aksw.shellgebra.exec;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.aksw.vshell.registry.JvmExecUtils;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 
@@ -38,7 +39,7 @@ public class SysRuntimeCoreDocker
         Container.ExecResult execResult = container.execInContainer(StandardCharsets.UTF_8, argv);
         String result = execResult.getStdout();
         // Remove trailing newline
-        result = result.replaceAll("\n$", "");
+        result = JvmExecUtils.removeTrailingNewline(result);
         return result;
     }
 

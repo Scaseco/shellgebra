@@ -99,6 +99,7 @@ public class JvmCommandExecutorImpl
 
             baos.flush();
             String str = baos.toString(StandardCharsets.UTF_8);
+            str = JvmExecUtils.removeTrailingNewline(str);
             return str;
         }
     }

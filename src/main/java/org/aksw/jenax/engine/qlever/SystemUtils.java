@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.aksw.shellgebra.exec.IProcessBuilder;
+import org.aksw.shellgebra.exec.ProcessBuilderNative;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.io.input.ProxyInputStream;
 import org.slf4j.Logger;
@@ -114,6 +116,10 @@ public class SystemUtils {
     }
 
     public static InputStream exec(ProcessBuilder processBuilder) throws IOException, InterruptedException {
+        return exec(new ProcessBuilderNative(processBuilder));
+    }
+
+    public static InputStream exec(IProcessBuilder<?> processBuilder) throws IOException, InterruptedException {
         Process process = processBuilder.start();
 
         AtomicBoolean isTerminating = new AtomicBoolean(false);

@@ -59,12 +59,12 @@ public class JvmCommandWhich
 
     public static List<String> resolve(JvmCommandRegistry reg, List<String> pathEntries, String name, long max) {
         List<String> res = PathResolutionUtils.streamPathResolutionCandidates(pathEntries, name)
-                .filter(n -> {
-                    boolean b = reg.get(n).isPresent();
-                    return b;
-                })
-                .limit(max)
-                .toList();
+            .filter(n -> {
+                boolean b = reg.get(n).isPresent();
+                return b;
+            })
+            .limit(max)
+            .toList();
         return res;
     }
 }
