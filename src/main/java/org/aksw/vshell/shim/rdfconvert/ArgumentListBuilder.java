@@ -68,6 +68,15 @@ public class ArgumentListBuilder {
         return this;
     }
 
+    public ArgumentListBuilder files(List<String> list) {
+        if (list != null) {
+            for (String item : list) {
+                args.add(CmdArg.ofPathString(item));
+            }
+        }
+        return this;
+    }
+
     // public List<String> build() { return args; }
     public ArgumentList build() { return new ArgumentList(args); }
 

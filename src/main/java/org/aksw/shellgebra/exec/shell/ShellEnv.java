@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import org.aksw.shellgebra.exec.io.FdTable;
+import org.aksw.vshell.registry.PathResolutionUtils;
 
 public class ShellEnv
     implements AutoCloseable
@@ -23,26 +24,18 @@ public class ShellEnv
         return env;
     }
 
-    protected String getPathValue() {
-        String result = getEnv().getOrDefault(pathKey, "");
-        return result;
-    }
+//    protected String getPathValue() {
+//        String result = getEnv().getOrDefault(pathKey, "");
+//        return result;
+//    }
 
     public List<String> getPathItems() {
-        String pathStr = getPathValue();
-        List<String> result = pathStr == null
-            ? List.of()
-            : List.of(pathStr.split(pathSeparator));
-        return result;
+        return PathResolutionUtils.getPathItems(env, pathKey, pathSeparator);
     }
 
     public Stream<String> streamPathCandidates(String localName) {
-        return getPathItems().stream().map(pathStr -> {
-            String str = pathStr.endsWith("/")
-                    ? pathStr + localName
-                    : pathStr + "/" + localName;
-            return str;
-        });
+        List<String> pathItems = getPathItems();
+        return PathResolutionUtils.streamPathResolutionCandidates(pathItems, localName);
     }
 
     @Override

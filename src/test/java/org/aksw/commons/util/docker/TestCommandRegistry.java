@@ -27,7 +27,11 @@ import org.aksw.vshell.registry.FinalPlacement;
 import org.aksw.vshell.registry.FinalPlacementInliner;
 import org.aksw.vshell.registry.FinalPlacer;
 import org.aksw.vshell.registry.JvmCommand;
+import org.aksw.vshell.registry.JvmCommandExecutor;
+import org.aksw.vshell.registry.JvmCommandExecutorImpl;
 import org.aksw.vshell.registry.JvmCommandRegistry;
+import org.aksw.vshell.registry.JvmCommandWhich;
+import org.aksw.vshell.registry.JvmContext;
 import org.aksw.vshell.registry.PlacedCmdOpToStage;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandTranscode;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
@@ -123,11 +127,25 @@ public class TestCommandRegistry {
         Assert.assertEquals(expectedStr,actualStr);
     }
 
+    @Test
+    public void testJvmWhich() throws IOException {
+        JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
+        JvmContext context = new JvmContext(jvmCmdRegistry);
+        context.getEnvironment().put("PATH", "/jvm:/bin");
+        JvmCommandExecutor executor = new JvmCommandExecutorImpl(context);
+        executor.run("which", "bzip2");
+
+        System.out.println("GOT:" + executor.exec("which", "bzip2"));
+    }
+
     public static JvmCommandRegistry initJvmCmdRegistry(JvmCommandRegistry jvmCmdRegistry) {
         CompressorStreamFactory csf = new CompressorStreamFactory();
 
         JvmCommand bzip2Cmd = JvmCommandTranscode.of(csf, CompressorStreamFactory.BZIP2);
         jvmCmdRegistry.put("/jvm/bzip2", bzip2Cmd);
+
+        jvmCmdRegistry.put("/bin/which", new JvmCommandWhich());
+
         // jvmCmdRegistry.put("/virt/bzip2", bzip2Cmd);
         return jvmCmdRegistry;
     }
