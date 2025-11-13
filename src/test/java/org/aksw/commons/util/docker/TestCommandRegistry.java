@@ -1,13 +1,18 @@
 package org.aksw.commons.util.docker;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Set;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
+import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.shellgebra.exec.Stage;
@@ -16,30 +21,41 @@ import org.aksw.shellgebra.exec.SysRuntimeCoreExecSiteFactory;
 import org.aksw.shellgebra.exec.SysRuntimeCoreExecSiteFactoryPool;
 import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
 import org.aksw.shellgebra.exec.model.ExecSite;
+import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 import org.aksw.shellgebra.exec.shell.ShellEnv;
 import org.aksw.vshell.registry.CandidatePlacement;
 import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
 import org.aksw.vshell.registry.CommandAvailability;
+import org.aksw.vshell.registry.CommandCatalog;
+import org.aksw.vshell.registry.CommandCatalogOverLocator;
+import org.aksw.vshell.registry.CommandCatalogUnion;
+import org.aksw.vshell.registry.CommandLocatorHost;
+import org.aksw.vshell.registry.CommandLocatorJvmRegistry;
 import org.aksw.vshell.registry.CommandRegistry;
 import org.aksw.vshell.registry.ExecSiteResolver;
 import org.aksw.vshell.registry.FinalPlacement;
 import org.aksw.vshell.registry.FinalPlacementInliner;
+import org.aksw.vshell.registry.FinalPlacementResolver;
 import org.aksw.vshell.registry.FinalPlacer;
 import org.aksw.vshell.registry.JvmCmdTest;
 import org.aksw.vshell.registry.JvmCommand;
+import org.aksw.vshell.registry.JvmCommandCat;
 import org.aksw.vshell.registry.JvmCommandExecutor;
 import org.aksw.vshell.registry.JvmCommandExecutorImpl;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.JvmCommandWhich;
 import org.aksw.vshell.registry.JvmContext;
 import org.aksw.vshell.registry.PlacedCmdOpToStage;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandTranscode;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
 import org.junit.Test;
+
+import com.google.common.io.ByteSource;
 
 import junit.framework.Assert;
 
@@ -54,6 +70,12 @@ public class TestCommandRegistry {
         JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
         CommandRegistry candidates = initCmdCandRegistry(new CommandRegistry());
 
+        CommandRegistry inferredCatalog = new CommandRegistry();
+        CommandCatalog hostCatalog = new CommandCatalogOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
+        CommandCatalog jvmCatalog = new CommandCatalogOverLocator(ExecSites.jvm(), new CommandLocatorJvmRegistry(jvmCmdRegistry));
+
+        CommandCatalog unionCatalog = new CommandCatalogUnion(List.of(candidates, hostCatalog, jvmCatalog, inferredCatalog));
+
         CommandAvailability cmdAvailability = new CommandAvailability();
         // TODO Have image introspector write into cmdAvailability without having to know about exec sites.
         // Need an adapter or cmdAvailability.asDockerImageMap().
@@ -66,11 +88,12 @@ public class TestCommandRegistry {
             cmdAvailability, imageIntrospector);
 
         // Some command expression.
+        // "echo 'test' | lbzip2 -c | bzip2 -cd | cat - <(echo done)"
         System.out.println(resolver.resolve("/virt/lbzip2"));
-        CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-d");
+        CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
         CmdOp cmdOp2 = CmdOpGroup.of(
-            CmdOpExec.ofLiterals("/virt/bzip2", "-d"),
-            CmdOpExec.ofLiterals("/usr/bin/echo", "done.")
+            CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),
+            new CmdOpExec(List.<CmdPrefix>of(), "/usr/bin/cat", ArgumentList.of(CmdArg.ofLiteral("-"), CmdArg.ofProcessSubstution(CmdOpExec.ofLiterals("/usr/bin/echo", "done."))))
         );
         // TODO Do not use CmdOpExec.ofLiterals
         // Instead: use a command registry with shim-parsers so that arguments are validated.
@@ -80,7 +103,7 @@ public class TestCommandRegistry {
         // Try to resolve the command on a certain docker image.
         ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
 
-        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, resolver, Set.of(qleverExecSite));
+        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, inferredCatalog, resolver, Set.of(qleverExecSite));
         PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
         CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
 
@@ -89,7 +112,10 @@ public class TestCommandRegistry {
 
         FinalPlacement inlined = FinalPlacementInliner.inline(placed);
 
-        System.out.println("Inlined: " + inlined);
+        FinalPlacement resolvedInlined = FinalPlacementResolver.resolve(inlined, resolver, unionCatalog);
+        // Resolve commands w.r.t. the final placement.
+
+        System.out.println("Inlined: " + resolvedInlined);
 //        if (true) {
 //            return;
 //        }
@@ -100,8 +126,19 @@ public class TestCommandRegistry {
         // TODO PlacedCmdOpToStage should probably accept a resolver as argument!
         ShellEnv shellEnv = new ShellEnv(); // Perhaps pass a shellEnv for book keeping of streams / file writers?
 
-        Stage stage = PlacedCmdOpToStage.of(fileMapper, resolver).toStage(inlined);
-        String str = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
+        Stage stage = PlacedCmdOpToStage.of(fileMapper, resolver).toStage(resolvedInlined);
+
+
+        ByteSource xx = new ByteSource() {
+            @Override
+            public InputStream openStream() throws IOException {
+                InputStream x = new ByteArrayInputStream("hello world".getBytes(StandardCharsets.UTF_8));
+                // x = new InputStreamTransformOverOutputStreamTransform(BZip2CompressorOutputStream::new).apply(x);
+                return x;
+            }
+        };
+
+        String str = stage.from(xx).toByteSource().asCharSource(StandardCharsets.UTF_8).read();
         System.out.println(str);
         System.out.println(placedCommand);
 
@@ -136,12 +173,10 @@ public class TestCommandRegistry {
         context.getEnvironment().put("PATH", "/jvm:/bin");
         JvmCommandExecutor executor = new JvmCommandExecutorImpl(context);
 
-        executor.run("which", "bzip2");
-
+        // TODO Use command -v instead of test.
         String expectedStr = "/jvm/bzip2";
         String actualStr = executor.exec("which", "bzip2");
         Assert.assertEquals(expectedStr, actualStr);
-
 
         int actualValue = executor.run("test", "-e", actualStr);
         Assert.assertEquals(0, actualValue);
@@ -162,12 +197,23 @@ public class TestCommandRegistry {
         // Assert.assertEquals(expectedStr, actualStr);
     }
 
+    public void testExecSiteExecutor() throws IOException, InterruptedException {
+        JvmCommandRegistry jvmCmdRegistry = initJvmCmdRegistry(new JvmCommandRegistry());
+        SysRuntimeFactoryDocker dockerRuntimeFactory = SysRuntimeFactoryDocker.create();
+        SysRuntimeCoreExecSiteFactoryPool pool = new SysRuntimeCoreExecSiteFactoryPool(jvmCmdRegistry, dockerRuntimeFactory);
+        try (SysRuntimeCore runtime = pool.getRuntime(ExecSites.jvm())) {
+            runtime.execCmd("/virt/is-command", "which");
+        }
+    }
+
     public static JvmCommandRegistry initJvmCmdRegistry(JvmCommandRegistry jvmCmdRegistry) {
         // Core command: which - resolve short name to fully qualified command name.
         jvmCmdRegistry.put("/bin/which", new JvmCommandWhich());
 
         // Core command: test - return 0 if name is fully qualified command name - 1 otherwise.
         jvmCmdRegistry.put("/bin/test", new JvmCmdTest());
+
+        jvmCmdRegistry.put("/bin/cat", new JvmCommandCat());
 
         CompressorStreamFactory csf = new CompressorStreamFactory();
 
@@ -178,7 +224,6 @@ public class TestCommandRegistry {
 
     public static CommandRegistry initCmdCandRegistry(CommandRegistry registry) {
         registry.put("/virt/lbzip2", ExecSites.docker("nestio/lbzip2"), "/usr/bin/lbzip2");
-
         // Note: There can be multiple candidates per exec site.
         registry.put("/virt/lbzip2", ExecSites.host(), "/usr/bin/lbzip2");
         registry.put("/virt/lbzip2", ExecSites.jvm(), "/jvm/bzip2");
@@ -186,6 +231,10 @@ public class TestCommandRegistry {
         registry.put("/virt/bzip2", ExecSites.jvm(), "/jvm/bzip2");
 
         registry.put("/usr/bin/echo", ExecSites.host(), "/usr/bin/echo");
+        registry.put("/usr/bin/cat", ExecSites.host(), "/usr/bin/cat");
+
+        registry.put("/virt/cat", ExecSites.jvm(), "/bin/cat");
+        registry.put("/virt/cat", ExecSites.host(), "/bin/cat");
         return registry;
     }
 }

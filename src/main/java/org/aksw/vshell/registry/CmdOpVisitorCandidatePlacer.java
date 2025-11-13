@@ -12,19 +12,23 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformer;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
 
 public class CmdOpVisitorCandidatePlacer
     implements CmdOpVisitor<PlacedCommand>
@@ -37,11 +41,13 @@ public class CmdOpVisitorCandidatePlacer
     private Map<CmdOp, Set<ExecSite>> opToSites = new IdentityHashMap<>();
     private Map<CmdOpVar, PlacedCommand> varToPlacement = new HashMap<>();
 
+    private CommandRegistry inferredCatalog;
     private int nextVar = 0;
 
-    public CmdOpVisitorCandidatePlacer(CommandCatalog cmdRegistry, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
+    public CmdOpVisitorCandidatePlacer(CommandCatalog cmdRegistry, CommandRegistry inferredCatalog, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
         super();
         this.cmdRegistry = cmdRegistry;
+        this.inferredCatalog = inferredCatalog;
         this.execSiteResolver = execSiteResolver;
         this.preferredExecSites = preferredExecSites;
     }
@@ -51,7 +57,31 @@ public class CmdOpVisitorCandidatePlacer
     }
 
     @Override
-    public PlacedCommand visit(CmdOpExec op) {
+    public PlacedCommand visit(CmdOpExec origOp) {
+
+        ArgumentList newArgs = CmdArgTransformer.transform(origOp.args(), new CmdArgTransformBase() {
+            @Override
+            public CmdArg transform(CmdArgCmdOp arg, CmdOp subOp) {
+                PlacedCommand pc = subOp.accept(CmdOpVisitorCandidatePlacer.this);
+
+                CmdOpVar subOpVar = new CmdOpVar("v" + (nextVar++));
+                // newSubOps.add(cmdOpVar);
+                varToPlacement.put(subOpVar, pc);
+
+                return CmdArg.ofProcessSubstution(subOpVar);
+
+                // return super.transform(arg, subOp);
+            }
+        }, null, null);
+
+        CmdOpExec op = new CmdOpExec(origOp.prefixes(), origOp.name(), newArgs);
+
+//    	List<CmdArg> outArgs = new ArrayList<>();
+//    	for (CmdArg arg =  op.args().args()) {
+//
+//    	}
+
+
         // TODO Introspect docker images for whether the entry point
         // needs to be set to a shell in order to run a command.
 
@@ -70,8 +100,10 @@ public class CmdOpVisitorCandidatePlacer
         for (ExecSite execSite : preferredExecSites) {
             for (String cmdLocation : candCmdLocations) {
                 boolean isCmdPresent = execSiteResolver.providesCommand(cmdLocation, execSite);
+
                 if (isCmdPresent) {
                     execSites.add(execSite);
+                    inferredCatalog.put(virtCmdName, execSite, cmdLocation);
                 }
             }
         }
@@ -263,7 +295,9 @@ public class CmdOpVisitorCandidatePlacer
         List<CmdOp> placedSubOps = streak.stream().map(PlacedCommand::cmdOp).toList();
 
         // <() / =()
-        CmdOp part = ctor.apply(placedSubOps);
+        CmdOp part = placedSubOps.size() == 1
+            ? placedSubOps.get(0)
+            :ctor.apply(placedSubOps);
         // PlacedCmd placed = new PlacedCmd(partPipeline, selectedExecSite);
         PlacedCommand placed = new PlacedCommand(part, effectiveExecSites);
         // varToPlacement.put(cmdOpVar, new PlacedCmd(partPipeline, selectedExecSite));

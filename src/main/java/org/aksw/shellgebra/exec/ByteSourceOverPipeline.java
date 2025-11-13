@@ -17,11 +17,11 @@ public class ByteSourceOverPipeline
 {
     private static final Logger logger = LoggerFactory.getLogger(ByteSourceOverPipeline.class);
 
-    private List<ProcessBuilderBase> processBuilders;
+    private List<ProcessBuilder> processBuilders;
     private List<FileWriterTask> fileWriters;
     private ByteSource inputSource;
 
-    public ByteSourceOverPipeline(List<ProcessBuilderBase> processBuilders, List<FileWriterTask> fileWriters,
+    public ByteSourceOverPipeline(List<ProcessBuilder> processBuilders, List<FileWriterTask> fileWriters,
             ByteSource inputSource) {
         super();
         this.processBuilders = Objects.requireNonNull(processBuilders);
@@ -35,7 +35,7 @@ public class ByteSourceOverPipeline
 
     @Override
     public InputStream openStream() throws IOException {
-        List<Process> processes = ProcessBuilderBase.startPipeline(processBuilders);
+        List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
         Process firstProcess = processes.get(0);
         Process lastProcess = processes.get(processes.size() - 1);
 

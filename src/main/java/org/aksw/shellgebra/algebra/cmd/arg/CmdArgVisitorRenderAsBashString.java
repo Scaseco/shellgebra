@@ -1,14 +1,17 @@
 package org.aksw.shellgebra.algebra.cmd.arg;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenCmdOp;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenLiteral;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVisitor;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
+import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.RedirectVisitorToString;
 import org.aksw.shellgebra.exec.CmdStrOps;
 import org.aksw.shellgebra.exec.CmdStrOpsBash;
@@ -17,18 +20,21 @@ public class CmdArgVisitorRenderAsBashString
     implements CmdArgVisitor<String>
 {
     private CmdStrOps strOps;
+    private CmdOpVisitor<CmdString> cmdOpVisitorToString;
 
-    public CmdArgVisitorRenderAsBashString(CmdStrOps strOps) {
+    public CmdArgVisitorRenderAsBashString(CmdOpVisitor<CmdString> cmdOpVisitorToString, CmdStrOps strOps) {
         super();
+        this.cmdOpVisitorToString = cmdOpVisitorToString;
         this.strOps = strOps;
     }
 
     public static List<String> render(List<CmdArg> args) {
-        return render(CmdStrOpsBash.get(), args);
+        CmdStrOps strOps = CmdStrOpsBash.get();
+        return render(new CmdOpVisitorToCmdString(strOps), strOps, args);
     }
 
-    public static List<String> render(CmdStrOps strOps, List<CmdArg> args) {
-        CmdArgVisitor<String> renderer = new CmdArgVisitorRenderAsBashString(strOps);
+    public static List<String> render(CmdOpVisitor<CmdString> cmdOpVisitorToString, CmdStrOps strOps, List<CmdArg> args) {
+        CmdArgVisitor<String> renderer = new CmdArgVisitorRenderAsBashString(cmdOpVisitorToString, strOps);
         List<String> result = args.stream().map(arg -> arg.accept(renderer)).toList();
         return result;
     }
@@ -45,9 +51,13 @@ public class CmdArgVisitorRenderAsBashString
         return result;
     }
 
+    // Process substitution
     @Override
     public String visit(CmdArgCmdOp arg) {
-        return arg.toString();
+        CmdOp cmdOp = arg.cmdOp();
+        String subStr = CmdOpVisitorToCmdString.toArg(cmdOp.accept(cmdOpVisitorToString));
+        String result = strOps.processSubstitution(subStr);
+        return result;
     }
 
     @Override
@@ -58,7 +68,7 @@ public class CmdArgVisitorRenderAsBashString
         return result;
     }
 
-    public static class TokenVisitorRenderToString
+    public class TokenVisitorRenderToString
         implements TokenVisitor<String>
     {
         @Override
@@ -78,7 +88,10 @@ public class CmdArgVisitorRenderAsBashString
 
         @Override
         public String visit(TokenCmdOp token) {
-            return Objects.toString(token.cmdOp());
+            CmdOp cmdOp = token.cmdOp();
+            CmdString cmdString = cmdOp.accept(cmdOpVisitorToString);
+            String result = CmdOpVisitorToCmdString.toArg(cmdString);
+            return result;
         }
     }
 }

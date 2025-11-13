@@ -105,26 +105,35 @@ public class BoundStageDocker
 //    }
 
     protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp cmdOp) throws IOException {
+        // TODO Consolidate with SysRuntimeCore: Need to get the appropriate bash entry point from some registry.
+
         String userStr = getUserString();
         logger.info("Setting up container " + imageRef + " with UID:GID=" + userStr);
 
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
 
         // TODO Variables need to be resolved - typically involves named pipes.
-
-
         // CmdOp op = new CmdOpExec("/usr/bin/bash", new CmdArgLiteral("-c"), new CmdArgCmdOp(cmdOp));
-        CmdString cmdString = runtime.compileString(cmdOp);
 
-        String[] cmdParts = new String[] {
-            "/bin/bash", "-c",
-            // List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
-            cmdString.scriptString()
-        };
+        // The original command becomes an argument to 'shell -c'
+        // So compile a string where the original command is used as an argument.
+        CmdOp dummy = new CmdOpExec("/dummy", CmdArg.ofCommandSubstitution(cmdOp));
+        CmdString cmdString = runtime.compileString(dummy);
+        String scriptString = cmdString.cmd()[1];
 
-
+        String[] entrypoint = new String[]{"bash"};
+        String[] cmdParts;
+        if (true) { // cmdString.isScriptString()) {
+            cmdParts = new String[] {
+                "-c",
+                // List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
+                scriptString
+            };
+        } else {
+            CmdStrOps strOps = runtime.getStrOps();
+            cmdParts = cmdString.cmd(); // XXX Must ensure that the command is resolvable!
+        }
         // String[] cmdParts = cmdString.cmd();
-
 
         // String str = cmdString.scriptString();
 
@@ -144,7 +153,7 @@ public class BoundStageDocker
             // error "UID 1000 already exists" ~ 2025-01-31
             // .withEnv("UID", Integer.toString(uid))
             // .withEnv("GID", Integer.toString(gid))
-            .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr))
+            .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr).withEntrypoint(entrypoint))
             // .withFileSystemBind(finalOutputFolder.toString(), "/data/", BindMode.READ_WRITE)
             .withCommand(cmdParts)
             .withLogConsumer(frame -> logger.info(frame.getUtf8StringWithoutLineEnding()))
@@ -203,7 +212,11 @@ public class BoundStageDocker
         if (itask != null) {
 //            inputTask.start();
             // Entry<Path, String> inputBind = fileMapper.allocateTempFile("byteSource", "", AccessMode.ro);
-            String containerPath = fileMapper.allocate(itask.getOutputPath().toAbsolutePath().toString(), AccessMode.ro);
+            // String containerPath = fileMapper.allocate(itask.getOutputPath().toAbsolutePath().toString(), AccessMode.ro);
+            String containerPath = fileMapper.getContainerPath(outPath.toString());
+            if (containerPath == null) {
+                throw new RuntimeException("should not happen");
+            }
 
             // Path hostPath = inputBind.getKey();
             tmpOp = CmdOp.prependRedirect(tmpOp, new RedirectFile(containerPath, OpenMode.READ, 0));
@@ -246,7 +259,9 @@ public class BoundStageDocker
             @Override
             public CmdOp transform(CmdOpVar op) {
                 String containerPath = varToContainerPath.get(op);
-                return new CmdOpExec("/virt/cat", ArgumentList.of(CmdArg.ofPathString(containerPath)));
+                String catCommand = "cat";
+
+                return new CmdOpExec(catCommand, ArgumentList.of(CmdArg.ofPathString(containerPath)));
             }
         }, new CmdArgTransformBase() {
             @Override

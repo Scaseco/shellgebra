@@ -2,7 +2,6 @@ package org.aksw.vshell.registry;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 
 import org.aksw.commons.util.list.ListUtils;
@@ -47,8 +46,9 @@ public class CmdOpVisitorExecJvm
 //        	throw new RuntimeException("Could not resolve: " + op);
 //        }
         JvmCommandRegistry jvmCmdRegistry = resolver.getJvmCmdRegistry();
-        String resolvedCmdName = resolver.resolve(cmdName, ExecSites.jvm())
-            .orElseThrow(() -> new RuntimeException("Failed to resolved: " + cmdName));
+//        String resolvedCmdName = resolver.resolve(cmdName, ExecSites.jvm())
+//            .orElseThrow(() -> new RuntimeException("Failed to resolve: " + cmdName));
+        String resolvedCmdName = cmdName;
 
         // TODO In general, resolve any expressions in arguments.
         ArgumentList args = op.args();

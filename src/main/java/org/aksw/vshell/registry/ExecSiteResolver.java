@@ -49,7 +49,7 @@ public class ExecSiteResolver {
 
     public Optional<String> resolve(String virtualCmd, ExecSite execSite) {
         String result = null;
-        Set<String> candLocations = cmdCatalog.get(virtualCmd, execSite).orElse(null);
+        Set<String> candLocations = cmdCatalog.get(virtualCmd, execSite).orElse(Set.of());
         for (String cmd : candLocations) {
             boolean isPresent = providesCommand(cmd, execSite);
             if (isPresent) {

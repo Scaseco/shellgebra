@@ -1,5 +1,6 @@
 package org.aksw.shellgebra.algebra.cmd.arg;
 
+import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenCmdOp;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenLiteral;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
@@ -34,8 +35,12 @@ public interface CmdArg {
         return new CmdArgWord(StringEscapeType.SINGLE_QUOTED, new TokenVar(varName));
     }
 
+    public static CmdArg ofCommandSubstitution(CmdOp cmdOp) {
+        return new CmdArgWord(StringEscapeType.SINGLE_QUOTED, new TokenCmdOp(cmdOp));
+    }
+
     // Process substition such as <(cat /tmp/foo.txt).
-    public static CmdArg of(CmdOp cmdOp) {
+    public static CmdArg ofProcessSubstution(CmdOp cmdOp) {
         return new CmdArgCmdOp(cmdOp);
     }
 }

@@ -19,5 +19,7 @@ public interface IProcessBuilder<X extends IProcessBuilder<X>> {
 
     X redirectErrorStream(boolean redirectErrorStream);
 
+    void bind(Path hostPath, String containerPath, boolean write);
+
     Process start() throws IOException;
 }

@@ -1,17 +1,21 @@
 package org.aksw.shellgebra.exec;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public abstract class ProcessBuilderBase<X extends ProcessBuilderBase<X>>
     implements IProcessBuilder<X>
 {
+    public static record Bind(Path hostPath, String containerPath, boolean write) {}
+
     private List<String> command;
     private Path directory;
     private Map<String,String> environment;
     private boolean redirectErrorStream;
     // private Redirect[] redirects;
+    private List<Bind> binds = new ArrayList<>();
 
     @SuppressWarnings("unchecked")
     protected X self() {
@@ -60,5 +64,10 @@ public abstract class ProcessBuilderBase<X extends ProcessBuilderBase<X>>
     public X redirectErrorStream(boolean redirectErrorStream) {
         this.redirectErrorStream = redirectErrorStream;
         return self();
+    }
+
+    @Override
+    public void bind(Path hostPath, String containerPath, boolean write) {
+        binds.add(new Bind(hostPath, containerPath, write));
     }
 }

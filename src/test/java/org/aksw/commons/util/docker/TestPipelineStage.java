@@ -30,7 +30,7 @@ public class TestPipelineStage {
             // Stages.javaOut(BZip2CompressorOutputStream::new),
             // Stages.javaIn(BZip2CompressorInputStream::new),
             Stages.javaOut(BZip2CompressorOutputStream::new),
-            Stages.docker("nestio/lbzip2", CmdOpExec.ofLiterals("/usr/bin/lbzip2", "-d"), fileMapper)
+            Stages.docker("nestio/lbzip2", CmdOpExec.ofLiterals("/usr/bin/lbzip2", "-d"), fileMapper, null)
         );
 
         ByteSource bs = pipelineStage.from(inputStage.fromNull()).toByteSource();

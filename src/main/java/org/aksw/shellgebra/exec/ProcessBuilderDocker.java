@@ -18,7 +18,7 @@ public class ProcessBuilderDocker
     }
 
     @Override
-    public ProcessDockerExecResult build() throws IOException {
+    public ProcessDockerExecResult start() throws IOException {
         String[] argv = Objects.requireNonNull(command()).toArray(String[]::new);
         Container.ExecResult execResult;
         try {

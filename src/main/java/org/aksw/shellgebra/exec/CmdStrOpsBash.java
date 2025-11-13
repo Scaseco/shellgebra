@@ -105,4 +105,9 @@ public class CmdStrOpsBash
     public String redirect(String cmdStr, String fileName) {
         return cmdStr + " > " + fileName;
     }
+
+    @Override
+    public String processSubstitution(String subStr) {
+        return "<(" + subStr + ")";
+    }
 }

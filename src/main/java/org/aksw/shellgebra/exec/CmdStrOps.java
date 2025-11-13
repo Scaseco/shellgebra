@@ -18,5 +18,6 @@ public interface CmdStrOps {
     String pipeline(List<String> parts);
     String call(String cmdName, List<String> args);
     String redirect(String cmd, String fileName);
+    String processSubstitution(String subStr);
     // exprEval $(...) -> Eval expression and substitute argument with result
 }

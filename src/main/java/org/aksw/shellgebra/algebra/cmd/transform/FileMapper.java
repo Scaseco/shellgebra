@@ -42,6 +42,17 @@ public class FileMapper {
         this(containerSharedPath, shortNameMgr, new ArrayList<>());
     }
 
+    protected void addBindChecked(Bind bind) {
+//        Path p = path.toAbsolutePath();
+        String key = bind.getPath();
+        Bind priorEntry = binds.stream().filter(b ->
+            b.getPath().equals(key) || b.getVolume().getPath().equals(bind.getVolume().getPath())).findFirst().orElse(null);
+        if (priorEntry != null) {
+            throw new RuntimeException("Duplicate mount point: " + bind + " prior entry: " + bind);
+        }
+        binds.add(bind);
+    }
+
     public FileMapper(String containerSharedPath, ShortNameMgr shortNameMgr, List<Bind> binds) {
         super();
         this.containerSharedPath = Objects.requireNonNull(containerSharedPath);
@@ -72,7 +83,8 @@ public class FileMapper {
         String containerFullPath = containerSharedPath + "/" + containerLocalName;
 
         Bind bind = new Bind(hostPath, new Volume(containerFullPath), accessMode);
-        binds.add(bind);
+        // binds.add(bind);
+        addBindChecked(bind);
         return containerFullPath;
     }
 
@@ -80,7 +92,6 @@ public class FileMapper {
         String name = Stream.of(prefix, Long.toString(System.nanoTime()), suffix)
                 .filter(str -> !str.isEmpty())
                 .collect(Collectors.joining("-"));
-
         return name;
     }
 

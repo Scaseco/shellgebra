@@ -64,7 +64,7 @@ public class CmdOpVisitorApplyTransform
 //    	CmdOp subOp2 = op.getSubOp2();
 //        CmdOp newOp1 = op.getSubOp1().accept(this);
 //        CmdOp newOp2 = op.getSubOp2().accept(this);
-        List<CmdOp> newOps = op.getSubOps().stream().map(subOp -> subOp.accept(this)).toList();
+        List<CmdOp> newOps = op.subOps().stream().map(subOp -> subOp.accept(this)).toList();
         CmdOp result = new CmdOpPipeline(newOps);
 //        CmdOp result = transform.transform(op, newOp1, newOp2);
         return result;
@@ -72,8 +72,10 @@ public class CmdOpVisitorApplyTransform
 
     @Override
     public CmdOp visit(CmdOpGroup op) {
-        List<CmdOp> newOps = transformAll(this, op.subOps());
-        CmdOp result = cmdOpTransform.transform(op, newOps);
+//        List<CmdOp> newOps = transformAll(this, op.subOps());
+//        CmdOp result = cmdOpTransform.transform(op, newOps);
+        List<CmdOp> newOps = op.subOps().stream().map(subOp -> subOp.accept(this)).toList();
+        CmdOp result = new CmdOpGroup(newOps);
         return result;
     }
 
