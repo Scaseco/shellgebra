@@ -162,6 +162,7 @@ public class BoundStageDocker
 
         for (Bind bind : fileMapper.getBinds()) {
             result = result.withFileSystemBind(bind.getPath(), bind.getVolume().getPath(), toBindMode(bind.getAccessMode()));
+            logger.info("Adding bind: " + bind);
         }
 
         return result;
@@ -206,14 +207,15 @@ public class BoundStageDocker
 
         if (inputExecBuilder != null) {
             itask = inputExecBuilder.runToHostPipe();
+            String containerPath = fileMapper.allocate(itask.getOutputPath().toAbsolutePath().toString(), AccessMode.ro);
         }
 
         CmdOp tmpOp = cmdOp;
         if (itask != null) {
 //            inputTask.start();
             // Entry<Path, String> inputBind = fileMapper.allocateTempFile("byteSource", "", AccessMode.ro);
-            // String containerPath = fileMapper.allocate(itask.getOutputPath().toAbsolutePath().toString(), AccessMode.ro);
-            String containerPath = fileMapper.getContainerPath(outPath.toString());
+            // Note: The input task is mapped immediately on creation.
+            String containerPath = fileMapper.getContainerPath(itask.getOutputPath().toString());
             if (containerPath == null) {
                 throw new RuntimeException("should not happen");
             }
@@ -309,6 +311,7 @@ public class BoundStageDocker
     public InputStream execToInputStream() throws IOException {
         PathLifeCycle pathLifeCycle = PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe());
 
+        // Create the output file - container writes, host reads.
         Entry<Path, String> map = fileMapper.allocateTempFile("", "", AccessMode.rw);
         Path outPipePath = map.getKey();
         String outContainerPath = map.getValue();
