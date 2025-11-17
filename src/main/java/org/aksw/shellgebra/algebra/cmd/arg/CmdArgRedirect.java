@@ -2,7 +2,7 @@ package org.aksw.shellgebra.algebra.cmd.arg;
 
 import java.util.Objects;
 
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 
 /**
  * CmdArgRedirect should probably be avoided in favor of explicit redirects
@@ -16,7 +16,7 @@ import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
  *
  * inputExpr must produce output - should be file or process.
  */
-public record CmdArgRedirect(Redirect redirect)
+public record CmdArgRedirect(CmdRedirect redirect)
     implements CmdArg
 {
     public CmdArgRedirect {

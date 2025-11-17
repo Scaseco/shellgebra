@@ -11,7 +11,7 @@ import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
 import org.aksw.shellgebra.exec.SysRuntime;
 
 public class CmdOpTransformArguments
-    extends CmdOpTransformBase
+    implements CmdOpTransformBase
 {
     protected SysRuntime runtime;
 
@@ -27,7 +27,7 @@ public class CmdOpTransformArguments
             List<CmdArg> newArgs = args.stream().map(this::handleFile).toList();
             result = new CmdOpExec(op.getName(), newArgs, op.redirects());
         } else {
-            result = super.transform(op, args);
+            result = CmdOpTransformBase.super.transform(op, args);
         }
         return result;
     }

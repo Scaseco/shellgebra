@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
 public interface CmdOp {
@@ -21,21 +21,21 @@ public interface CmdOp {
         return Stream.of(collections).flatMap(Collection::stream).map(Object::toString).collect(Collectors.joining(" "));
     }
 
-    public static CmdOp appendRedirect(CmdOp base, Redirect redirect) {
+    public static CmdOp appendRedirect(CmdOp base, CmdRedirect redirect) {
         return appendRedirects(base, List.of(redirect));
     }
 
-    public static CmdOp appendRedirects(CmdOp base, List<Redirect> redirects) {
+    public static CmdOp appendRedirects(CmdOp base, List<CmdRedirect> redirects) {
         CmdOpVisitor<CmdOp> visitor = new CmdOpVisitorAddRedirect(redirects);
         CmdOp result = base.accept(visitor);
         return result;
     }
 
-    public static CmdOp prependRedirect(CmdOp base, Redirect redirect) {
+    public static CmdOp prependRedirect(CmdOp base, CmdRedirect redirect) {
         return prependRedirects(base, List.of(redirect));
     }
 
-    public static CmdOp prependRedirects(CmdOp base, List<Redirect> redirects) {
+    public static CmdOp prependRedirects(CmdOp base, List<CmdRedirect> redirects) {
         CmdOpVisitor<CmdOp> visitor = new CmdOpVisitorPrependRedirect(redirects);
         CmdOp result = base.accept(visitor);
         return result;
@@ -44,9 +44,9 @@ public interface CmdOp {
     public abstract class CmdOpVisitorModifyRedirect
         implements CmdOpVisitor<CmdOp>
     {
-        protected List<Redirect> additions;
+        protected List<CmdRedirect> additions;
 
-        public CmdOpVisitorModifyRedirect(List<Redirect> additions) {
+        public CmdOpVisitorModifyRedirect(List<CmdRedirect> additions) {
             super();
             this.additions = additions;
         }
@@ -54,7 +54,7 @@ public interface CmdOp {
         @Override
         public CmdOp visit(CmdOpExec op) {
             List<CmdArg> newArgs = new ArrayList<>(op.args().args());
-            for (Redirect redirect : additions) {
+            for (CmdRedirect redirect : additions) {
                 newArgs.add(CmdArg.redirect(redirect));
             }
             return new CmdOpExec(op.prefixes(), op.name(), ArgumentList.of(newArgs));
@@ -62,8 +62,8 @@ public interface CmdOp {
             // return new CmdOpExec(op.prefixes(), op.name(), op.args(), finalRedirects);
         }
 
-        public List<Redirect> combine(List<Redirect> base) {
-            List<Redirect> result = Stream.concat(base.stream(), additions.stream()).toList();
+        public List<CmdRedirect> combine(List<CmdRedirect> base) {
+            List<CmdRedirect> result = Stream.concat(base.stream(), additions.stream()).toList();
             return result;
         }
 
@@ -86,7 +86,7 @@ public interface CmdOp {
     public class CmdOpVisitorAddRedirect
         extends CmdOpVisitorModifyRedirect
     {
-        public CmdOpVisitorAddRedirect(List<Redirect> redirects) {
+        public CmdOpVisitorAddRedirect(List<CmdRedirect> redirects) {
             super(redirects);
         }
 
@@ -106,7 +106,7 @@ public interface CmdOp {
     public class CmdOpVisitorPrependRedirect
         extends CmdOpVisitorModifyRedirect
     {
-        public CmdOpVisitorPrependRedirect(List<Redirect> redirects) {
+        public CmdOpVisitorPrependRedirect(List<CmdRedirect> redirects) {
             super(redirects);
         }
 

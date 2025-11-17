@@ -3,7 +3,7 @@ package org.aksw.shellgebra.algebra.cmd.op;
 import java.util.List;
 import java.util.Objects;
 
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 
 /**
  * Command group - brace group (not a sub-shell).
@@ -12,7 +12,7 @@ import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
  * { cmd1; ...; cmdN }
  * </pre>
  */
-public record CmdOpGroup(List<CmdOp> subOps, List<Redirect> redirects)
+public record CmdOpGroup(List<CmdOp> subOps, List<CmdRedirect> redirects)
     implements CmdOp
 {
     public CmdOpGroup {
@@ -22,6 +22,10 @@ public record CmdOpGroup(List<CmdOp> subOps, List<Redirect> redirects)
 
     public CmdOpGroup(List<CmdOp> subOps) {
         this(subOps, List.of());
+    }
+
+    public static CmdOpGroup of(List<CmdOp> subOps, List<CmdRedirect> redirects) {
+        return new CmdOpGroup(subOps, redirects);
     }
 
     public static CmdOpGroup of(CmdOp ...subOps) {

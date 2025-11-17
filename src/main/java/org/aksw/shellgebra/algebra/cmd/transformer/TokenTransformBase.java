@@ -7,21 +7,21 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 
-public class TokenTransformBase
-    implements TokenTransform
+public interface TokenTransformBase
+    extends TokenTransform
 {
     @Override
-    public Token transform(TokenLiteral token) {
+    default Token transform(TokenLiteral token) {
         return token;
     }
 
     @Override
-    public Token transform(TokenPath token) {
+    default Token transform(TokenPath token) {
         return token;
     }
 
     @Override
-    public Token transform(TokenCmdOp token, CmdOp subOp) {
+    default Token transform(TokenCmdOp token, CmdOp subOp) {
         Token result = (token.cmdOp() == subOp)
             ? token
             : new TokenCmdOp(subOp);
@@ -29,7 +29,7 @@ public class TokenTransformBase
     }
 
     @Override
-    public Token transform(TokenVar token) {
+    default Token transform(TokenVar token) {
         return token;
     }
 }

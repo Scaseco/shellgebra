@@ -11,11 +11,11 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
-public class CmdOpTransformBase
-    implements CmdOpTransform
+public interface CmdOpTransformBase
+    extends CmdOpTransform
 {
     @Override
-    public CmdOp transform(CmdOpPipeline op, List<CmdOp> subOps) {
+    default CmdOp transform(CmdOpPipeline op, List<CmdOp> subOps) {
         CmdOp result = (IterableUtils.equalsByReference(subOps, op.getSubOps()))
             ? op
             : new CmdOpPipeline(subOps);
@@ -23,7 +23,7 @@ public class CmdOpTransformBase
     }
 
     @Override
-    public CmdOp transform(CmdOpGroup op, List<CmdOp> subOps) {
+    default CmdOp transform(CmdOpGroup op, List<CmdOp> subOps) {
         CmdOp result = (IterableUtils.equalsByReference(subOps, op.subOps()))
             ? op
             : new CmdOpGroup(subOps, op.redirects());
@@ -31,7 +31,7 @@ public class CmdOpTransformBase
     }
 
     @Override
-    public CmdOp transform(CmdOpExec op, List<CmdArg> subOps) {
+    default CmdOp transform(CmdOpExec op, List<CmdArg> subOps) {
         CmdOp result = (IterableUtils.equalsByReference(subOps, op.args().args()))
             ? op
             : new CmdOpExec(op.getName(), new ArgumentList(subOps)); //, op.redirects());
@@ -39,7 +39,7 @@ public class CmdOpTransformBase
     }
 
     @Override
-    public CmdOp transform(CmdOpVar op) {
+    default CmdOp transform(CmdOpVar op) {
         return op;
     }
 }

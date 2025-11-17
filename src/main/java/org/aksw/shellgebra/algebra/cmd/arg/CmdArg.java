@@ -5,7 +5,7 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenLiteral;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 
 /**
  * Argument to a CmdOpExec.
@@ -15,7 +15,7 @@ import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
 public interface CmdArg {
     <T> T accept(CmdArgVisitor<T> visitor);
 
-    public static CmdArg redirect(Redirect redirect) {
+    public static CmdArg redirect(CmdRedirect redirect) {
         return new CmdArgRedirect(redirect);
     }
 

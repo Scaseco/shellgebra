@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,15 +27,18 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
 import org.aksw.shellgebra.exec.FileWriterTaskBase.PathLifeCycle;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.apache.commons.io.IOUtils;
@@ -50,6 +55,140 @@ import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.google.common.io.ByteSource;
+
+interface PlacedCmdProcessor<T> {
+    T process(CmdOpExec op, T input);
+    T process(CmdOpPipeline op, T input);
+    T process(CmdOpGroup op, T input);
+    T process(CmdOpVar op, T input);
+}
+
+class CmdOpDispatch<T>
+    implements CmdOpVisitor<T>
+{
+    private Deque<T> stack = new ArrayDeque<>();
+    private PlacedCmdProcessor<T> processor;
+
+    public T build(CmdOp op, T input) {
+        stack.push(input);
+        op.accept(this);
+        T result = stack.pop();
+        return result;
+    }
+
+    @Override
+    public T visit(CmdOpExec op) {
+        T in = stack.pop();
+        T out = processor.process(op, in);
+        stack.push(out);
+        return out;
+    }
+
+    @Override
+    public T visit(CmdOpPipeline op) {
+        T in = stack.pop();
+        T out = processor.process(op, in);
+        stack.push(out);
+        return out;
+    }
+
+    @Override
+    public T visit(CmdOpGroup op) {
+        T in = stack.pop();
+        T out = processor.process(op, in);
+        stack.push(out);
+        return out;
+    }
+
+    @Override
+    public T visit(CmdOpVar op) {
+        T in = stack.pop();
+        T out = processor.process(op, in);
+        stack.push(out);
+        return out;
+    }
+}
+
+// So the resulting expression replaces vars with "cat named-pipe"
+// The difficulty is, that if there is a variable in a group, then a named pipe needs to be created for the whole
+// group, and each member of that group needs to get the named pipe passed.
+// So what is the input to a group? (CmdOp? BoundStage?)
+// i think, in a first step, it needs to be a CmdOp expression.
+//
+class CmdOpTransformStageGenerator {
+    // @Override
+    public CmdOp transform(CmdOpGroup op, BoundStage input) {
+        // If there is a var in the group then
+        // (1) the current input must be passed on to a named pipe and
+        // (2) that named pipe must be passed to all members of the group.
+        // The var gets substituted for 'cat named-pipe'.
+
+        boolean hasVars = subOps.stream().anyMatch(subOp -> subOp instanceof CmdOpVar);
+
+        if (!hasVars) {
+            // Easy case: return as is.
+            return CmdOpTransformBase.super.transform(op, subOps);
+        } else {
+            // Hard case: turn the
+
+        }
+        return null;
+    }
+
+    public CmdOp transform(CmdOpPipeline op, BoundStage input) {
+        BoundStage result = input;
+        List<CmdOp> subOps = op.subOps();
+        for (CmdOp subOp : subOps) {
+            subOp.
+        }
+
+        // TODO Auto-generated method stub
+        // return CmdOpTransformBase.super.transform(op, subOps);
+    }
+
+    public CmdOp transform(CmdOpVar op, BoundStage input) {
+        // TODO Auto-generated method stub
+        // return CmdOpTransformBase.super.transform(op);
+    }
+}
+
+// superInput | { x | { y ; VAR } }
+class CmdOpTransformStageGenerator2
+    implements CmdOpTransformBase
+{
+    private Stage inputStage;
+
+    @Override
+    public CmdOp transform(CmdOpGroup op, List<CmdOp> subOps) {
+        // If there is a var in the group then
+        // (1) the current input must be passed on to a named pipe and
+        // (2) that named pipe must be passed to all members of the group.
+        // The var gets substituted for 'cat named-pipe'.
+
+        boolean hasVars = subOps.stream().anyMatch(subOp -> subOp instanceof CmdOpVar);
+
+        if (!hasVars) {
+            // Easy case: return as is.
+            return CmdOpTransformBase.super.transform(op, subOps);
+        } else {
+            // Hard case: turn the
+
+        }
+        return null;
+    }
+
+    @Override
+    public CmdOp transform(CmdOpPipeline op, List<CmdOp> subOps) {
+        // TODO Auto-generated method stub
+        return CmdOpTransformBase.super.transform(op, subOps);
+    }
+
+    @Override
+    public CmdOp transform(CmdOpVar op) {
+        // TODO Auto-generated method stub
+        return CmdOpTransformBase.super.transform(op);
+    }
+}
 
 public class BoundStageDocker
     implements BoundStage
@@ -238,6 +377,8 @@ public class BoundStageDocker
         // Map<CmdOpVar, Stage> varToStage = new LinkedHashMap<>();
         Map<CmdOpVar, String> varToContainerPath = new LinkedHashMap<>();
         // List<FileWriterTask> subTasks = new ArrayList<>();
+
+        // FIXME We cannot just use stage.fromNull - we need to properly wire up the stages!
         for (CmdOpVar v : vars) {
             Stage stage = varResolver.apply(v);
             // varToStage.put(v, stage);
@@ -257,7 +398,7 @@ public class BoundStageDocker
             // stage.fromNull().runToHostPipe()
         }
 
-        tmpOp = CmdOpTransformer.transform(tmpOp, new CmdOpTransformBase() {
+        tmpOp = CmdOpTransformer.transform(tmpOp, new CmdTransformBase() {
             @Override
             public CmdOp transform(CmdOpVar op) {
                 String containerPath = varToContainerPath.get(op);
@@ -265,16 +406,16 @@ public class BoundStageDocker
 
                 return new CmdOpExec(catCommand, ArgumentList.of(CmdArg.ofPathString(containerPath)));
             }
-        }, new CmdArgTransformBase() {
+
             @Override
             public CmdArg transform(CmdArgCmdOp arg, CmdOp subOp) {
                 String path = extractSimpleCatPath(subOp);
                 CmdArg r = path != null
                     ? CmdArg.ofPathString(path)
-                    : super.transform(arg, subOp);
+                    : CmdTransformBase.super.transform(arg, subOp);
                 return r;
             }
-        }, null);
+        });
 
         // SysRuntimeImpl.forCurrentOs().createNamedPipe(outPipePath);
         CmdOp effectiveOp = CmdOp.appendRedirect(tmpOp, RedirectFile.fileToStdOut(outContainerPath, OpenMode.WRITE_TRUNCATE));

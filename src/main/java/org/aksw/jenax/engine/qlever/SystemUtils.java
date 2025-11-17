@@ -38,6 +38,7 @@ public class SystemUtils {
         try (OutputStream out = OutputStream.nullOutputStream()) {
             p.getInputStream().transferTo(out);
         }
+        p.waitFor();
         int result = p.exitValue();
         return result;
     }

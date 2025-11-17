@@ -12,13 +12,13 @@ import com.google.common.io.ByteSource;
 public class BoundStageJvm
     implements BoundStage
 {
-    private InputStreamTransform transform;
     private ByteSource byteSource;
+    private InputStreamTransform transform;
 
-    public BoundStageJvm(InputStreamTransform transform, ByteSource byteSource) {
+    public BoundStageJvm(ByteSource byteSource, InputStreamTransform transform) {
         super();
-        this.transform = Objects.requireNonNull(transform);
         this.byteSource = Objects.requireNonNull(byteSource);
+        this.transform = Objects.requireNonNull(transform);
     }
 
     @Override

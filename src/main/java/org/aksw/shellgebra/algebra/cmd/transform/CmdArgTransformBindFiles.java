@@ -5,9 +5,9 @@ import java.util.Set;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
 
 import com.github.dockerjava.api.model.AccessMode;
@@ -38,27 +38,27 @@ public class CmdArgTransformBindFiles
 
     @Override
     public CmdArg transform(CmdArgRedirect arg) {
-        Redirect inRedirect = arg.redirect();
-        Redirect outRedirect = processRedirect(inRedirect);
+        CmdRedirect inRedirect = arg.redirect();
+        CmdRedirect outRedirect = processRedirect(inRedirect);
         CmdArg result = inRedirect.equals(outRedirect)
             ? arg
             : new CmdArgRedirect(outRedirect);
         return result;
     }
 
-    protected Redirect processRedirect(Redirect redirect) {
-        Redirect result = redirect instanceof RedirectFile f
+    protected CmdRedirect processRedirect(CmdRedirect redirect) {
+        CmdRedirect result = redirect instanceof RedirectFile f
             ? processRedirect(f)
             : redirect;
         return result;
     }
 
-    protected Redirect processRedirect(RedirectFile f) {
+    protected CmdRedirect processRedirect(RedirectFile f) {
         String hostPath = f.file();
         OpenMode openMode = f.openMode();
         AccessMode accessMode = toAccessMode(openMode);
         String containerPath = fileMapper.allocate(hostPath, accessMode);
-        Redirect newRedirect = new RedirectFile(containerPath, openMode, f.fd());
+        CmdRedirect newRedirect = new RedirectFile(containerPath, openMode, f.fd());
         return newRedirect;
     }
 

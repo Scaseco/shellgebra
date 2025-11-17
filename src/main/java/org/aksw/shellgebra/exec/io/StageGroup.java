@@ -9,6 +9,11 @@ import org.aksw.shellgebra.exec.Stage;
 
 import com.google.common.io.ByteSource;
 
+/**
+ * input | { x1 ; xi ; xn }
+ *
+ * The same input is passed to all members of the group.
+ */
 public class StageGroup
     implements Stage
 {

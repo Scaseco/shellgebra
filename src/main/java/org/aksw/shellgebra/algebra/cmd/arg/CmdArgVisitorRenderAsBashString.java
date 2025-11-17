@@ -9,10 +9,10 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
-import org.aksw.shellgebra.algebra.cmd.transform.RedirectVisitorToString;
+import org.aksw.shellgebra.algebra.cmd.transform.RedirectTargetVisitorToString;
 import org.aksw.shellgebra.exec.CmdStrOps;
 import org.aksw.shellgebra.exec.CmdStrOpsBash;
 
@@ -62,9 +62,9 @@ public class CmdArgVisitorRenderAsBashString
 
     @Override
     public String visit(CmdArgRedirect arg) {
-        Redirect redirect = arg.redirect();
+        CmdRedirect redirect = arg.redirect();
         // The StrOps are used to escape filenames.
-        String result = RedirectVisitorToString.toString(strOps, redirect);
+        String result = CmdRedirect.toString(strOps, redirect);
         return result;
     }
 

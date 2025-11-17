@@ -73,7 +73,7 @@ public class CmdOps {
     }
 
     private static class VarCollector
-        extends CmdOpTransformBase
+        implements CmdOpTransformBase
     {
         private Consumer<CmdOpVar> acc;
 
@@ -85,7 +85,7 @@ public class CmdOps {
         @Override
         public CmdOp transform(CmdOpVar op) {
             acc.accept(op);
-            return super.transform(op);
+            return CmdOpTransformBase.super.transform(op);
         }
     }
 //

@@ -14,6 +14,9 @@ public interface BoundStage
     FileWriterTask execToFile(Path hostPath, PathLifeCycle pathLifeCycle);
     FileWriterTask runToHostPipe();
 
+    /** Write to an output stream; return a runnable to abort the process. */
+    // Runnable writeTo(OutputStream out);
+
     // XXX Add support to get an input stream AND an underlying exit code!
 
     // XXX Perhaps add support for OutputStream destinations? Sketch:

@@ -2,7 +2,6 @@ package org.aksw.shellgebra.algebra.cmd.op;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
@@ -23,6 +22,10 @@ public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args
     /** Args array where the first element is the program name. */
     public static CmdOpExec ofLiteralArgs(String... argv) {
         return ofLiterals(argv[0], Arrays.asList(argv).subList(1, argv.length));
+    }
+
+    public static CmdOpExec assign(String key, String value) {
+        return new CmdOpExec(List.of(new CmdPrefix(key, value)), null, ArgumentList.of());
     }
 
     /**
@@ -65,7 +68,9 @@ public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args
         // super();
         // super(args);
         this.prefixes = List.copyOf(prefixes);
-        this.name = Objects.requireNonNull(name);
+        // this.name = Objects.requireNonNull(name);
+        this.name = name; // Allow null command to allow for simple assignment.
+                          // TODO Either have different ctors or introduce a CmdOpAssign type.
         this.args = args;
         // this.redirects = List.<Redirect>copyOf(redirects);
     }

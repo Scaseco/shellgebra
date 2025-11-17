@@ -10,11 +10,11 @@ import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
 import org.aksw.shellgebra.algebra.cmd.arg.Token;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 
-public class CmdArgTransformBase
-    implements CmdArgTransform
+public interface CmdArgTransformBase
+    extends CmdArgTransform
 {
     @Override
-    public CmdArg transform(CmdArgWord arg, List<Token> subTokens) {
+    default CmdArg transform(CmdArgWord arg, List<Token> subTokens) {
         CmdArg result = IterableUtils.equalsByReference(arg.tokens(), subTokens)
             ? arg
             : new CmdArgWord(arg.escapeType(), subTokens);
@@ -22,7 +22,7 @@ public class CmdArgTransformBase
     }
 
     @Override
-    public CmdArg transform(CmdArgCmdOp arg, CmdOp subOp) {
+    default CmdArg transform(CmdArgCmdOp arg, CmdOp subOp) {
         CmdArg result = (arg.cmdOp() == subOp)
             ? arg
             :new CmdArgCmdOp(subOp);
@@ -30,7 +30,7 @@ public class CmdArgTransformBase
     }
 
     @Override
-    public CmdArg transform(CmdArgRedirect arg) {
+    default CmdArg transform(CmdArgRedirect arg) {
         return arg;
     }
 }

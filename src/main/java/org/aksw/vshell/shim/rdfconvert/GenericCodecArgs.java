@@ -12,14 +12,18 @@ public class GenericCodecArgs
     @Option(names = {"-d", "--decompress"}, description = "Decompress")
     boolean decode;
 
-//    @Option(names = {"-c", "--stdeout"}, description = "Stdout")
-//    boolean stdout;
+    @Option(names = {"-c", "--stdout"}, description = "Output to console.")
+    boolean stdout;
 
     @Unmatched
     List<String> unmatchedArgs = new ArrayList<>();
 
     public boolean isDecode() {
         return decode;
+    }
+
+    public boolean isStdout() {
+        return stdout;
     }
 
     public List<String> getUnmatchedArgs() {
@@ -39,6 +43,7 @@ public class GenericCodecArgs
     public static ArgumentList renderArgList(GenericCodecArgs model) {
         ArgumentList result = ArgumentListBuilder.newBuilder()
             .ifTrue(model.isDecode(), "-d")
+            .ifTrue(model.isStdout(), "-c")
             .args(model.getUnmatchedArgs())
             .build();
         return result;

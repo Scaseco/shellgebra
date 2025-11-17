@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.Redirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 
 /**
  * A model that captures structured arguments. This record is used
@@ -38,8 +38,8 @@ public record ArgumentList(List<CmdArg> args) {
 
     /** Get redirect arguments. */
     // Split into redirects and plain args (TODO cache on demand).
-    public List<Redirect> getRedirects() {
-        List<Redirect> result = args.stream()
+    public List<CmdRedirect> getRedirects() {
+        List<CmdRedirect> result = args.stream()
             .map(arg -> arg instanceof CmdArgRedirect ca ? ca.redirect() : null)
             .filter(Objects::nonNull)
             .toList();

@@ -9,7 +9,7 @@ import org.aksw.shellgebra.algebra.cmd.transformer.TokenTransformBase;
 import com.github.dockerjava.api.model.AccessMode;
 
 public class CmdTokenTransformBindFiles
-    extends TokenTransformBase
+    implements TokenTransformBase
 {
     private FileMapper fileMapper;
 

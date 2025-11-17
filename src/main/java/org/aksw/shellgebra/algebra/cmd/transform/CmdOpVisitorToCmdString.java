@@ -1,6 +1,7 @@
 package org.aksw.shellgebra.algebra.cmd.transform;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -12,12 +13,14 @@ import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitor;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitorRenderAsBashString;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectVisitor;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTargetVisitor;
 import org.aksw.shellgebra.exec.CmdStrOps;
 
 
@@ -30,6 +33,14 @@ public class CmdOpVisitorToCmdString
 {
     protected CmdStrOps strOps;
 
+    public static String toString(CmdOp cmdOp, CmdOpVisitor<CmdString> visitor) {
+        CmdString c = cmdOp.accept(visitor);
+        String result = c.isCmd()
+            ? Arrays.asList(c.cmd()).stream().collect(Collectors.joining(" "))
+            : c.scriptString();
+        return result;
+    }
+
     public class CmdArgToString
         implements CmdArgVisitor<String> {
         @Override
@@ -40,8 +51,8 @@ public class CmdOpVisitorToCmdString
 
         @Override
         public String visit(CmdArgRedirect arg) {
-            RedirectVisitor<String> visitor = new RedirectVisitorToString(strOps);
-            String str = arg.redirect().accept(visitor);
+            RedirectTargetVisitor<String> visitor = new RedirectTargetVisitorToString(strOps);
+            String str = arg.redirect().toString(visitor);
             return str;
         }
 
@@ -87,7 +98,18 @@ public class CmdOpVisitorToCmdString
             String str = inArg.accept(visitor);
             outArgv.add(str);
         }
-        return new CmdString(outArgv.toArray(String[]::new));
+
+        CmdString result;
+        if (op.prefixes().isEmpty()) {
+            result = new CmdString(outArgv.toArray(String[]::new));
+        } else {
+            StringBuilder sb = new StringBuilder();
+            op.prefixes().forEach(e -> sb.append(e.key() + "=" + e.value()));
+            sb.append(" ");
+            sb.append(outArgv.stream().collect(Collectors.joining(" ")));
+            result = new CmdString(sb.toString());
+        }
+        return result;
     }
 
     @Override
@@ -99,8 +121,12 @@ public class CmdOpVisitorToCmdString
 
     @Override
     public CmdString visit(CmdOpGroup op) {
-        List<String> strs = CmdOpTransformLib.transformAll(this, op.subOps(), CmdOpVisitorToCmdString::toArg);
-        CmdString result = new CmdString(strOps.group(strs));
+        List<String> strs = CmdOpTransformLib.transformAll(this, op.subOps(), str -> CmdOpVisitorToCmdString.toArg(str));
+        String str = strOps.group(strs);
+        for (CmdRedirect redirect : op.redirects()) {
+            str += " " + CmdRedirect.toString(strOps, redirect);
+        }
+        CmdString result = new CmdString(str);
         return result;
     }
 

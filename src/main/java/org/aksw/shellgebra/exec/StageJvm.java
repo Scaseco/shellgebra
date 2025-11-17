@@ -23,7 +23,7 @@ public class StageJvm
 
     @Override
     public BoundStage from(ByteSource input) {
-        return new BoundStageJvm(transform, input);
+        return new BoundStageJvm(input, transform);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class StageJvm
                 return result;
             }
         };
-        return new BoundStageJvm(transform, bs);
+        return new BoundStageJvm(bs, transform);
     }
 
     @Override

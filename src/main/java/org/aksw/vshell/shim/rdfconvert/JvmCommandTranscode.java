@@ -50,7 +50,6 @@ public class JvmCommandTranscode
             ? new InputStreamTransformOverCommonsCompress(provider, codecName)
             : null;
 
-
         Set<String> outNames = provider.getOutputStreamCompressorNames();
         OutputStreamTransform outTransform = outNames.contains(codecName)
             ? new OutputStreamTransformOverCommonsCompress(provider, codecName)
