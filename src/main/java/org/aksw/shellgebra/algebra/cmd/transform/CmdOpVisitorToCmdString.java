@@ -23,7 +23,6 @@ import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTargetVisitor;
 import org.aksw.shellgebra.exec.CmdStrOps;
 
-
 // Note: CmdString does not ensure that the string is actually a command -
 // e.g. when passing a CmdOpFile it will return a string with the file name
 // So if the result is expected to be an executable operation, then the check needs

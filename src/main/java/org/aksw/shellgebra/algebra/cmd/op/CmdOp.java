@@ -21,26 +21,6 @@ public interface CmdOp {
         return Stream.of(collections).flatMap(Collection::stream).map(Object::toString).collect(Collectors.joining(" "));
     }
 
-    public static CmdOp appendRedirect(CmdOp base, CmdRedirect redirect) {
-        return appendRedirects(base, List.of(redirect));
-    }
-
-    public static CmdOp appendRedirects(CmdOp base, List<CmdRedirect> redirects) {
-        CmdOpVisitor<CmdOp> visitor = new CmdOpVisitorAddRedirect(redirects);
-        CmdOp result = base.accept(visitor);
-        return result;
-    }
-
-    public static CmdOp prependRedirect(CmdOp base, CmdRedirect redirect) {
-        return prependRedirects(base, List.of(redirect));
-    }
-
-    public static CmdOp prependRedirects(CmdOp base, List<CmdRedirect> redirects) {
-        CmdOpVisitor<CmdOp> visitor = new CmdOpVisitorPrependRedirect(redirects);
-        CmdOp result = base.accept(visitor);
-        return result;
-    }
-
     public abstract class CmdOpVisitorModifyRedirect
         implements CmdOpVisitor<CmdOp>
     {

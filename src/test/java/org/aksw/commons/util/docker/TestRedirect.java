@@ -17,6 +17,7 @@ import java.util.List;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
@@ -236,8 +237,8 @@ public class TestRedirect {
         CmdOp scriptOp = CmdOpGroup.of(List.<CmdOp>of(
             CmdOpGroup.of(List.<CmdOp>of(
                     CmdOpExec.assign("IN", "/proc/$$/fd/0"),
-                    CmdOp.appendRedirect(CmdOpExec.ofLiterals("echo", "hello"), CmdRedirect.out("OUT")),
-                    CmdOp.appendRedirect(CmdOpExec.ofLiterals("echo", "do"), CmdRedirect.out("PROC_CTL")),
+                    CmdOps.appendRedirect(CmdOpExec.ofLiterals("echo", "hello"), CmdRedirect.out("OUT")),
+                    CmdOps.appendRedirect(CmdOpExec.ofLiterals("echo", "do"), CmdRedirect.out("PROC_CTL")),
                     CmdOpExec.ofLiterals("cat", "JAVA_FIFO")
                 ),
                 List.of()
@@ -256,10 +257,10 @@ public class TestRedirect {
                 { bash -c 'IFS= read -r line; printf "x %s\n" "$line"' ; } ;
 
                 # tell process control to start another process and wait for its output.
-                echo "do: $IN" > PROC_CTL ; cat JAVA_FIFO;
+                echo "do: $IN" > PROC_CTL ; cat JAVA_FIFO ;
 
                 cat "$IN" ;
-              }  < <(cat "$1")
+              } < <(cat "$1")
               # } < "FIFO_IN"
             }
             """
@@ -296,7 +297,7 @@ public class TestRedirect {
 
             // Write something into stdin
             try (PrintWriter out = new PrintWriter(Files.newOutputStream(fifoInPath), true, StandardCharsets.UTF_8)) {
-                for (int i = 0; i < 10; ++i) {
+                for (int i = 1; i < 10; ++i) {
                     out.println("" + i);
                 }
                 out.flush();
@@ -310,7 +311,6 @@ public class TestRedirect {
 
             int exitValue = process.waitFor();
             System.out.println("Process " + process.pid() + " terminated with value: " + exitValue);
-
 
 //            // ProcessBuilder pb2 = new ProcessBuilder("cat");
 //            ProcessBuilder pb2 = new ProcessBuilder("bash", "-c", "cat < /tmp/my-test-fifo");
