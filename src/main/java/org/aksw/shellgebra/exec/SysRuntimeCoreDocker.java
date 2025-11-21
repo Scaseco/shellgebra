@@ -37,7 +37,7 @@ public class SysRuntimeCoreDocker
     @Override
     public String execCmd(String... argv) throws IOException, InterruptedException {
         Container.ExecResult execResult = container.execInContainer(StandardCharsets.UTF_8, argv);
-        String result = execResult.getStdout();
+        String result = execResult.out();
         // Remove trailing newline
         result = JvmExecUtils.removeTrailingNewline(result);
         return result;

@@ -16,10 +16,10 @@ public interface IProcessBuilder<X extends IProcessBuilder<X>> {
     Map<String, String> environment();
 
     boolean redirectErrorStream();
-
     X redirectErrorStream(boolean redirectErrorStream);
 
     void bind(Path hostPath, String containerPath, boolean write);
-
     Process start() throws IOException;
+
+    // redirectError()
 }

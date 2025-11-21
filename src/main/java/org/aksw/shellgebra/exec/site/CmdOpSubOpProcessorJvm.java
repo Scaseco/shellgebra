@@ -31,6 +31,11 @@ class CmdOpSubOpProcessorJvm
         CmdOp notifyProcCtlCmdOp = CmdOps.appendRedirect(
             CmdOpExec.ofLiterals("echo", "{ pid: \"$$\", cmdId: \"" + cmdId + "\"}"),
             CmdRedirect.out(cxt.processCtlPath));
+
+        // Register op for execution via the jvm once the event on the procCtl channel is seen.
+        ExecStage execStage = new ExecStage(op);
+        cxt.externalExecutions.put(outPipePath, execStage);
+
         CmdOp catProcOutcmdOp = CmdOpExec.ofLiteralArgs("cat", outPipePath);
         CmdOp result = CmdOps.group(notifyProcCtlCmdOp, catProcOutcmdOp);
         return result;

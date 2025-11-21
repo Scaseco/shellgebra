@@ -25,8 +25,8 @@ public class ProcessDockerExecResult
         super();
         this.execResult = execResult;
         this.stdin = OutputStream.nullOutputStream();
-        this.stdout = new InputStreamWrapper(new ByteArrayInputStream(execResult.getStdout().getBytes(StandardCharsets.UTF_8)));
-        this.stderr = new InputStreamWrapper(new ByteArrayInputStream(execResult.getStdout().getBytes(StandardCharsets.UTF_8)));
+        this.stdout = new InputStreamWrapper(new ByteArrayInputStream(execResult.out().getBytes(StandardCharsets.UTF_8)));
+        this.stderr = new InputStreamWrapper(new ByteArrayInputStream(execResult.out().getBytes(StandardCharsets.UTF_8)));
     }
 
     public Container.ExecResult getExecResult() {
