@@ -6,9 +6,10 @@ import java.util.Arrays;
 import java.util.function.Function;
 
 import org.aksw.shellgebra.exec.FileWriterTaskFromProcess;
+import org.aksw.shellgebra.exec.PathLifeCycle;
 import org.aksw.shellgebra.exec.PathLifeCycles;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
-import org.aksw.shellgebra.exec.FileWriterTaskBase.PathLifeCycle;
+
 import org.junit.Test;
 
 public class TestWriterTask {

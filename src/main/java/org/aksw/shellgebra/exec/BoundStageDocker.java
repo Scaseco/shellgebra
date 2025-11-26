@@ -39,7 +39,6 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
-import org.aksw.shellgebra.exec.FileWriterTaskBase.PathLifeCycle;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.riot.Lang;

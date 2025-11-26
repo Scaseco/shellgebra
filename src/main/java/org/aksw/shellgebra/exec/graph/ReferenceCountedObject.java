@@ -22,6 +22,10 @@ public final class ReferenceCountedObject<T> {
         return resource;
     }
 
+    public T getRaw() {
+        return resource;
+    }
+
     public ReferenceCountedObject<T> acquire() {
         // Never increment once zero was reached.
         refCount.getAndUpdate(old -> old > 0 ? old + 1 : 0);
@@ -35,6 +39,7 @@ public final class ReferenceCountedObject<T> {
         }
         if (oldCount == 0) {
             try {
+                System.out.println("Closing resource: " + this);
                 closeAction.close();
             } catch (Exception e) {
                 Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);

@@ -20,11 +20,6 @@ public abstract class FileWriterTaskBase
 //        ABORTED    // Stopped before completion
     }
 
-    public static interface PathLifeCycle {
-        default void beforeExec(Path path) throws IOException {}
-        default void afterExec(Path path) throws IOException {}
-    }
-
     /**  The file being generated. */
     protected Path outputPath;
     protected PathLifeCycle pathLifeCycle;

@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.FileWriterTaskBase.PathLifeCycle;
 
 import com.google.common.io.ByteSource;
 

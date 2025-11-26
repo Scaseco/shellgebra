@@ -54,4 +54,9 @@ public interface SysRuntime
 
     @Override
     public void close();
+
+
+    public static void newNamedPipe(Path path) throws IOException {
+        SysRuntimeImpl.forCurrentOs().createNamedPipe(path);
+    }
 }

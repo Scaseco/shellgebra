@@ -22,11 +22,13 @@ public class FdTable<T>
         this.fileDescriptions = fileDescriptions;
     }
 
+    /** Get the Resource of a file description. RefCount stays unaffected. */
     public T getResource(int id) {
         return getFd(id).get();
     }
 
 
+    /** Get a file description. RefCount stays unaffected. */
     public FileDescription<T> getFd(int id) {
         FileDescription<T> result = fileDescriptions[id];
         if (result == null) {

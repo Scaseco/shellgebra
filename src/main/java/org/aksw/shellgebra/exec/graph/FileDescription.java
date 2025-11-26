@@ -1,38 +1,25 @@
 package org.aksw.shellgebra.exec.graph;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicBoolean;
+public interface FileDescription<T>
+    extends AutoCloseable {
 
-public class FileDescription<T>
-    implements AutoCloseable
-{
-    private ReferenceCountedObject<T> resource;
-    private AtomicBoolean isClosed = new AtomicBoolean();
+    boolean isOpen();
 
-    private FileDescription(ReferenceCountedObject<T> resource) {
-        super();
-        this.resource = resource;
-    }
+    /** Get the raw reference to the resource that may be closed. */
+    T getRaw();
+    T get();
+    FileDescription<T> dup();
 
-    public boolean isOpen() {
-        return resource.isOpen();
-    }
+    @Override
+    public void close();
 
-    public T get() {
-        return resource.get();
-    }
-
-    /**
-     * Duplicate the file description.
-     * Will try to acquire the underlying resource.
-     * The resulting FileDescription may be "born dead" if the resource is already closed.
-     * Check the state with {@link FileDescription#isOpen()}.
-     */
-    public FileDescription<T> dup() {
-        resource.acquire();
-        return new FileDescription<>(resource);
+    /** Dup followed by a check for whether the resource is alive. */
+    default FileDescription<T> checkedDup() {
+        FileDescription<T> result = dup();
+        if (!result.isOpen()) {
+            throw new IllegalStateException("Resource already closed: " + getRaw());
+        }
+        return result;
     }
 
     public static <T extends AutoCloseable> FileDescription<T> auto(T obj) {
@@ -41,25 +28,6 @@ public class FileDescription<T>
     }
 
     public static <T> FileDescription<T> of(ReferenceCountedObject<T> resource) {
-        return new FileDescription<>(resource);
-    }
-
-    public static <T> FileDescription<FdResource> of(OutputStream os) {
-        return auto(FdResource.of(os));
-    }
-
-    public static <T> FileDescription<FdResource> of(InputStream is) {
-        return auto(FdResource.of(is));
-    }
-
-    public static <T> FileDescription<FdResource> of(Path path) {
-        return auto(FdResource.of(path));
-    }
-
-    @Override
-    public void close() {
-        if (isClosed.compareAndSet(false, true)) {
-            resource.release();
-        }
+        return new FileDescriptionImpl<>(resource);
     }
 }
