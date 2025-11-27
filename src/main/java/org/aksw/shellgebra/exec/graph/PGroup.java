@@ -522,7 +522,6 @@ public class PGroup
         // fdr points to the path of a regular file.
         // fdr
 
-
         // pb.redirectError(cxt.ge);
         // Process process = pb.start();
     }
@@ -558,7 +557,7 @@ public class PGroup
         Path basePath = Files.createTempDirectory("process-exec-");
         // logger.info("Created path at  " + basePath);
         System.out.println("Created path at  " + basePath);
-        try (NativeExecCxt ncxt = NativeExecCxt.create(basePath, true, true, true)) {
+        try (ProcessRunner ncxt = ProcessRunner.create(basePath, true, true, true)) {
             ncxt.setOutputReader(in -> readLines(in, line -> System.err.println(line)));
             ncxt.setErrorReader(in -> readLines(in, line -> System.err.println(line)));
 
@@ -568,7 +567,7 @@ public class PGroup
 
 
             if (true) {
-                ncxt.setInputSupplier(out -> {
+                ncxt.setInputGenerator(out -> {
                     try (PrintStream pout = new PrintStream(out, false, StandardCharsets.UTF_8)) {
                         for (int i = 0; i < 1000; ++i) {
                             pout.println("" + i);

@@ -1,25 +1,49 @@
 package org.aksw.shellgebra.exec.graph;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.lang.ProcessBuilder.Redirect.Type;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.PathLifeCycle;
 import org.aksw.shellgebra.exec.PathLifeCycles;
 import org.aksw.shellgebra.exec.graph.FdResource.FdResourceInputStream;
 import org.aksw.shellgebra.exec.graph.FdResource.FdResourceOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class NativeExecCxt
+/**
+ * Process runner provides an environment for running a set of processes.
+ * All processes can share the same input, output and error streams.
+ *
+ * The process runner manages a set of  named pipes.
+ * Processes launched with this runner are configured with the appropriate pipe ends.
+ */
+public class ProcessRunner
     implements AutoCloseable
 {
+    private Logger logger = LoggerFactory.getLogger(ProcessRunner.class);
+
+    private Path basePath;
+
     private PathResource fd0;
     private PathResource fd1;
     private PathResource fd2;
@@ -28,13 +52,16 @@ public class NativeExecCxt
     private boolean fd1OverridesInherit = false;
     private boolean fd2OverridesInherit = false;
 
-    private Thread dummyThread;
+    // private Thread dummyThread;
     private Runnable closeAction;
 
 
     private FdTable fdTable;
 
-    private Thread inThread;
+    private ExecutorService executorService;
+
+    // private Thread inThread;
+    private CompletableFuture<?> inThread;
     private Thread outThread;
     private Thread errThread;
 
@@ -42,11 +69,13 @@ public class NativeExecCxt
 //    private InputStream out;
 //    private InputStream err;
 
-    public NativeExecCxt(PathResource fd0, PathResource fd1, PathResource fd2,
+    public ProcessRunner(Path basePath, PathResource fd0, PathResource fd1, PathResource fd2,
             FdTable fdTable,
             boolean fd0OverridesInherit, boolean fd1OverridesInherit, boolean fd2OverridesInherit,
             Runnable closeAction) {
         super();
+        this.basePath = basePath;
+        this.executorService = Executors.newCachedThreadPool();
         this.fd0OverridesInherit = fd0OverridesInherit;
         this.fd1OverridesInherit = fd1OverridesInherit;
         this.fd2OverridesInherit = fd2OverridesInherit;
@@ -109,6 +138,14 @@ public class NativeExecCxt
         return thread;
     }
 
+    public Thread setOutputLineReaderUtf8(Consumer<String> lineCallback) {
+        return setOutputLineReader(StandardCharsets.UTF_8, lineCallback);
+    }
+
+    public Thread setOutputLineReader(Charset charset, Consumer<String> lineCallback) {
+        return setOutputReader(in -> readLines(in, charset, lineCallback));
+    }
+
     public Thread setErrorReader(Consumer<InputStream> reader) {
         Thread thread = new Thread(() -> {
             try (InputStream in = getErrorStream()) {
@@ -122,8 +159,16 @@ public class NativeExecCxt
         return thread;
     }
 
-    public Thread setInputSupplier(Consumer<OutputStream> inputSupplier) {
-        Thread thread = new Thread(() -> {
+    public Thread setErrorLineReaderUtf8(Consumer<String> lineCallback) {
+        return setErrorLineReader(StandardCharsets.UTF_8, lineCallback);
+    }
+
+    public Thread setErrorLineReader(Charset charset, Consumer<String> lineCallback) {
+        return setErrorReader(in -> readLines(in, charset, lineCallback));
+    }
+
+    public Future<?> setInputGenerator(Consumer<OutputStream> inputSupplier) {
+        Runnable runnable = () -> {
             try (OutputStream out = getOutputStream()) {
                 inputSupplier.accept(out);
                 out.flush();
@@ -131,13 +176,20 @@ public class NativeExecCxt
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
-        });
-        inThread = thread;
-        return thread;
+        };
+        Future<?> future = executorService.submit(runnable);
+        return future;
+    }
+
+    public Future<?> setInputPrintStreamUtf8(Consumer<PrintStream> writerCallback) {
+        return setInputPrintStream(StandardCharsets.UTF_8, true, writerCallback);
+    }
+
+    public Future<?> setInputPrintStream(Charset charset, boolean autoFlush, Consumer<PrintStream> writerCallback) {
+        return setInputGenerator(out -> writerCallback.accept(new PrintStream(out, autoFlush, charset)));
     }
 
     public OutputStream getOutputStream() {
-        new RuntimeException("here i am").printStackTrace();
         // fdTable.getFd(0).isOpen();
         // System.out.println("Write End - open: " + fdTable.getFd(0).isOpen());
         return ((FdResourceOutputStream)fdTable.getResource(0)).outputStream();
@@ -151,20 +203,46 @@ public class NativeExecCxt
         return ((FdResourceInputStream)fdTable.getFd(2).get()).inputStream();
     }
 
+    public static ProcessBuilder clone(ProcessBuilder original) {
+        ProcessBuilder clone = new ProcessBuilder();
+        clone.command(original.command());
+        clone.environment().putAll(original.environment());
+        clone.redirectInput(original.redirectInput());
+        clone.redirectOutput(original.redirectOutput());
+        clone.redirectError(original.redirectError());
+        clone.directory(original.directory());
+        return clone;
+    }
+
     public ProcessBuilder configure(ProcessBuilder processBuilder) {
-        configureInput(processBuilder.redirectInput(), fd0, fd0OverridesInherit, processBuilder::redirectInput);
-        configureOutput(processBuilder.redirectOutput(), fd1, fd1OverridesInherit, processBuilder::redirectOutput);
-        configureOutput(processBuilder.redirectError(), fd2, fd2OverridesInherit, processBuilder::redirectError);
-        return processBuilder;
+        ProcessBuilder clone = clone(processBuilder);
+        configureInput(clone.redirectInput(), fd0, fd0OverridesInherit, clone::redirectInput);
+        configureOutput(clone.redirectOutput(), fd1, fd1OverridesInherit, clone::redirectOutput);
+        configureOutput(clone.redirectError(), fd2, fd2OverridesInherit, clone::redirectError);
+        return clone;
+    }
+
+    /** Does not alter the provided process builder. */
+    public Process start(ProcessBuilder nativeProcessBuilder) throws IOException {
+        ProcessBuilder configuredProcessBuilder = configure(nativeProcessBuilder);
+        Process result = configuredProcessBuilder.start();
+        return result;
     }
 
     static Timer timer = null; //new Timer();
 
-    public static NativeExecCxt create(Path basePath) throws IOException {
+    public static ProcessRunner create() throws IOException {
+        Path basePath = Files.createTempDirectory("process-exec-");
+        System.out.println("Created path at  " + basePath);
+        ProcessRunner result = ProcessRunner.create(basePath);
+        return result;
+    }
+
+    public static ProcessRunner create(Path basePath) throws IOException {
         return create(basePath, true, true, true);
     }
 
-    public static NativeExecCxt create(Path basePath, boolean fd0OverridesInherit, boolean fd1OverridesInherit, boolean fd2OverridesInherit) throws IOException {
+    public static ProcessRunner create(Path basePath, boolean fd0OverridesInherit, boolean fd1OverridesInherit, boolean fd2OverridesInherit) throws IOException {
         Path fd0 = basePath.resolve("fd0");
         Path fd1 = basePath.resolve("fd1");
         Path fd2 = basePath.resolve("fd2");
@@ -234,21 +312,53 @@ public class NativeExecCxt
 
         Runnable closeAction = closer[0];
 
-        return new NativeExecCxt(rfd0, rfd1, rfd2, fdTable, fd0OverridesInherit, fd1OverridesInherit, fd2OverridesInherit, closeAction);
+        return new ProcessRunner(basePath, rfd0, rfd1, rfd2, fdTable, fd0OverridesInherit, fd1OverridesInherit, fd2OverridesInherit, closeAction);
     }
 
     @Override
     public void close() throws Exception {
-        fdTable.close();
+        // TODO Clean up / harden clean up procedure.
+        // inThread.cancel(true);
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            List<Runnable> abandonedTasks = executorService.shutdownNow();
+            if (!abandonedTasks.isEmpty()) {
+                logger.error("Abandoned " + abandonedTasks.size() + " tasks.");
+            }
+        }
+
+//        if (inThread != null) {
+//            inThread.interrupt();
+//            try {
+//                inThread.join(5000);
+//            } catch (InterruptedException e) {
+//                logger.warn("Abandoning data provider thread because it did not shut down in time.");
+//            }
+//        }
+
         fd0.close();
+        fdTable.close();
+
+        if (errThread != null) { errThread.join(); }
+        if (outThread != null) { outThread.join(); }
+
         fd1.close();
         fd2.close();
+
         Runnable ca = closeAction;
         if (ca != null) {
             ca.run();
         }
+        Files.deleteIfExists(basePath);
+    }
 
-        if (errThread != null) { errThread.join(); }
-        if (outThread != null) { outThread.join(); }
+    static void readLines(InputStream in, Charset charset, Consumer<String> lineCallback) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(in, charset))) {
+            br.lines().forEach(lineCallback::accept);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
