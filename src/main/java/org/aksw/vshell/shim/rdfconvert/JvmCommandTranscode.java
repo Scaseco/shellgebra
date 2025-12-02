@@ -1,20 +1,23 @@
 package org.aksw.vshell.shim.rdfconvert;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.Stages;
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.registry.codec.InputStreamTransformOverCommonsCompress;
 import org.aksw.shellgebra.registry.codec.OutputStreamTransformOverCommonsCompress;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.aksw.shellgebra.unused.algebra.plan.OutputStreamTransform;
-import org.aksw.vshell.registry.JvmCommand;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 public class JvmCommandTranscode
-    implements JvmCommand
+    extends JvmCommandBase<ArgsModular<GenericCodecArgs>>
 {
     private String codecName;
     private InputStreamTransform inTransform;
@@ -28,9 +31,14 @@ public class JvmCommandTranscode
     }
 
     @Override
+    public ArgsModular<GenericCodecArgs> parseArgs(String... args) {
+        ArgsModular<GenericCodecArgs> argsModel = GenericCodecArgs.parse(args);
+        return argsModel;
+    }
+
+    @Override
     public Stage newStage(String... args) {
-        ArgsModular<GenericCodecArgs> transcodeModel = GenericCodecArgs.parse(args);
-        GenericCodecArgs model = transcodeModel.model();
+        GenericCodecArgs model = parseArgs(args).model();
         Stage result;
         if (model.isDecode()) {
             Objects.requireNonNull(inTransform, "No decoding for " + codecName);
@@ -40,6 +48,22 @@ public class JvmCommandTranscode
             result = Stages.javaOut(outTransform);
         }
         return result;
+    }
+
+    @Override
+    protected void runActual(ProcessRunner cxt, ArgsModular<GenericCodecArgs> args) throws IOException {
+        GenericCodecArgs model = args.model();
+        if (model.isDecode()) {
+            Objects.requireNonNull(inTransform, "No decoding for " + codecName);
+            InputStream in = cxt.internalIn();
+            InputStream out = inTransform.apply(in);
+            out.transferTo(cxt.internalOut());
+        } else {
+            Objects.requireNonNull(inTransform, "No encoding for " + codecName);
+            InputStream in = cxt.internalIn();
+            OutputStream out = outTransform.apply(cxt.internalOut());
+            in.transferTo(out);
+        }
     }
 
     public static JvmCommandTranscode of(CompressorStreamFactory provider, String codecName) {

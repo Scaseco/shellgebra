@@ -13,7 +13,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +29,12 @@ import org.aksw.shellgebra.exec.PathLifeCycle;
 import org.aksw.shellgebra.exec.PathLifeCycles;
 import org.aksw.shellgebra.exec.graph.FdResource.FdResourceInputStream;
 import org.aksw.shellgebra.exec.graph.FdResource.FdResourceOutputStream;
+import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectFileDescription;
+import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectIn;
+import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectJava;
+import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectOut;
+import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectPBF;
+import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +50,10 @@ public class ProcessRunner
 {
     private Logger logger = LoggerFactory.getLogger(ProcessRunner.class);
 
+    // Bridge to java commands.
+    private JvmCommandRegistry jvmCmdRegistry;
+    private Map<String, String> environment;
+
     private Path basePath;
 
     private PathResource fd0;
@@ -52,11 +64,17 @@ public class ProcessRunner
     private boolean fd1OverridesInherit = false;
     private boolean fd2OverridesInherit = false;
 
+    // Process-facing streams.
+    private List<FileDescription<FdResource>> internalPipeEnds;
+
     // private Thread dummyThread;
     private Runnable closeAction;
 
 
     private FdTable fdTable;
+
+    // Should there be a process-builder base class that resolves redirects?
+    private ProcessCxt cxt; // FIXME Move some fields into process context?
 
     private ExecutorService executorService;
 
@@ -70,9 +88,10 @@ public class ProcessRunner
 //    private InputStream err;
 
     public ProcessRunner(Path basePath, PathResource fd0, PathResource fd1, PathResource fd2,
-            FdTable fdTable,
+            FdTable fdTable, // Table of outside-facing pipe ends.
             boolean fd0OverridesInherit, boolean fd1OverridesInherit, boolean fd2OverridesInherit,
-            Runnable closeAction) {
+            // Runnable closeAction,
+            List<FileDescription<FdResource>> internalPipeEnds) {
         super();
         this.basePath = basePath;
         this.executorService = Executors.newCachedThreadPool();
@@ -86,8 +105,48 @@ public class ProcessRunner
         this.fd1 = fd1;
         this.fd2 = fd2;
 
-        this.closeAction = closeAction;
+        this.internalPipeEnds = internalPipeEnds;
+        // this.closeAction = closeAction;
+
+        this.jvmCmdRegistry = new JvmCommandRegistry();
     }
+
+    public JvmCommandRegistry getJvmCmdRegistry() {
+        return jvmCmdRegistry;
+    }
+
+    public Map<String, String> environment() {
+        return environment;
+    }
+
+    public InputStream internalIn() {
+        return internalPipeEnds.get(0).get().asInputStream();
+    }
+
+    public OutputStream internalOut() {
+        return internalPipeEnds.get(1).get().asOutputStream();
+    }
+
+    public OutputStream internalErr() {
+        return internalPipeEnds.get(2).get().asOutputStream();
+    }
+
+    public PrintStream internalPrintOut() {
+        return new PrintStream(internalPipeEnds.get(1).get().asOutputStream());
+    }
+
+    public PrintStream internalPrintErr() {
+        return new PrintStream(internalPipeEnds.get(2).get().asOutputStream());
+    }
+
+//    public JvmExecCxt getJvmContext() {
+//        public JvmExecCxt(
+//                JvmContext context,
+//                // List<String> command,
+//                Map<String, String> environment,
+//                Path directory,
+//                InputStream inputStream, PrintStream outputStream, PrintStream errorStream) {
+//    }
 
     public FdTable getFdTable() {
         return fdTable;
@@ -229,6 +288,43 @@ public class ProcessRunner
         return result;
     }
 
+
+    public Process start(ProcessBuilder2 processBuilder) {
+        JRedirect redirectIn = processBuilder.redirectInput();
+        redirectIn.accept(new JRedirectVisitor<Object>() {
+            @Override
+            public Object visit(PRedirectJava redirect) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+            @Override
+            public Object visit(PRedirectFileDescription redirect) {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public Object visit(PRedirectIn redirect) {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public Object visit(PRedirectOut redirect) {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public Object visit(PRedirectPBF redirect) {
+                PBF pbf = redirect.pbf();
+
+                return null;
+            }
+        });
+
+        processBuilder.redirectOutput();
+        processBuilder.redirectError();
+        // processBuilder
+        return null;
+    }
+
+
+
     static Timer timer = null; //new Timer();
 
     public static ProcessRunner create() throws IOException {
@@ -257,6 +353,8 @@ public class ProcessRunner
         rfd2.open();
 
         Runnable[] closer = {null};
+
+        List<FileDescription<FdResource>> internalPipeEnds = new ArrayList<>(3);
 
         // Use a thread to open the process-facing ends of the pipes and hold them.
         Thread internalPipeEndOpenerThread = new Thread(() -> {
@@ -288,6 +386,10 @@ public class ProcessRunner
                         throw new RuntimeException(e);
                     }
                 };
+
+                internalPipeEnds.add(FileDescriptions.of(xfd0));
+                internalPipeEnds.add(FileDescriptions.of(xfd1));
+                internalPipeEnds.add(FileDescriptions.of(xfd2));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -312,7 +414,7 @@ public class ProcessRunner
 
         Runnable closeAction = closer[0];
 
-        return new ProcessRunner(basePath, rfd0, rfd1, rfd2, fdTable, fd0OverridesInherit, fd1OverridesInherit, fd2OverridesInherit, closeAction);
+        return new ProcessRunner(basePath, rfd0, rfd1, rfd2, fdTable, fd0OverridesInherit, fd1OverridesInherit, fd2OverridesInherit, internalPipeEnds);
     }
 
     @Override
@@ -339,10 +441,14 @@ public class ProcessRunner
 //        }
 
         fd0.close();
-        fdTable.close();
+
+        // Close the internal output pipe ends to indicate EOF to the outside readers.
+        internalOut().close();
+        internalErr().close();
 
         if (errThread != null) { errThread.join(); }
         if (outThread != null) { outThread.join(); }
+        fdTable.close();
 
         fd1.close();
         fd2.close();

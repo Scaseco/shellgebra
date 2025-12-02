@@ -5,11 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.exec.Stage;
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.vshell.shim.rdfconvert.JvmCommandBase;
+import org.apache.commons.exec.ExecuteException;
 
 public class JvmCommandCat
-    implements JvmCommand
+    extends JvmCommandBase<ArgsCat>
 {
     @Override
     public ArgsCat parseArgs(String... args) {
@@ -23,18 +25,8 @@ public class JvmCommandCat
     }
 
     @Override
-    public int run(JvmExecCxt cxt, Argv argv) {
-        ArgsCat model;
-
+    public void runActual(ProcessRunner cxt, ArgsCat model) throws ExecuteException {
         int exitValue = 0;
-        try {
-            model = parseArgs(argv.newArgs());
-        } catch (Exception e) {
-            e.printStackTrace(cxt.err());
-            exitValue = 2;
-            return exitValue;
-        }
-
         List<String> names = model.getFileNames().isEmpty()
             ? List.of("-")
             : model.getFileNames();
@@ -42,19 +34,24 @@ public class JvmCommandCat
         for (String name : names) {
             try {
                 if (name.equals("-")) {
-                    cxt.in().transferTo(cxt.out());
+                    cxt.internalIn().transferTo(cxt.internalOut());
                 } else {
                     Path path = Path.of(name);
                     try (InputStream in = Files.newInputStream(path)) {
-                        in.transferTo(cxt.out());
+                        in.transferTo(cxt.internalOut());
+                        // XXX flush?
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace(cxt.err());
+                e.printStackTrace(cxt.internalPrintErr());
                 exitValue = 1;
                 break;
             }
         }
-        return exitValue;
+
+        if (exitValue != 0) {
+            // TODO Improve exception - should we reuse ExecuteException or roll our own?
+            throw new ExecuteException("One or more arguments failed to open as files.", 1);
+        }
     }
 }

@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+// TODO Consolidate with ProcessRunner and JvmExecCxt
 public class JvmContext {
     private JvmCommandRegistry jvmCmdRegistry;
     private Map<String, String> environment = new ConcurrentHashMap<>();

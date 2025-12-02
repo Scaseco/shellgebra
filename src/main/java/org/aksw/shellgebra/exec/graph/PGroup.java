@@ -38,68 +38,6 @@ interface PBF {
     PB createProcessBuilder();
 }
 
-// High level redirect
-sealed interface PRedirect {
-    // Standard Java redirect
-    public record PRedirectJava(Redirect redirect) implements PRedirect { }
-    public record PRedirectProcess(PBF processBuilderFactory) implements PRedirect { }
-}
-
-interface JRedirectVisitor<T> {
-    T visit(PRedirectJava redirect);
-    T visit(PRedirectFileDescription redirect);
-    T visit(PRedirectIn redirect);
-    T visit(PRedirectOut redirect);
-    T visit(PRedirectPBF redirect);
-}
-
-// Low-level java redirect - PBF redirects have been resolved to plain input stream.
-// However, the input stream to a process may be set directly.
-// A java-native pseudo process may read directly from it - no java pipe pair necessary.
-sealed interface JRedirect {
-
-    <T> T accept(JRedirectVisitor<T> visitor);
-
-    // Standard Java redirect
-    public record PRedirectJava(Redirect redirect) implements JRedirect {
-        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
-            T result = visitor.visit(this);
-            return result;
-        }
-    }
-
-    // Standard Java redirect
-    public record PRedirectFileDescription(FileDescription<FdResource> fileDescription) implements JRedirect {
-        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
-            T result = visitor.visit(this);
-            return result;
-        }
-    }
-
-    public record PRedirectPBF(PBF pbf) implements JRedirect {
-        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
-            T result = visitor.visit(this);
-            return result;
-        }
-    }
-
-    //public record PRedirectProcess(ByteSource in) implements JRedirect { }
-    public record PRedirectIn(InputStream in) implements JRedirect {
-        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
-            T result = visitor.visit(this);
-            return result;
-        }
-    }
-
-    public record PRedirectOut(OutputStream in) implements JRedirect {
-        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
-            T result = visitor.visit(this);
-            return result;
-        }
-    }
-}
-
-
 // Combine a file name which can be passed directly to processes with the corresponding java streams.
 class NamedPipeJava {
     private Path path;
@@ -272,9 +210,16 @@ class NativePB
         return redirectErr;
     }
 
+//    @Override
+//    public PB createProcessBuilder() {
+//        return new NativePB(command);
+//    }
+
     @Override
-    public PB createProcessBuilder() {
-        return new NativePB(command);
+    public Process start(ProcessRunner runner) throws IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        Process process = runner.start(processBuilder);
+        return process;
     }
 
 //    @Override
@@ -330,9 +275,9 @@ interface PB {
     void redirectOutput(JRedirect redirect);
     void redirectError(JRedirect redirect);
 
-    PB createProcessBuilder();
+    // PB createProcessBuilder();
 
-    // Process start();
+    Process start(ProcessRunner context) throws IOException;
 }
 
 

@@ -10,6 +10,14 @@ import java.nio.file.StandardOpenOption;
 
 public interface FdResource extends AutoCloseable
 {
+    default InputStream asInputStream() {
+        throw new RuntimeException("not an input stream");
+    }
+
+    default OutputStream asOutputStream() {
+        throw new RuntimeException("not an uutput stream");
+    }
+
     @Override
     void close() throws IOException;
 
@@ -21,6 +29,11 @@ public interface FdResource extends AutoCloseable
     }
 
     public record FdResourceInputStream(InputStream inputStream, FileDescription<FdResourcePath> base) implements FdResource {
+        @Override
+        public InputStream asInputStream() {
+            return inputStream;
+        }
+
         @Override
         public void close() throws IOException {
             try {
@@ -34,6 +47,11 @@ public interface FdResource extends AutoCloseable
     }
 
     public record FdResourceOutputStream(OutputStream outputStream, FileDescription<FdResourcePath> base) implements FdResource {
+        @Override
+        public OutputStream asOutputStream() {
+            return outputStream;
+        }
+
         @Override
         public void close() throws IOException {
             try {

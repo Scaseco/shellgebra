@@ -5,6 +5,7 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Map;
 
+// FIXME Consolidate with ProcessRunner
 public class JvmExecCxt {
     private JvmContext context; // Used executor + JvmCommandRegistry registry;
 

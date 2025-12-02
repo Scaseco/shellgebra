@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.exec.Stage;
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
 public class JvmCommandWhich
     implements JvmCommand
@@ -20,20 +21,20 @@ public class JvmCommandWhich
     }
 
     @Override
-    public int run(JvmExecCxt cxt, Argv argv) {
+    public int run(ProcessRunner cxt, Argv argv) {
         ArgsWhich model;
 
         int exitValue = 0;
         try {
             model = parseArgs(argv.newArgs());
         } catch (Exception e) {
-            e.printStackTrace(cxt.err());
+            e.printStackTrace(cxt.internalPrintErr());
             exitValue = 2;
             return exitValue;
         }
 
-        List<String> pathEntries = PathResolutionUtils.getPathItems(cxt.env(), "PATH", ":");
-        JvmCommandRegistry reg = cxt.context().getJvmCmdRegistry();
+        List<String> pathEntries = PathResolutionUtils.getPathItems(cxt.environment(), "PATH", ":");
+        JvmCommandRegistry reg = cxt.getJvmCmdRegistry();
         for (String name : model.getFileNames()) {
             long limit = model.isAll() ? Long.MAX_VALUE : 1;
             List<String> res = resolve(reg, pathEntries, name, limit);
@@ -43,7 +44,7 @@ public class JvmCommandWhich
             }
 
             for (String str : res) {
-                cxt.out().println(str);
+                cxt.internalPrintOut().println(str);
             }
         }
 

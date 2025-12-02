@@ -3,6 +3,7 @@ package org.aksw.commons.util.docker;
 import org.junit.Test;
 
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.vshell.registry.ProcessBuilderJvm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,13 @@ public class TestProcessRunner {
             });
             runner.start(new ProcessBuilder("head", "-n 2")).waitFor();
             runner.start(new ProcessBuilder("head", "-n 2")).waitFor();
+
+            TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+
+            ProcessBuilderJvm jvmProcessBuilder = ProcessBuilderJvm.of("/bin/cat");
+            Process jvmProcess = jvmProcessBuilder.start(runner);
+            jvmProcess.waitFor();
+            System.out.println("exit code: " + jvmProcess.exitValue());
         }
     }
 }
