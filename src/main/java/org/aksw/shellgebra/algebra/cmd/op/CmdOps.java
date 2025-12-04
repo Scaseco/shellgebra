@@ -156,6 +156,10 @@ public class CmdOps {
         return appendRedirects(base, List.of(redirect));
     }
 
+    public static CmdOp appendRedirects(CmdOp base, CmdRedirect... redirects) {
+        return appendRedirects(base, List.of(redirects));
+    }
+
     public static CmdOp appendRedirects(CmdOp base, List<CmdRedirect> redirects) {
         CmdOpVisitor<CmdOp> visitor = new CmdOp.CmdOpVisitorAddRedirect(redirects);
         CmdOp result = base.accept(visitor);

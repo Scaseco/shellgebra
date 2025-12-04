@@ -10,6 +10,9 @@ import java.nio.file.StandardOpenOption;
 
 public interface FdResource extends AutoCloseable
 {
+    // XXX Should FdResource allow for a generic list of dependent FdResources?
+    //     E.g. A computation resource depending on a list of inputs.
+
     default InputStream asInputStream() {
         throw new RuntimeException("not an input stream");
     }

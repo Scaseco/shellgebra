@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
+
 public class ProcessBuilderNative
     implements IProcessBuilder<ProcessBuilderNative>
 {
@@ -72,8 +74,13 @@ public class ProcessBuilderNative
         return getDelegate().start();
     }
 
+//    @Override
+//    public void bind(Path hostPath, String containerPath, boolean write) {
+//        // XXX Add flag that enables tracking for debugging.
+//    }
+
     @Override
-    public void bind(Path hostPath, String containerPath, boolean write) {
-        // XXX Add flag that enables tracking for debugging.
+    public Process start(ProcessRunner executor) throws IOException {
+        return executor.start(delegate);
     }
 }

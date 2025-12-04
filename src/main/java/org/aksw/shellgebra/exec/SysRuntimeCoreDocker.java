@@ -31,7 +31,7 @@ public class SysRuntimeCoreDocker
 
     @Override
     public IProcessBuilder<?> newProcessBuilder() {
-        return new ProcessBuilderDocker(container);
+        return new ProcessBuilderDockerExec(container);
     }
 
     @Override

@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
+
 public interface IProcessBuilder<X extends IProcessBuilder<X>> {
     List<String> command();
     X command(String... command);
@@ -18,8 +20,10 @@ public interface IProcessBuilder<X extends IProcessBuilder<X>> {
     boolean redirectErrorStream();
     X redirectErrorStream(boolean redirectErrorStream);
 
-    void bind(Path hostPath, String containerPath, boolean write);
+    // void bind(Path hostPath, String containerPath, boolean write);
     Process start() throws IOException;
+
+    Process start(ProcessRunner executor) throws IOException;
 
     // redirectError()
 }

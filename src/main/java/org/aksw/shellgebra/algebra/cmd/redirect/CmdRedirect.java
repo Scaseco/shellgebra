@@ -17,6 +17,10 @@ public record CmdRedirect(int fd, OpenMode openMode, RedirectTarget target) {
         return new CmdRedirect(0, OpenMode.READ, new RedirectTargetProcessSubstitution(cmdOp));
     }
 
+    public static CmdRedirect in(String fileName) {
+        return new CmdRedirect(0, OpenMode.READ, new RedirectTargetFile(fileName));
+    }
+
     public static CmdRedirect out(String fileName) {
         return new CmdRedirect(1, OpenMode.WRITE_TRUNCATE, new RedirectTargetFile(fileName));
     }

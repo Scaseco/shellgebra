@@ -1,10 +1,12 @@
 package org.aksw.commons.util.docker;
 
+import java.io.FileDescriptor;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,20 +17,82 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.model.AccessMode;
+import com.github.dockerjava.api.model.Container;
+
 import org.aksw.jenax.engine.qlever.SystemUtils;
-import org.aksw.shellgebra.exec.SysRuntimeDocker;
-import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
+import org.newsclub.net.unix.FileDescriptorCast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.model.Container;
-
 public class ContainerUtils {
     private static final Logger logger = LoggerFactory.getLogger(ContainerUtils.class);
+
+    /** Returns a path such as /proc/process_id/fd/123 */
+    public static Path getFdPath(FileDescriptor fd) {
+        int fdVal;
+        try {
+            fdVal = FileDescriptorCast.using(fd).as(Integer.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        long pid = ProcessHandle.current().pid();
+        Path result = Path.of("/proc", Long.toString(pid), "fd", Integer.toString(fdVal));
+        return result;
+    }
+
+    /** Does not work: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @20abdeca */
+    public static int extractFD(FileDescriptor fd) {
+        try {
+            Field field = FileDescriptor.class.getDeclaredField("fd");
+            field.setAccessible(true);
+            return (int)field.get(fd);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static BindMode toBindMode(AccessMode am) {
+        return am == AccessMode.ro ? BindMode.READ_ONLY : BindMode.READ_WRITE;
+    }
+
+    public static String getUserString() throws IOException {
+        int uid = SystemUtils.getUID();
+        int gid = SystemUtils.getGID();
+        String userStr = uid + ":" + gid;
+        return userStr;
+    }
+
+    /**
+     * Get the exit value based on the container's info.
+     * This will only work if the container has been stopped but not removed.
+     */
+    public static long getExitValueLong(GenericContainer<?> container) {
+          InspectContainerResponse containerInfo = container.getContainerInfo();
+          if (containerInfo != null && containerInfo.getState().getExitCodeLong() != null) {
+              long exitValue = containerInfo.getState().getExitCodeLong();
+              return exitValue;
+          }
+          // System.out.println("Could not get exit code, container info not available or container still running.");
+          throw new RuntimeException("No exit value");
+    }
+
+    public static int getExitValue(GenericContainer<?> container) {
+        return (int)getExitValueLong(container);
+    }
+
+    public static void waitFor(GenericContainer<?> container) throws InterruptedException {
+        container.getDockerClient()
+            .waitContainerCmd(container.getContainerId())
+            .exec(new WaitContainerResultCallback())
+            .awaitCompletion();
+    }
 
     private static Set<String> getContainerIdCandidates() {
         Set<String> result = new LinkedHashSet<>();

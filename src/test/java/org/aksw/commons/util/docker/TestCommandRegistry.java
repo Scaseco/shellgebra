@@ -7,6 +7,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.io.ByteSource;
+
+import org.junit.Test;
+
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
@@ -44,6 +48,7 @@ import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandCat;
 import org.aksw.vshell.registry.JvmCommandExecutor;
 import org.aksw.vshell.registry.JvmCommandExecutorImpl;
+import org.aksw.vshell.registry.JvmCommandHead;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.JvmCommandWhich;
 import org.aksw.vshell.registry.JvmContext;
@@ -53,9 +58,6 @@ import org.aksw.vshell.shim.rdfconvert.JvmCommandTranscode;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
-import org.junit.Test;
-
-import com.google.common.io.ByteSource;
 
 import junit.framework.Assert;
 
@@ -214,6 +216,7 @@ public class TestCommandRegistry {
         jvmCmdRegistry.put("/bin/test", new JvmCmdTest());
 
         jvmCmdRegistry.put("/bin/cat", new JvmCommandCat());
+        jvmCmdRegistry.put("/bin/head", new JvmCommandHead());
 
         CompressorStreamFactory csf = new CompressorStreamFactory();
 

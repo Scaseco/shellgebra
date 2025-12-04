@@ -12,6 +12,10 @@ public record Argv(List<String> argv) {
         argv = List.copyOf(Objects.requireNonNull(argv));
     }
 
+    public static Argv of(List<String> argv) {
+        return of(argv.get(0), argv.subList(1, argv.size()));
+    }
+
     public static Argv of(String... argv) {
         if (argv.length == 0) {
             throw new IllegalArgumentException("At least on item expected.");

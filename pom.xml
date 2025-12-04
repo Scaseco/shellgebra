@@ -16,6 +16,34 @@
 
 	<dependencies>
 
+
+<dependency>
+  <groupId>net.java.dev.jna</groupId>
+  <artifactId>jna</artifactId>
+  <version>5.14.0</version>
+</dependency>
+
+  <dependency>
+    <groupId>com.kohlschutter.junixsocket</groupId>
+    <artifactId>junixsocket-common</artifactId>
+    <version>2.10.1</version>
+  </dependency>
+
+
+  <!-- pulls in the JNI .so for common platforms including Linux -->
+  <dependency>
+    <groupId>com.kohlschutter.junixsocket</groupId>
+    <artifactId>junixsocket-native-common</artifactId>
+    <version>2.10.1</version>
+  </dependency>
+  
+  <dependency>
+  <groupId>com.github.jnr</groupId>
+  <artifactId>jnr-posix</artifactId>
+  <version>3.1.20</version>
+</dependency>
+
+
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-exec</artifactId>

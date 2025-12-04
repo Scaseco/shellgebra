@@ -28,6 +28,7 @@ public class PathResource
         return path;
     }
 
+    /** Run the beforeExec method of the life cycle if not already open. */
     @Override
     public void open() throws IOException {
         synchronized (lock) {

@@ -34,7 +34,10 @@ public class ProcessDockerExec extends Process {
     // Client-facing streams
     private final PipedInputStream stdoutIn = new PipedInputStream();
     private final PipedInputStream stderrIn = new PipedInputStream();
+
+    // TODO Wire up stdin.
     private final PipedOutputStream stdinOut = new PipedOutputStream();
+
 
     // Internal ends that we write/read to
     private final PipedOutputStream stdoutSink;

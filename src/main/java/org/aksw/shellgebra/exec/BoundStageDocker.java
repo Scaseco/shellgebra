@@ -7,9 +7,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,34 +15,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-
-import org.aksw.commons.util.docker.ContainerPathResolver;
-import org.aksw.jenax.engine.qlever.SystemUtils;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
-import org.aksw.shellgebra.algebra.cmd.arg.Token;
-import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
-import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
-import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
-import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
-import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
-import org.apache.commons.io.IOUtils;
-import org.apache.jena.riot.Lang;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.BindMode;
 
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.async.ResultCallback.Adapter;
@@ -54,6 +24,28 @@ import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.google.common.io.ByteSource;
+
+import org.aksw.commons.util.docker.ContainerPathResolver;
+import org.aksw.commons.util.docker.ContainerUtils;
+import org.aksw.jenax.engine.qlever.SystemUtils;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect.OpenMode;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
+import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
+import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.apache.commons.io.IOUtils;
+import org.apache.jena.riot.Lang;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BoundStageDocker
     implements BoundStage
@@ -165,7 +157,7 @@ public class BoundStageDocker
             ;
 
         for (Bind bind : fileMapper.getBinds()) {
-            result = result.withFileSystemBind(bind.getPath(), bind.getVolume().getPath(), toBindMode(bind.getAccessMode()));
+            result = result.withFileSystemBind(bind.getPath(), bind.getVolume().getPath(), ContainerUtils.toBindMode(bind.getAccessMode()));
             logger.info("Adding bind: " + bind);
         }
 
@@ -181,25 +173,6 @@ public class BoundStageDocker
                 return execToInputStream();
             }
         };
-    }
-
-    public static String extractSimpleCatPath(CmdOp cmdOp) {
-        if (cmdOp instanceof CmdOpExec exec) {
-            if ("/virt/cat".equals(exec.name())) {
-                if (exec.args().size() == 1) {
-                    CmdArg a = exec.args().args().get(0);
-                    if (a instanceof CmdArgWord w) {
-                        if (w.tokens().size() == 1) {
-                            Token t = w.tokens().get(0);
-                            if (t instanceof TokenPath tp) {
-                                 return tp.path();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     protected FileWriterTask execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) {
@@ -274,7 +247,7 @@ public class BoundStageDocker
 
             @Override
             public CmdArg transform(CmdArgCmdOp arg, CmdOp subOp) {
-                String path = extractSimpleCatPath(subOp);
+                String path = ProcessBuilderDocker.extractSimpleCatPath(subOp);
                 CmdArg r = path != null
                     ? CmdArg.ofPathString(path)
                     : CmdTransformBase.super.transform(arg, subOp);
@@ -283,7 +256,7 @@ public class BoundStageDocker
         });
 
         // SysRuntimeImpl.forCurrentOs().createNamedPipe(outPipePath);
-        CmdOp effectiveOp = CmdOp.appendRedirect(tmpOp, RedirectFile.fileToStdOut(outContainerPath, OpenMode.WRITE_TRUNCATE));
+        CmdOp effectiveOp = CmdOps.appendRedirect(tmpOp, CmdRedirect.out(outContainerPath));
 
         // effectiveOp = tmpOp;
 
@@ -342,10 +315,6 @@ public class BoundStageDocker
         };
 
         return result;
-    }
-
-    private static BindMode toBindMode(AccessMode am) {
-        return am == AccessMode.ro ? BindMode.READ_ONLY : BindMode.READ_WRITE;
     }
 
     // For an input stream, pipe it to a named pipe and supply it via bash

@@ -1,7 +1,7 @@
 package org.aksw.shellgebra.exec.graph;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,42 +13,34 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.aksw.shellgebra.exec.PathLifeCycle;
-import org.aksw.shellgebra.exec.PathLifeCycles;
-import org.aksw.shellgebra.exec.graph.FdResource.FdResourceInputStream;
-import org.aksw.shellgebra.exec.graph.FdResource.FdResourceOutputStream;
+import org.aksw.commons.util.docker.Argv;
+import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectFileDescription;
 import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectIn;
 import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectJava;
 import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectOut;
 import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectPBF;
+import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandRegistry;
+import org.aksw.vshell.registry.ProcessBuilderJvm;
+import org.aksw.vshell.registry.ProcessOverCompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Process runner provides an environment for running a set of processes.
- * All processes can share the same input, output and error streams.
- *
- * The process runner manages a set of  named pipes.
- * Processes launched with this runner are configured with the appropriate pipe ends.
- */
 public class ProcessRunner
     implements AutoCloseable
 {
-    private Logger logger = LoggerFactory.getLogger(ProcessRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProcessRunner.class);
 
     // Bridge to java commands.
     private JvmCommandRegistry jvmCmdRegistry;
@@ -56,57 +48,44 @@ public class ProcessRunner
 
     private Path basePath;
 
-    private PathResource fd0;
-    private PathResource fd1;
-    private PathResource fd2;
+    private PosixPipe pipeIn;
+    private PosixPipe pipeOut;
+    private PosixPipe pipeErr;
 
-    private boolean fd0OverridesInherit = false;
-    private boolean fd1OverridesInherit = false;
-    private boolean fd2OverridesInherit = false;
+    // Overrides for whether inherit stdin/stdout/stderr from the system (this jvm process) rather than the pipes.
 
-    // Process-facing streams.
-    private List<FileDescription<FdResource>> internalPipeEnds;
+    private boolean inheritInFromSystem = false;
+    private boolean inheritOutFromSystem = false;
+    private boolean inheritErrFromSystem = false;
 
-    // private Thread dummyThread;
-    private Runnable closeAction;
+    private ExecutorService executorService;
 
+    // Threads seem to be more easy to cancel (interrupt) and join than futures.
+    private Thread inFuture = null;
+    private Thread outFuture = null;
+    private Thread errFuture = null;
 
-    private FdTable fdTable;
+    // private CompletableFuture<?> inFuture = null;
+    // private CompletableFuture<?> outFuture = null;
+    // private CompletableFuture<?> errFuture = null;
 
     // Should there be a process-builder base class that resolves redirects?
     private ProcessCxt cxt; // FIXME Move some fields into process context?
 
-    private ExecutorService executorService;
-
-    // private Thread inThread;
-    private CompletableFuture<?> inThread;
-    private Thread outThread;
-    private Thread errThread;
-
-//    private OutputStream in;
-//    private InputStream out;
-//    private InputStream err;
-
-    public ProcessRunner(Path basePath, PathResource fd0, PathResource fd1, PathResource fd2,
-            FdTable fdTable, // Table of outside-facing pipe ends.
-            boolean fd0OverridesInherit, boolean fd1OverridesInherit, boolean fd2OverridesInherit,
-            // Runnable closeAction,
-            List<FileDescription<FdResource>> internalPipeEnds) {
+    public ProcessRunner(
+            Path basePath, // Do we still need basePath?
+            PosixPipe pipeIn, PosixPipe pipeOut, PosixPipe pipeErr,
+            boolean inheritInFromSystem, boolean inheritOutFromSystem, boolean inheritErrFromSystem) {
         super();
         this.basePath = basePath;
         this.executorService = Executors.newCachedThreadPool();
-        this.fd0OverridesInherit = fd0OverridesInherit;
-        this.fd1OverridesInherit = fd1OverridesInherit;
-        this.fd2OverridesInherit = fd2OverridesInherit;
+        this.inheritInFromSystem = inheritInFromSystem;
+        this.inheritOutFromSystem = inheritOutFromSystem;
+        this.inheritErrFromSystem = inheritErrFromSystem;
 
-        this.fdTable = fdTable;
-
-        this.fd0 = fd0;
-        this.fd1 = fd1;
-        this.fd2 = fd2;
-
-        this.internalPipeEnds = internalPipeEnds;
-        // this.closeAction = closeAction;
+        this.pipeIn = pipeIn;
+        this.pipeOut = pipeOut;
+        this.pipeErr = pipeErr;
 
         this.jvmCmdRegistry = new JvmCommandRegistry();
     }
@@ -119,48 +98,47 @@ public class ProcessRunner
         return environment;
     }
 
+    public Path inputPipe() {
+        return pipeIn.getReadEndProcPath();
+    }
+
+    public Path outputPipe() {
+        return pipeOut.getWriteEndProcPath();
+    }
+
+    public Path errorPipe() {
+        return pipeErr.getWriteEndProcPath();
+    }
+
     public InputStream internalIn() {
-        return internalPipeEnds.get(0).get().asInputStream();
+        return pipeIn.getInputStream();
     }
 
     public OutputStream internalOut() {
-        return internalPipeEnds.get(1).get().asOutputStream();
+        return pipeOut.getOutputStream();
     }
 
     public OutputStream internalErr() {
-        return internalPipeEnds.get(2).get().asOutputStream();
+        return pipeErr.getOutputStream();
     }
 
     public PrintStream internalPrintOut() {
-        return new PrintStream(internalPipeEnds.get(1).get().asOutputStream());
+        return pipeOut.printer(StandardCharsets.UTF_8);
     }
 
     public PrintStream internalPrintErr() {
-        return new PrintStream(internalPipeEnds.get(2).get().asOutputStream());
+        return pipeErr.printer(StandardCharsets.UTF_8);
     }
 
-//    public JvmExecCxt getJvmContext() {
-//        public JvmExecCxt(
-//                JvmContext context,
-//                // List<String> command,
-//                Map<String, String> environment,
-//                Path directory,
-//                InputStream inputStream, PrintStream outputStream, PrintStream errorStream) {
-//    }
-
-    public FdTable getFdTable() {
-        return fdTable;
-    }
-
-    private void configureInput(Redirect redirect, PathResource fd, boolean fdOverridesInherit, Consumer<Redirect> redirectConsumer) {
+    private void configureInput(Redirect redirect, Path fd, boolean fdOverridesInherit, Consumer<Redirect> redirectConsumer) {
         Type type = redirect.type();
         switch (type) {
         case PIPE:
-            redirectConsumer.accept(Redirect.from(fd.getPath().toFile()));
+            redirectConsumer.accept(Redirect.from(fd.toFile()));
             break;
         case INHERIT:
             if (fdOverridesInherit) {
-                redirectConsumer.accept(Redirect.from(fd.getPath().toFile()));
+                redirectConsumer.accept(Redirect.from(fd.toFile()));
             }
             break;
         default:
@@ -168,15 +146,15 @@ public class ProcessRunner
         }
     }
 
-    private void configureOutput(Redirect redirect, PathResource fd, boolean fdOverridesInherit, Consumer<Redirect> redirectConsumer) {
+    private void configureOutput(Redirect redirect, Path fd, boolean fdOverridesInherit, Consumer<Redirect> redirectConsumer) {
         Type type = redirect.type();
         switch (type) {
         case PIPE:
-            redirectConsumer.accept(Redirect.to(fd.getPath().toFile()));
+            redirectConsumer.accept(Redirect.to(fd.toFile()));
             break;
         case INHERIT:
             if (fdOverridesInherit) {
-                redirectConsumer.accept(Redirect.to(fd.getPath().toFile()));
+                redirectConsumer.accept(Redirect.to(fd.toFile()));
             }
             break;
         default:
@@ -185,16 +163,17 @@ public class ProcessRunner
     }
 
     public Thread setOutputReader(Consumer<InputStream> reader) {
-        Thread thread = new Thread(() -> {
+        Runnable runnable = () -> {
             try (InputStream in = getInputStream()) {
                 reader.accept(in);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
-        thread.start();
-        outThread = thread;
-        return thread;
+        };
+        //outFuture = CompletableFuture.runAsync(runnable, executorService);
+        outFuture = new Thread(runnable);
+        outFuture.start();
+        return outFuture;
     }
 
     public Thread setOutputLineReaderUtf8(Consumer<String> lineCallback) {
@@ -206,16 +185,16 @@ public class ProcessRunner
     }
 
     public Thread setErrorReader(Consumer<InputStream> reader) {
-        Thread thread = new Thread(() -> {
+        Runnable runnable = () -> {
             try (InputStream in = getErrorStream()) {
                 reader.accept(in);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
-        thread.start();
-        errThread = thread;
-        return thread;
+        };
+        errFuture = new Thread(runnable); // CompletableFuture.runAsync(runnable, executorService);
+        errFuture.start();
+        return errFuture;
     }
 
     public Thread setErrorLineReaderUtf8(Consumer<String> lineCallback) {
@@ -226,40 +205,40 @@ public class ProcessRunner
         return setErrorReader(in -> readLines(in, charset, lineCallback));
     }
 
-    public Future<?> setInputGenerator(Consumer<OutputStream> inputSupplier) {
+    public Thread setInputGenerator(Consumer<OutputStream> inputSupplier) {
         Runnable runnable = () -> {
             try (OutputStream out = getOutputStream()) {
                 inputSupplier.accept(out);
                 out.flush();
+                logger.info("Closing: " + ContainerUtils.getFdPath(((FileOutputStream)out).getFD()));
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
         };
-        Future<?> future = executorService.submit(runnable);
-        return future;
+        inFuture = new Thread(runnable);// CompletableFuture.runAsync(runnable, executorService);
+        inFuture.start();
+        return inFuture;
     }
 
-    public Future<?> setInputPrintStreamUtf8(Consumer<PrintStream> writerCallback) {
+    public Thread setInputPrintStreamUtf8(Consumer<PrintStream> writerCallback) {
         return setInputPrintStream(StandardCharsets.UTF_8, true, writerCallback);
     }
 
-    public Future<?> setInputPrintStream(Charset charset, boolean autoFlush, Consumer<PrintStream> writerCallback) {
+    public Thread setInputPrintStream(Charset charset, boolean autoFlush, Consumer<PrintStream> writerCallback) {
         return setInputGenerator(out -> writerCallback.accept(new PrintStream(out, autoFlush, charset)));
     }
 
     public OutputStream getOutputStream() {
-        // fdTable.getFd(0).isOpen();
-        // System.out.println("Write End - open: " + fdTable.getFd(0).isOpen());
-        return ((FdResourceOutputStream)fdTable.getResource(0)).outputStream();
+        return pipeIn.getOutputStream();
     }
 
     public InputStream getInputStream() {
-        return ((FdResourceInputStream)fdTable.getFd(1).get()).inputStream();
+        return pipeOut.getInputStream();
     }
 
     public InputStream getErrorStream() {
-        return ((FdResourceInputStream)fdTable.getFd(2).get()).inputStream();
+        return pipeErr.getInputStream();
     }
 
     public static ProcessBuilder clone(ProcessBuilder original) {
@@ -275,9 +254,9 @@ public class ProcessRunner
 
     public ProcessBuilder configure(ProcessBuilder processBuilder) {
         ProcessBuilder clone = clone(processBuilder);
-        configureInput(clone.redirectInput(), fd0, fd0OverridesInherit, clone::redirectInput);
-        configureOutput(clone.redirectOutput(), fd1, fd1OverridesInherit, clone::redirectOutput);
-        configureOutput(clone.redirectError(), fd2, fd2OverridesInherit, clone::redirectError);
+        configureInput(clone.redirectInput(), inputPipe(), inheritInFromSystem, clone::redirectInput);
+        configureOutput(clone.redirectOutput(), outputPipe(), inheritOutFromSystem, clone::redirectOutput);
+        configureOutput(clone.redirectError(), errorPipe(), inheritErrFromSystem, clone::redirectError);
         return clone;
     }
 
@@ -288,6 +267,21 @@ public class ProcessRunner
         return result;
     }
 
+//    public Process startDocker(ProcessBuilderDocker processBuilder) {
+//    	ProcessBuilderDocker.start(this);
+//    }
+
+    public Process startJvm(ProcessBuilderJvm jvmProcessBuilder) {
+        Argv a = Argv.of(jvmProcessBuilder.command());
+        String command = a.command();
+        JvmCommand cmd = getJvmCmdRegistry().get(command)
+                .orElseThrow(() -> new RuntimeException("Command not found: " + command));
+        Process process = ProcessOverCompletableFuture.of(() -> {
+            int exitValue = cmd.run(ProcessRunner.this, a);
+            return exitValue;
+        });
+        return process;
+    }
 
     public Process start(ProcessBuilder2 processBuilder) {
         JRedirect redirectIn = processBuilder.redirectInput();
@@ -339,86 +333,34 @@ public class ProcessRunner
     }
 
     public static ProcessRunner create(Path basePath, boolean fd0OverridesInherit, boolean fd1OverridesInherit, boolean fd2OverridesInherit) throws IOException {
-        Path fd0 = basePath.resolve("fd0");
-        Path fd1 = basePath.resolve("fd1");
-        Path fd2 = basePath.resolve("fd2");
+        PosixPipe inPipe = PosixPipe.open();
+        PosixPipe outPipe = PosixPipe.open();
+        PosixPipe errPipe = PosixPipe.open();
 
-        PathLifeCycle lifeCycle = PathLifeCycles.deleteAfterExec(PathLifeCycles.namedPipe());
-        PathResource rfd0 = new PathResource(fd0, lifeCycle);
-        PathResource rfd1 = new PathResource(fd1, lifeCycle);
-        PathResource rfd2 = new PathResource(fd2, lifeCycle);
+        return new ProcessRunner(basePath, inPipe, outPipe, errPipe, fd0OverridesInherit, fd1OverridesInherit, fd2OverridesInherit);
+    }
 
-        rfd0.open();
-        rfd1.open();
-        rfd2.open();
-
-        Runnable[] closer = {null};
-
-        List<FileDescription<FdResource>> internalPipeEnds = new ArrayList<>(3);
-
-        // Use a thread to open the process-facing ends of the pipes and hold them.
-        Thread internalPipeEndOpenerThread = new Thread(() -> {
-            try {
-                // FileDescriptor.in
-                // Open READ end of input pipe
-                InputStream xfd0 = new FileInputStream(rfd0.getPath().toFile()); // Files.newInputStream(rfd0.getPath());
-
-                if (false) {
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            System.out.println("Hijacking input");
-                            PGroup.readerThread(xfd0, "hijack: ").start();
-                        }
-                    }, 5000);
-                }
-
-                OutputStream xfd1 = Files.newOutputStream(rfd1.getPath());
-                OutputStream xfd2 = Files.newOutputStream(rfd2.getPath());
-
-                closer[0] = () -> {
-                    System.out.println("Closing ends of process-facing pipes.");
-                    try {
-                        xfd0.close();
-                        xfd1.close();
-                        xfd2.close();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                };
-
-                internalPipeEnds.add(FileDescriptions.of(xfd0));
-                internalPipeEnds.add(FileDescriptions.of(xfd1));
-                internalPipeEnds.add(FileDescriptions.of(xfd2));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Pipe ends openend - pipe end opener thread terminated.");
-        });
-        internalPipeEndOpenerThread.start();
-
-        FdTable fdTable = new FdTable<>();
-        // Open the client facing ends of the pipes.
-        fdTable.setFd(0, FileDescriptions.of(Files.newOutputStream(rfd0.getPath())));
-
-        // Cannot connect to a file input stream if it hasn't been opened for writing
-        fdTable.setFd(1, FileDescriptions.of(Files.newInputStream(rfd1.getPath())));
-        fdTable.setFd(2, FileDescriptions.of(Files.newInputStream(rfd2.getPath())));
-
-        try {
-            internalPipeEndOpenerThread.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    private void cancelAndGet(CompletableFuture<?> future) throws InterruptedException, ExecutionException {
+        if (future != null) {
+            future.cancel(true);
+            future.get();
         }
-        System.out.println("Got internal ends");
+    }
 
-        Runnable closeAction = closer[0];
-
-        return new ProcessRunner(basePath, rfd0, rfd1, rfd2, fdTable, fd0OverridesInherit, fd1OverridesInherit, fd2OverridesInherit, internalPipeEnds);
+    private void cancelAndGet(Thread thread) throws InterruptedException, ExecutionException {
+        if (thread != null) {
+            thread.interrupt();
+            thread.join();
+        }
     }
 
     @Override
     public void close() throws Exception {
+
+        cancelAndGet(inFuture);
+        // Close the internal output pipe ends to indicate EOF to the outside readers.
+        internalIn().close();
+
         // TODO Clean up / harden clean up procedure.
         // inThread.cancel(true);
         executorService.shutdown();
@@ -431,32 +373,16 @@ public class ProcessRunner
             }
         }
 
-//        if (inThread != null) {
-//            inThread.interrupt();
-//            try {
-//                inThread.join(5000);
-//            } catch (InterruptedException e) {
-//                logger.warn("Abandoning data provider thread because it did not shut down in time.");
-//            }
-//        }
-
-        fd0.close();
-
-        // Close the internal output pipe ends to indicate EOF to the outside readers.
         internalOut().close();
         internalErr().close();
 
-        if (errThread != null) { errThread.join(); }
-        if (outThread != null) { outThread.join(); }
-        fdTable.close();
+        cancelAndGet(outFuture);
+        cancelAndGet(errFuture);
 
-        fd1.close();
-        fd2.close();
+        pipeIn.close();
+        pipeOut.close();
+        pipeErr.close();
 
-        Runnable ca = closeAction;
-        if (ca != null) {
-            ca.run();
-        }
         Files.deleteIfExists(basePath);
     }
 
@@ -467,4 +393,139 @@ public class ProcessRunner
             throw new RuntimeException(e);
         }
     }
+
+//    // Begin of internal streams - pipe ends facing to the processes.
+//
+//    private BufferedReader internalInReader;
+//    private Charset internalInCharset;
+//    private BufferedWriter internalOutWriter;
+//    private Charset internalOutCharset;
+//    private BufferedWriter internalErrWriter;
+//    private Charset internalErrCharset;
+//
+//    public final BufferedReader internalInReader() {
+//        return internalInReader(Charset.defaultCharset());
+//    }
+//
+//    public final BufferedReader internalInReader(Charset charset) {
+//        Objects.requireNonNull(charset, "charset");
+//        synchronized (this) {
+//            if (internalInReader == null) {
+//                internalInCharset = charset;
+//                internalInReader = new BufferedReader(new InputStreamReader(internalIn(), charset));
+//            } else {
+//                if (!internalInCharset.equals(charset))
+//                    throw new IllegalStateException("BufferedWriter was created with charset: " + internalInCharset);
+//            }
+//            return internalInReader;
+//        }
+//    }
+//
+//    public final BufferedWriter internalOutWriter() {
+//        return internalOutWriter(Charset.defaultCharset());
+//    }
+//
+//    public final BufferedWriter internalOutWriter(Charset charset) {
+//        Objects.requireNonNull(charset, "charset");
+//        synchronized (this) {
+//            if (internalOutWriter == null) {
+//                internalOutCharset = charset;
+//                internalOutWriter = new BufferedWriter(new OutputStreamWriter(internalOut(), charset));
+//            } else {
+//                if (!internalOutCharset.equals(charset))
+//                    throw new IllegalStateException("BufferedReader was created with charset: " + internalOutCharset);
+//            }
+//            return internalOutWriter;
+//        }
+//    }
+//
+//    public final BufferedWriter internalErrWriter() {
+//        return internalErrWriter(Charset.defaultCharset());
+//    }
+//
+//    public final BufferedWriter internalErrWriter(Charset charset) {
+//        Objects.requireNonNull(charset, "charset");
+//        synchronized (this) {
+//            if (internalErrWriter == null) {
+//                internalErrCharset = charset;
+//                internalErrWriter = new BufferedWriter(new OutputStreamWriter(internalOut(), charset));
+//            } else {
+//                if (!internalErrCharset.equals(charset))
+//                    throw new IllegalStateException("BufferedReader was created with charset: " + internalErrCharset);
+//            }
+//            return internalErrWriter;
+//        }
+//    }
+//
+//    // End of internal streams.
+//
+//
+//    // Mechanism taken from Process
+//    // XXX Subclass from process? Or make this an abstract base class?
+//
+//    // Readers and Writers created for this process; so repeated calls return the same object
+//    // All updates must be done while synchronized on this Process.
+//    private BufferedWriter outputWriter;
+//    private Charset outputCharset;
+//    private BufferedReader inputReader;
+//    private Charset inputCharset;
+//    private BufferedReader errorReader;
+//    private Charset errorCharset;
+//
+//    public final BufferedWriter outputWriter() {
+//        return outputWriter(Charset.defaultCharset());
+//    }
+//
+//    public final BufferedWriter outputWriter(Charset charset) {
+//        Objects.requireNonNull(charset, "charset");
+//        synchronized (this) {
+//            if (outputWriter == null) {
+//                outputCharset = charset;
+//                outputWriter = new BufferedWriter(new OutputStreamWriter(getOutputStream(), charset));
+//            } else {
+//                if (!outputCharset.equals(charset))
+//                    throw new IllegalStateException("BufferedWriter was created with charset: " + outputCharset);
+//            }
+//            return outputWriter;
+//        }
+//    }
+//
+//    public final BufferedWriter inputReader() {
+//        return outputWriter(Charset.defaultCharset());
+//    }
+//
+//    public final BufferedReader inputReader(Charset charset) {
+//        Objects.requireNonNull(charset, "charset");
+//        synchronized (this) {
+//            if (inputReader == null) {
+//                inputCharset = charset;
+//                inputReader = new BufferedReader(new InputStreamReader(getInputStream(), charset));
+//            } else {
+//                if (!inputCharset.equals(charset))
+//                    throw new IllegalStateException("BufferedReader was created with charset: " + inputCharset);
+//            }
+//            return inputReader;
+//        }
+//    }
+//
+//    public final BufferedWriter errorReader() {
+//        return outputWriter(Charset.defaultCharset());
+//    }
+//
+//    public final BufferedReader errorReader(Charset charset) {
+//        Objects.requireNonNull(charset, "charset");
+//        synchronized (this) {
+//            if (errorReader == null) {
+//                errorCharset = charset;
+//                errorReader = new BufferedReader(new InputStreamReader(getErrorStream(), charset));
+//            } else {
+//                if (!errorCharset.equals(charset))
+//                    throw new IllegalStateException("BufferedReader was created with charset: " + errorCharset);
+//            }
+//            return errorReader;
+//        }
+//    }
+
+    // End of Process
 }
+
