@@ -23,23 +23,19 @@ public class ProcessBuilderDockerExec
         this.container = container;
     }
 
-    @Override
-    public ProcessDockerExecResult start() throws IOException {
-        String[] argv = Objects.requireNonNull(command()).toArray(String[]::new);
-        Container.ExecResult execResult;
-        try {
-            execResult = container.execInContainer(StandardCharsets.UTF_8, argv);
-            
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return new ProcessDockerExecResult(execResult);
-    }
 
     @Override
     public Process start(ProcessRunner executor) throws IOException {
         // TODO Mount the redirects into the container and adjust the command to make use of the redirects:
         // command <input >stdout 2>stderr
-        throw new UnsupportedOperationException("");
+        String[] argv = Objects.requireNonNull(command()).toArray(String[]::new);
+        Container.ExecResult execResult;
+        try {
+            execResult = container.execInContainer(StandardCharsets.UTF_8, argv);
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return new ProcessDockerExecResult(execResult);
     }
 }

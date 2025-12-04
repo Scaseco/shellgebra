@@ -20,7 +20,6 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
@@ -217,12 +216,6 @@ public class ProcessBuilderDocker
                 }
             }
         }
-        return null;
-    }
-
-    @Override
-    public Process start() throws IOException {
-        // TODO Auto-generated method stub
         return null;
     }
 }

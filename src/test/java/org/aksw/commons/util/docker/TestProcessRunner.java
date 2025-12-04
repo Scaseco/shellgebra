@@ -10,6 +10,7 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.ProcessBuilderDocker;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
+import org.aksw.vshell.registry.ProcessBuilderNative;
 import org.newsclub.net.unix.FileDescriptorCast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +34,7 @@ public class TestProcessRunner {
                 logger.info("Data generation thread terminated.");
             });
 
-            ProcessBuilder pb1 = new ProcessBuilder("head", "-n 2");
-            runner.start(pb1).waitFor();
+            ProcessBuilderNative.of("head", "-n 2").start(runner).waitFor();
             Thread.sleep(1000);
             // System.out.println("Available: " + runner.internalIn().available() + " on " + ContainerUtils.getFdPath(((FileInputStream)runner.internalIn()).getFD()));
             if (false) {
@@ -43,14 +43,14 @@ public class TestProcessRunner {
                 runner.internalIn().transferTo(System.out);
             }
             System.out.println("Process 2: Starting.");
-            runner.start(new ProcessBuilder("head", "-n 4")).waitFor();
+            ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
             System.out.println("Process 2: Terminated.");
 
             TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
             // ProcessBuilderJvm jvmProcessBuilder = ProcessBuilderJvm.of("/bin/cat");
             // Process jvmProcess = jvmProcessBuilder.start(runner);
-            runner.startJvm(ProcessBuilderJvm.of("/bin/head", "-n10")).waitFor();
+            ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
 
 
                 // runner.start(ProcessBuilderDocker.of("head", "-n 2").entrypoint("bash"));

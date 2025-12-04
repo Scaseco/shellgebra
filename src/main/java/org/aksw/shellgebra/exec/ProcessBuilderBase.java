@@ -1,6 +1,7 @@
 package org.aksw.shellgebra.exec;
 
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,11 @@ public abstract class ProcessBuilderBase<X extends ProcessBuilderBase<X>>
     @SuppressWarnings("unchecked")
     protected X self() {
         return (X)this;
+    }
+
+    public ProcessBuilderBase() {
+        super();
+        this.environment = new LinkedHashMap<>();
     }
 
     @Override

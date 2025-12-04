@@ -8,11 +8,8 @@ import org.aksw.shellgebra.exec.graph.ProcessRunner;
 public class ProcessBuilderJvm
     extends ProcessBuilderBase<ProcessBuilderJvm>
 {
-    // protected ProcessRunner executor;
-
     public ProcessBuilderJvm() {
         super();
-        // this.executor = executor;
     }
 
     public static ProcessBuilderJvm of(String ...argv) {
@@ -20,11 +17,6 @@ public class ProcessBuilderJvm
     }
 
     @Override
-    public Process start() throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    // @Override
     public Process start(ProcessRunner executor) throws IOException {
         // FIXME Still undecided whether the runner or the builder is the master.
         return executor.startJvm(this);
