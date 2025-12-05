@@ -36,32 +36,23 @@ public class TestProcessRunner {
 
             ProcessBuilderNative.of("head", "-n 2").start(runner).waitFor();
             Thread.sleep(1000);
-            // System.out.println("Available: " + runner.internalIn().available() + " on " + ContainerUtils.getFdPath(((FileInputStream)runner.internalIn()).getFD()));
-            if (false) {
-                // Issue: It seems that SOMETIMES (not reliable) data is delivered to the read end of any open
-                // reader.
-                runner.internalIn().transferTo(System.out);
-            }
+
             System.out.println("Process 2: Starting.");
             ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
             System.out.println("Process 2: Terminated.");
 
             TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
-            // ProcessBuilderJvm jvmProcessBuilder = ProcessBuilderJvm.of("/bin/cat");
-            // Process jvmProcess = jvmProcessBuilder.start(runner);
             ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
 
+            // TODO Implement interactive (false) either via process builder or redirect / input mode.
+//            ProcessBuilderDocker.of("echo", "DOCKERTESTMSG")
+//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
+//                .waitFor();
 
-                // runner.start(ProcessBuilderDocker.of("head", "-n 2").entrypoint("bash"));
-//                ProcessBuilderDocker.of("echo", "DOCKERTESTMSG")
-//                    .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
-//                    .waitFor();
-    //            ProcessBuilderDocker.of("head", "-n 2")
-    //                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
-    //                .waitFor();
-
-                // System.out.println("exit code: " + jvmProcess.exitValue());
+            ProcessBuilderDocker.of("cat") // .of("head", "-n 4")
+                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
+                .waitFor();
         }
     }
 

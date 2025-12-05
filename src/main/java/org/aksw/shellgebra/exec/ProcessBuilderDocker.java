@@ -23,6 +23,7 @@ import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,8 @@ public class ProcessBuilderDocker
     protected Function<CmdOpVar, Stage> varResolver;
     protected List<Bind> binds;
 
+    protected boolean interactive;
+
     public ProcessBuilderDocker() {
         super();
     }
@@ -67,6 +70,11 @@ public class ProcessBuilderDocker
 
     public String entrypoint() {
         return entrypoint;
+    }
+
+    public ProcessBuilderDocker interactive(boolean onOrOff) {
+        this.interactive = onOrOff;
+        return self();
     }
 
     /**
@@ -117,26 +125,51 @@ public class ProcessBuilderDocker
         return execInternal(executor);
     }
 
+    // TODO We need to set up a helper cat in-pipe-end > named-pipe
+    protected Process catInputProcess(Path pipeReadEnd, Path namedPipePath) throws IOException {
+        CmdOpExec cat = new CmdOpExec(List.of(), "cat", ArgumentList.of(
+            CmdArg.ofPathString(pipeReadEnd.toString()),
+            CmdArg.redirect(CmdRedirect.out(namedPipePath.toString()))));
+        String scriptString = toScriptString(cat);
+
+        ProcessBuilder pb = new ProcessBuilder("bash", "-c", scriptString);
+        Process process = pb.start();
+        return process;
+    }
+
     // protected Process execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) {
-    protected Process execInternal(ProcessRunner executor) {
+    protected Process execInternal(ProcessRunner executor) throws IOException {
         // Closer closer = Closer.create();
         List<FileWriterTask> inputTasks = new ArrayList<>();
 
         // Map the pipes into the container
         Path hostInputPipe = executor.inputPipe();
-        Path hostOutputPipe = executor.outputPipe();
-        Path hostErrorPipe = executor.errorPipe();
+//        Path hostOutputPipe = executor.outputPipe();
+//        Path hostErrorPipe = executor.errorPipe();
+
+
+//        Process pumpIn;
+//        try {
+//            pumpIn = catInputProcess(hostInputPipe);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+
+        Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
+        SysRuntime.newNamedPipe(namedPipePath);
+        Process pumpProcess = catInputProcess(hostInputPipe, namedPipePath);
+
 
         FileMapper finalFileMapper = fileMapper.clone();
-        String containerInputPath = finalFileMapper.allocate(hostInputPipe.toString(), AccessMode.ro);
-        String containerOutputPath = finalFileMapper.allocate(hostOutputPipe.toString(), AccessMode.rw);
-        String containerErrorPath = finalFileMapper.allocate(hostErrorPipe.toString(), AccessMode.rw);
+        String containerInputPath = finalFileMapper.allocate(namedPipePath.toString(), AccessMode.ro);
+//        String containerOutputPath = finalFileMapper.allocate(hostOutputPipe.toString(), AccessMode.rw);
+//        String containerErrorPath = finalFileMapper.allocate(hostErrorPipe.toString(), AccessMode.rw);
 
         CmdOp op = CmdOpExec.ofLiteralArgs(super.command().toArray(String[]::new));
         op = CmdOps.appendRedirects(op,
-                CmdRedirect.in(containerInputPath),
-                CmdRedirect.out(containerOutputPath)
-//                CmdRedirect.err(containerErrorPath)
+                CmdRedirect.in(containerInputPath)
+                // CmdRedirect.out(containerOutputPath),
+                // CmdRedirect.err(containerErrorPath)
                 );
 
         // If there is a byte source as a file writer then start it.
@@ -154,22 +187,21 @@ public class ProcessBuilderDocker
         return ContainerUtils.getUserString();
     }
 
+    public static String toScriptString(CmdOp cmdOp) {
+        SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
+        CmdOp dummy = new CmdOpExec("/dummy", CmdArg.ofCommandSubstitution(cmdOp));
+        CmdString cmdString = runtime.compileString(dummy);
+        String scriptString = cmdString.cmd()[1];
+        return scriptString;
+    }
+
     protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp cmdOp, FileMapper fileMapper) throws IOException {
         // TODO Consolidate with SysRuntimeCore: Need to get the appropriate bash entry point from some registry.
 
         String userStr = getUserString();
         logger.info("Setting up container " + imageRef + " with UID:GID=" + userStr);
 
-        SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
-
-        // TODO Variables need to be resolved - typically involves named pipes.
-        // CmdOp op = new CmdOpExec("/usr/bin/bash", new CmdArgLiteral("-c"), new CmdArgCmdOp(cmdOp));
-
-        // The original command becomes an argument to 'shell -c'
-        // So compile a string where the original command is used as an argument.
-        CmdOp dummy = new CmdOpExec("/dummy", CmdArg.ofCommandSubstitution(cmdOp));
-        CmdString cmdString = runtime.compileString(dummy);
-        String scriptString = cmdString.cmd()[1];
+        String scriptString = toScriptString(cmdOp);
 
         // String[] entrypoint = new String[]{"bash"};
         String[] cmdParts;
@@ -180,8 +212,8 @@ public class ProcessBuilderDocker
                 scriptString
             };
         } else {
-            CmdStrOps strOps = runtime.getStrOps();
-            cmdParts = cmdString.cmd(); // XXX Must ensure that the command is resolvable!
+//            CmdStrOps strOps = runtime.getStrOps();
+//            cmdParts = cmdString.cmd(); // XXX Must ensure that the command is resolvable!
         }
 
         List.of(cmdParts).stream().forEach(p -> logger.info("Command part: [" + p + "]"));
@@ -200,6 +232,7 @@ public class ProcessBuilderDocker
         return result;
     }
 
+    /** If the op is "/virt/cat path" then return path. */
     public static String extractSimpleCatPath(CmdOp cmdOp) {
         if (cmdOp instanceof CmdOpExec exec) {
             if ("/virt/cat".equals(exec.name())) {
