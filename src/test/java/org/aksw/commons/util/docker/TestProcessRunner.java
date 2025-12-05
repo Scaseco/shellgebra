@@ -1,6 +1,8 @@
 package org.aksw.commons.util.docker;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -8,6 +10,7 @@ import org.junit.Test;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.ProcessBuilderDocker;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
 import org.aksw.vshell.registry.ProcessBuilderNative;
@@ -34,22 +37,33 @@ public class TestProcessRunner {
                 logger.info("Data generation thread terminated.");
             });
 
+            System.out.println("Process 1");
             ProcessBuilderNative.of("head", "-n 2").start(runner).waitFor();
             Thread.sleep(1000);
 
-            System.out.println("Process 2: Starting.");
+            System.out.println("Process 2");
             ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
-            System.out.println("Process 2: Terminated.");
 
             TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
+            System.out.println("Process 3");
             ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
 
-            // TODO Implement interactive (false) either via process builder or redirect / input mode.
-//            ProcessBuilderDocker.of("echo", "DOCKERTESTMSG")
-//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
-//                .waitFor();
+            System.out.println("Process 4a");
+            ProcessBuilderDocker.of("echo", "FIRST DOCKER TEST STRING")
+                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
+                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
+                .start(runner)
+                .waitFor();
 
+            System.out.println("Process 4b");
+            ProcessBuilderDocker.of("echo", "SECOND DOCKER TEST STRING")
+                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
+                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
+                .start(runner)
+                .waitFor();
+
+            System.out.println("Process 5");
             ProcessBuilderDocker.of("cat") // .of("head", "-n 4")
                 .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
                 .waitFor();

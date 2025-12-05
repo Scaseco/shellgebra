@@ -25,11 +25,12 @@ import java.util.function.Consumer;
 
 import org.aksw.commons.util.docker.Argv;
 import org.aksw.commons.util.docker.ContainerUtils;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectFileDescription;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectIn;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectJava;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectOut;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectPBF;
+import org.aksw.shellgebra.exec.IProcessBuilder;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectFileDescription;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectIn;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectOut;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectPBF;
 import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
@@ -260,6 +261,16 @@ public class ProcessRunner
         return clone;
     }
 
+    public IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder) {
+        IProcessBuilder<?> clone = processBuilder.clone();
+
+        // TODO Properly process the redirects
+        clone.redirectInput(new JRedirectJava(Redirect.from(pipeIn.getReadEndProcFile())));
+        clone.redirectOutput(new JRedirectJava(Redirect.to(pipeOut.getWriteEndProcFile())));
+        clone.redirectError(new JRedirectJava(Redirect.to(pipeIn.getWriteEndProcFile())));
+        return clone;
+    }
+
     /** Does not alter the provided process builder. */
     public Process start(ProcessBuilder nativeProcessBuilder) throws IOException {
         ProcessBuilder configuredProcessBuilder = configure(nativeProcessBuilder);
@@ -282,44 +293,6 @@ public class ProcessRunner
         });
         return process;
     }
-
-    public Process start(ProcessBuilder2 processBuilder) {
-        JRedirect redirectIn = processBuilder.redirectInput();
-        redirectIn.accept(new JRedirectVisitor<Object>() {
-            @Override
-            public Object visit(PRedirectJava redirect) {
-                // TODO Auto-generated method stub
-                return null;
-            }
-            @Override
-            public Object visit(PRedirectFileDescription redirect) {
-                throw new UnsupportedOperationException();
-            }
-            @Override
-            public Object visit(PRedirectIn redirect) {
-                throw new UnsupportedOperationException();
-            }
-            @Override
-            public Object visit(PRedirectOut redirect) {
-                throw new UnsupportedOperationException();
-            }
-            @Override
-            public Object visit(PRedirectPBF redirect) {
-                PBF pbf = redirect.pbf();
-
-                return null;
-            }
-        });
-
-        processBuilder.redirectOutput();
-        processBuilder.redirectError();
-        // processBuilder
-        return null;
-    }
-
-
-
-    static Timer timer = null; //new Timer();
 
     public static ProcessRunner create() throws IOException {
         Path basePath = Files.createTempDirectory("process-exec-");
@@ -394,138 +367,39 @@ public class ProcessRunner
         }
     }
 
-//    // Begin of internal streams - pipe ends facing to the processes.
-//
-//    private BufferedReader internalInReader;
-//    private Charset internalInCharset;
-//    private BufferedWriter internalOutWriter;
-//    private Charset internalOutCharset;
-//    private BufferedWriter internalErrWriter;
-//    private Charset internalErrCharset;
-//
-//    public final BufferedReader internalInReader() {
-//        return internalInReader(Charset.defaultCharset());
-//    }
-//
-//    public final BufferedReader internalInReader(Charset charset) {
-//        Objects.requireNonNull(charset, "charset");
-//        synchronized (this) {
-//            if (internalInReader == null) {
-//                internalInCharset = charset;
-//                internalInReader = new BufferedReader(new InputStreamReader(internalIn(), charset));
-//            } else {
-//                if (!internalInCharset.equals(charset))
-//                    throw new IllegalStateException("BufferedWriter was created with charset: " + internalInCharset);
-//            }
-//            return internalInReader;
-//        }
-//    }
-//
-//    public final BufferedWriter internalOutWriter() {
-//        return internalOutWriter(Charset.defaultCharset());
-//    }
-//
-//    public final BufferedWriter internalOutWriter(Charset charset) {
-//        Objects.requireNonNull(charset, "charset");
-//        synchronized (this) {
-//            if (internalOutWriter == null) {
-//                internalOutCharset = charset;
-//                internalOutWriter = new BufferedWriter(new OutputStreamWriter(internalOut(), charset));
-//            } else {
-//                if (!internalOutCharset.equals(charset))
-//                    throw new IllegalStateException("BufferedReader was created with charset: " + internalOutCharset);
-//            }
-//            return internalOutWriter;
-//        }
-//    }
-//
-//    public final BufferedWriter internalErrWriter() {
-//        return internalErrWriter(Charset.defaultCharset());
-//    }
-//
-//    public final BufferedWriter internalErrWriter(Charset charset) {
-//        Objects.requireNonNull(charset, "charset");
-//        synchronized (this) {
-//            if (internalErrWriter == null) {
-//                internalErrCharset = charset;
-//                internalErrWriter = new BufferedWriter(new OutputStreamWriter(internalOut(), charset));
-//            } else {
-//                if (!internalErrCharset.equals(charset))
-//                    throw new IllegalStateException("BufferedReader was created with charset: " + internalErrCharset);
-//            }
-//            return internalErrWriter;
-//        }
-//    }
-//
-//    // End of internal streams.
-//
-//
-//    // Mechanism taken from Process
-//    // XXX Subclass from process? Or make this an abstract base class?
-//
-//    // Readers and Writers created for this process; so repeated calls return the same object
-//    // All updates must be done while synchronized on this Process.
-//    private BufferedWriter outputWriter;
-//    private Charset outputCharset;
-//    private BufferedReader inputReader;
-//    private Charset inputCharset;
-//    private BufferedReader errorReader;
-//    private Charset errorCharset;
-//
-//    public final BufferedWriter outputWriter() {
-//        return outputWriter(Charset.defaultCharset());
-//    }
-//
-//    public final BufferedWriter outputWriter(Charset charset) {
-//        Objects.requireNonNull(charset, "charset");
-//        synchronized (this) {
-//            if (outputWriter == null) {
-//                outputCharset = charset;
-//                outputWriter = new BufferedWriter(new OutputStreamWriter(getOutputStream(), charset));
-//            } else {
-//                if (!outputCharset.equals(charset))
-//                    throw new IllegalStateException("BufferedWriter was created with charset: " + outputCharset);
-//            }
-//            return outputWriter;
-//        }
-//    }
-//
-//    public final BufferedWriter inputReader() {
-//        return outputWriter(Charset.defaultCharset());
-//    }
-//
-//    public final BufferedReader inputReader(Charset charset) {
-//        Objects.requireNonNull(charset, "charset");
-//        synchronized (this) {
-//            if (inputReader == null) {
-//                inputCharset = charset;
-//                inputReader = new BufferedReader(new InputStreamReader(getInputStream(), charset));
-//            } else {
-//                if (!inputCharset.equals(charset))
-//                    throw new IllegalStateException("BufferedReader was created with charset: " + inputCharset);
-//            }
-//            return inputReader;
-//        }
-//    }
-//
-//    public final BufferedWriter errorReader() {
-//        return outputWriter(Charset.defaultCharset());
-//    }
-//
-//    public final BufferedReader errorReader(Charset charset) {
-//        Objects.requireNonNull(charset, "charset");
-//        synchronized (this) {
-//            if (errorReader == null) {
-//                errorCharset = charset;
-//                errorReader = new BufferedReader(new InputStreamReader(getErrorStream(), charset));
-//            } else {
-//                if (!errorCharset.equals(charset))
-//                    throw new IllegalStateException("BufferedReader was created with charset: " + errorCharset);
-//            }
-//            return errorReader;
-//        }
-//    }
 
-    // End of Process
+    public Process start(ProcessBuilder2 processBuilder) {
+        JRedirect redirectIn = processBuilder.redirectInput();
+        redirectIn.accept(new JRedirectVisitor<Object>() {
+            @Override
+            public Object visit(JRedirectJava redirect) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+            @Override
+            public Object visit(JRedirectFileDescription redirect) {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public Object visit(JRedirectIn redirect) {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public Object visit(JRedirectOut redirect) {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public Object visit(JRedirectPBF redirect) {
+                PBF pbf = redirect.pbf();
+
+                return null;
+            }
+        });
+
+        processBuilder.redirectOutput();
+        processBuilder.redirectError();
+        // processBuilder
+        return null;
+    }
 }
 

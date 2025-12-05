@@ -26,4 +26,9 @@ public class ProcessBuilderNative
 
         return pb.start();
     }
+
+    @Override
+    protected ProcessBuilderNative cloneActual() {
+        return new ProcessBuilderNative();
+    }
 }

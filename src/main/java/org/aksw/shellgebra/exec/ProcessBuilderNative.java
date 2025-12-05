@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
+// TODO Remove this wrapper class in favor of the non-wrapper version.
 public class ProcessBuilderNative
     implements IProcessBuilder<ProcessBuilderNative>
 {

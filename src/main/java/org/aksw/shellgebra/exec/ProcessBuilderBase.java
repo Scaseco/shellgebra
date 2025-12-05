@@ -1,21 +1,28 @@
 package org.aksw.shellgebra.exec;
 
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import org.aksw.shellgebra.exec.graph.JRedirect;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 
 public abstract class ProcessBuilderBase<X extends ProcessBuilderBase<X>>
     implements IProcessBuilder<X>
 {
-    // public static record Bind(Path hostPath, String containerPath, boolean write) {}
-
     private List<String> command;
     private Path directory;
     private Map<String,String> environment;
     private boolean redirectErrorStream;
-    // private Redirect[] redirects;
-    // private List<Bind> binds = new ArrayList<>();
+
+    private List<JRedirect> redirects = new ArrayList<>(List.of(
+        new JRedirectJava(Redirect.INHERIT),
+        new JRedirectJava(Redirect.INHERIT),
+        new JRedirectJava(Redirect.INHERIT)));
 
     @SuppressWarnings("unchecked")
     protected X self() {
@@ -71,8 +78,58 @@ public abstract class ProcessBuilderBase<X extends ProcessBuilderBase<X>>
         return self();
     }
 
-//    @Override
-//    public void bind(Path hostPath, String containerPath, boolean write) {
-//        binds.add(new Bind(hostPath, containerPath, write));
-//    }
+    @Override
+    public X redirectInput(JRedirect redirect) {
+        Objects.requireNonNull(redirect, "redirectInput");
+        redirects.set(0, redirect);
+        return self();
+    }
+
+    @Override
+    public JRedirect redirectInput() {
+        return redirects.get(0);
+    }
+
+    @Override
+    public X redirectOutput(JRedirect redirect) {
+        Objects.requireNonNull(redirect, "redirectOutput");
+        redirects.set(1, redirect);
+        return self();
+    }
+
+    @Override
+    public JRedirect redirectOutput() {
+        return redirects.get(1);
+    }
+
+    @Override
+    public X redirectError(JRedirect redirect) {
+        Objects.requireNonNull(redirect, "redirectError");
+        redirects.set(2, redirect);
+        return self();
+    }
+
+    @Override
+    public JRedirect redirectError() {
+        return redirects.get(2);
+    }
+
+    @Override
+    public X clone() {
+        X result = cloneActual();
+        applySettings(result);
+        return result;
+    }
+
+    protected void applySettings(ProcessBuilderBase target) {
+        target.command(command());
+        target.environment().putAll(environment());
+        target.directory(directory());
+        target.redirectErrorStream(redirectErrorStream());
+        target.redirectInput(redirectInput());
+        target.redirectOutput(redirectOutput());
+        target.redirectError(redirectError());
+    }
+
+    protected abstract X cloneActual();
 }

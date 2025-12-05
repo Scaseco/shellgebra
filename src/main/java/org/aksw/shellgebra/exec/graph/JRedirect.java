@@ -1,5 +1,6 @@
 package org.aksw.shellgebra.exec.graph;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
@@ -12,22 +13,30 @@ public sealed interface JRedirect {
     <T> T accept(JRedirectVisitor<T> visitor);
 
     // Standard Java redirect
-    public record PRedirectJava(Redirect redirect) implements JRedirect {
+    public record JRedirectJava(Redirect redirect) implements JRedirect {
         @Override public <T> T accept(JRedirectVisitor<T> visitor) {
             T result = visitor.visit(this);
             return result;
         }
     }
+
+    /** Anonymous pipes differ from regular files and named pipes in that they cannot be bind mounted. */
+//    public record JRedirectAnonymousPipe(File file) implements JRedirect {
+//        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
+//            T result = visitor.visit(this);
+//            return result;
+//        }
+//    }
 
     // Standard Java redirect
-    public record PRedirectFileDescription(FileDescription<FdResource> fileDescription) implements JRedirect {
+    public record JRedirectFileDescription(FileDescription<FdResource> fileDescription) implements JRedirect {
         @Override public <T> T accept(JRedirectVisitor<T> visitor) {
             T result = visitor.visit(this);
             return result;
         }
     }
 
-    public record PRedirectPBF(PBF pbf) implements JRedirect {
+    public record JRedirectPBF(PBF pbf) implements JRedirect {
         @Override public <T> T accept(JRedirectVisitor<T> visitor) {
             T result = visitor.visit(this);
             return result;
@@ -35,14 +44,14 @@ public sealed interface JRedirect {
     }
 
     //public record PRedirectProcess(ByteSource in) implements JRedirect { }
-    public record PRedirectIn(InputStream in) implements JRedirect {
+    public record JRedirectIn(InputStream in) implements JRedirect {
         @Override public <T> T accept(JRedirectVisitor<T> visitor) {
             T result = visitor.visit(this);
             return result;
         }
     }
 
-    public record PRedirectOut(OutputStream in) implements JRedirect {
+    public record JRedirectOut(OutputStream in) implements JRedirect {
         @Override public <T> T accept(JRedirectVisitor<T> visitor) {
             T result = visitor.visit(this);
             return result;

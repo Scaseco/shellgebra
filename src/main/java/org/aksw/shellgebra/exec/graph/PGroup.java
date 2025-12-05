@@ -22,11 +22,11 @@ import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.PathLifeCycle;
 import org.aksw.shellgebra.exec.PathLifeCycles;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectFileDescription;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectIn;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectJava;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectOut;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectPBF;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectFileDescription;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectIn;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectOut;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectPBF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ class RedirectVisitorToDescription
     private FileDescription<FdResource> base;
 
     @Override
-    public FileDescription<FdResource> visit(PRedirectJava redirect) {
+    public FileDescription<FdResource> visit(JRedirectJava redirect) {
         Redirect r = redirect.redirect();
         Type type = r.type();
         FileDescription<FdResource> result;
@@ -79,24 +79,24 @@ class RedirectVisitorToDescription
     }
 
     @Override
-    public FileDescription<FdResource> visit(PRedirectFileDescription redirect) {
+    public FileDescription<FdResource> visit(JRedirectFileDescription redirect) {
         return redirect.fileDescription();
     }
 
     @Override
-    public FileDescription<FdResource> visit(PRedirectIn redirect) {
+    public FileDescription<FdResource> visit(JRedirectIn redirect) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public FileDescription<FdResource> visit(PRedirectOut redirect) {
+    public FileDescription<FdResource> visit(JRedirectOut redirect) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public FileDescription<FdResource> visit(PRedirectPBF redirect) {
+    public FileDescription<FdResource> visit(JRedirectPBF redirect) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -359,30 +359,30 @@ public class PGroup
     public static Redirect openInForNativeProcess(ProcessCxt cxt, int targetFd, JRedirect redirectIn) {
         Redirect result = (Redirect)redirectIn.accept(new JRedirectVisitor<Object>() {
             @Override
-            public Object visit(PRedirectJava redirect) {
+            public Object visit(JRedirectJava redirect) {
 
                 return null;
             }
 
             @Override
-            public Object visit(PRedirectFileDescription redirect) {
+            public Object visit(JRedirectFileDescription redirect) {
                 return redirect.fileDescription();
             }
 
             @Override
-            public Object visit(PRedirectIn redirect) {
+            public Object visit(JRedirectIn redirect) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
-            public Object visit(PRedirectOut redirect) {
+            public Object visit(JRedirectOut redirect) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
-            public Object visit(PRedirectPBF redirect) {
+            public Object visit(JRedirectPBF redirect) {
                 // exec(cxt, redirect.bpf(), currentDepth, maxDepth, visited);
                 exec(cxt, redirect.pbf());
                 return null;
@@ -394,30 +394,30 @@ public class PGroup
     public static Redirect openOutForNativeProcess(ProcessCxt cxt, int targetFd, JRedirect redirectIn) {
         Redirect result = (Redirect)redirectIn.accept(new JRedirectVisitor<Object>() {
             @Override
-            public Object visit(PRedirectJava redirect) {
+            public Object visit(JRedirectJava redirect) {
 
                 return null;
             }
 
             @Override
-            public Object visit(PRedirectFileDescription redirect) {
+            public Object visit(JRedirectFileDescription redirect) {
                 return redirect.fileDescription();
             }
 
             @Override
-            public Object visit(PRedirectIn redirect) {
+            public Object visit(JRedirectIn redirect) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
-            public Object visit(PRedirectOut redirect) {
+            public Object visit(JRedirectOut redirect) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
-            public Object visit(PRedirectPBF redirect) {
+            public Object visit(JRedirectPBF redirect) {
                 // exec(cxt, redirect.bpf(), currentDepth, maxDepth, visited);
                 exec(cxt, redirect.pbf());
                 return null;

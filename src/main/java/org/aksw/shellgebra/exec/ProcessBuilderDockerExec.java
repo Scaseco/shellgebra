@@ -23,7 +23,6 @@ public class ProcessBuilderDockerExec
         this.container = container;
     }
 
-
     @Override
     public Process start(ProcessRunner executor) throws IOException {
         // TODO Mount the redirects into the container and adjust the command to make use of the redirects:

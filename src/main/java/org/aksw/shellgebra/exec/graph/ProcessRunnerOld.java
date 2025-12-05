@@ -32,11 +32,11 @@ import org.aksw.shellgebra.exec.PathLifeCycle;
 import org.aksw.shellgebra.exec.PathLifeCycles;
 import org.aksw.shellgebra.exec.graph.FdResource.FdResourceInputStream;
 import org.aksw.shellgebra.exec.graph.FdResource.FdResourceOutputStream;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectFileDescription;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectIn;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectJava;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectOut;
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectPBF;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectFileDescription;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectIn;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectOut;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectPBF;
 import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
@@ -347,24 +347,24 @@ public class ProcessRunnerOld
         JRedirect redirectIn = processBuilder.redirectInput();
         redirectIn.accept(new JRedirectVisitor<Object>() {
             @Override
-            public Object visit(PRedirectJava redirect) {
+            public Object visit(JRedirectJava redirect) {
                 // TODO Auto-generated method stub
                 return null;
             }
             @Override
-            public Object visit(PRedirectFileDescription redirect) {
+            public Object visit(JRedirectFileDescription redirect) {
                 throw new UnsupportedOperationException();
             }
             @Override
-            public Object visit(PRedirectIn redirect) {
+            public Object visit(JRedirectIn redirect) {
                 throw new UnsupportedOperationException();
             }
             @Override
-            public Object visit(PRedirectOut redirect) {
+            public Object visit(JRedirectOut redirect) {
                 throw new UnsupportedOperationException();
             }
             @Override
-            public Object visit(PRedirectPBF redirect) {
+            public Object visit(JRedirectPBF redirect) {
                 PBF pbf = redirect.pbf();
 
                 return null;

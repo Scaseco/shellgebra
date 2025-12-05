@@ -1,6 +1,7 @@
 package org.aksw.shellgebra.exec;
 
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,8 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.graph.JRedirect;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.slf4j.Logger;
@@ -77,6 +80,10 @@ public class ProcessBuilderDocker
         return self();
     }
 
+    public boolean interactive() {
+        return interactive;
+    }
+
     /**
      * Set an explicit entrypoint.
      * If none is set, an attempt to infer one from the context will be made upon starting the process.
@@ -107,19 +114,6 @@ public class ProcessBuilderDocker
         return self();
     }
 
-//    @Override
-//    public ProcessDockerExecResult start() throws IOException {
-//        String[] argv = Objects.requireNonNull(command()).toArray(String[]::new);
-//        Container.ExecResult execResult;
-//        try {
-//            execResult = container.execInContainer(StandardCharsets.UTF_8, argv);
-//
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        return new ProcessDockerExecResult(execResult);
-//    }
-
     @Override
     public Process start(ProcessRunner executor) throws IOException {
         return execInternal(executor);
@@ -143,7 +137,6 @@ public class ProcessBuilderDocker
         List<FileWriterTask> inputTasks = new ArrayList<>();
 
         // Map the pipes into the container
-        Path hostInputPipe = executor.inputPipe();
 //        Path hostOutputPipe = executor.outputPipe();
 //        Path hostErrorPipe = executor.errorPipe();
 
@@ -155,13 +148,40 @@ public class ProcessBuilderDocker
 //            throw new RuntimeException(e);
 //        }
 
-        Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
-        SysRuntime.newNamedPipe(namedPipePath);
-        Process pumpProcess = catInputProcess(hostInputPipe, namedPipePath);
+        Path inputPath = null;
+        boolean isInputPathMountable = false;
+
+        Path hostMountableInputPath = null;
+
+        JRedirect inRedirect = redirectInput();
+        if (inRedirect instanceof JRedirectJava x) {
+            Redirect r = x.redirect();
+            switch (r.type()) {
+            case INHERIT:
+                inputPath = executor.inputPipe();
+                isInputPathMountable = false;
+                break;
+            case READ:
+                hostMountableInputPath = r.file().toPath();
+                isInputPathMountable = true;
+                break;
+            default:
+                throw new RuntimeException("Unsupported or not implemented yet.");
+            }
+        }
+
+        if (!isInputPathMountable) {
+            Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
+            SysRuntime.newNamedPipe(namedPipePath);
+            hostMountableInputPath = namedPipePath;
+            Process pumpProcess = catInputProcess(inputPath, hostMountableInputPath);
+        }
+
+
 
 
         FileMapper finalFileMapper = fileMapper.clone();
-        String containerInputPath = finalFileMapper.allocate(namedPipePath.toString(), AccessMode.ro);
+        String containerInputPath = finalFileMapper.allocate(hostMountableInputPath.toString(), AccessMode.ro);
 //        String containerOutputPath = finalFileMapper.allocate(hostOutputPipe.toString(), AccessMode.rw);
 //        String containerErrorPath = finalFileMapper.allocate(hostErrorPipe.toString(), AccessMode.rw);
 
@@ -250,5 +270,19 @@ public class ProcessBuilderDocker
             }
         }
         return null;
+    }
+
+    @Override
+    protected ProcessBuilderDocker cloneActual() {
+        ProcessBuilderDocker result = new ProcessBuilderDocker();
+        applySettings(result);
+        return result;
+    }
+
+    protected void applySettings(ProcessBuilderDocker target) {
+        target.imageRef(imageRef());
+        target.entrypoint(entrypoint());
+        target.workingDirectory(workingDirectory());
+        target.interactive(interactive());
     }
 }

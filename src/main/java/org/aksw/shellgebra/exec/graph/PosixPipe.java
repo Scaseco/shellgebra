@@ -3,6 +3,7 @@ package org.aksw.shellgebra.exec.graph;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -117,8 +118,16 @@ public final class PosixPipe implements Closeable {
         return procPath(readFd);
     }
 
+    public File getReadEndProcFile() {
+        return procPath(readFd).toFile();
+    }
+
     public Path getWriteEndProcPath() {
         return procPath(writeFd);
+    }
+
+    public File getWriteEndProcFile() {
+        return procPath(writeFd).toFile();
     }
 
     /**

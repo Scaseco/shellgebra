@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.aksw.shellgebra.exec.graph.JRedirect.PRedirectJava;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 
 // TODO Consolidate with IProcessBuilderBase
 public class ProcessBuilder2 {
@@ -16,9 +16,9 @@ public class ProcessBuilder2 {
 
     public ProcessBuilder2() {
         super();
-        this.redirects[0] = new PRedirectJava(Redirect.INHERIT);
-        this.redirects[1] = new PRedirectJava(Redirect.INHERIT);
-        this.redirects[2] = new PRedirectJava(Redirect.INHERIT);
+        this.redirects[0] = new JRedirectJava(Redirect.INHERIT);
+        this.redirects[1] = new JRedirectJava(Redirect.INHERIT);
+        this.redirects[2] = new JRedirectJava(Redirect.INHERIT);
     }
 
     public List<String> command() {
