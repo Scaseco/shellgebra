@@ -2,6 +2,7 @@ package org.aksw.shellgebra.exec;
 
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -120,10 +121,10 @@ public class ProcessBuilderDocker
     }
 
     // TODO We need to set up a helper cat in-pipe-end > named-pipe
-    protected Process catInputProcess(Path pipeReadEnd, Path namedPipePath) throws IOException {
+    protected Process catProcess(Path source, Path target) throws IOException {
         CmdOpExec cat = new CmdOpExec(List.of(), "cat", ArgumentList.of(
-            CmdArg.ofPathString(pipeReadEnd.toString()),
-            CmdArg.redirect(CmdRedirect.out(namedPipePath.toString()))));
+            CmdArg.ofPathString(source.toString()),
+            CmdArg.redirect(CmdRedirect.out(target.toString()))));
         String scriptString = toScriptString(cat);
 
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", scriptString);
@@ -136,61 +137,25 @@ public class ProcessBuilderDocker
         // Closer closer = Closer.create();
         List<FileWriterTask> inputTasks = new ArrayList<>();
 
-        // Map the pipes into the container
-//        Path hostOutputPipe = executor.outputPipe();
-//        Path hostErrorPipe = executor.errorPipe();
+        PathAndProcess inProcess = processInput(executor.inputPipe(), redirectInput());
+        PathAndProcess outProcess = processOutput(executor.outputPipe(), redirectOutput());
+        PathAndProcess errProcess = processOutput(executor.errorPipe(), redirectError());
 
-
-//        Process pumpIn;
-//        try {
-//            pumpIn = catInputProcess(hostInputPipe);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-
-        Path inputPath = null;
-        boolean isInputPathMountable = false;
-
-        Path hostMountableInputPath = null;
-
-        JRedirect inRedirect = redirectInput();
-        if (inRedirect instanceof JRedirectJava x) {
-            Redirect r = x.redirect();
-            switch (r.type()) {
-            case INHERIT:
-                inputPath = executor.inputPipe();
-                isInputPathMountable = false;
-                break;
-            case READ:
-                hostMountableInputPath = r.file().toPath();
-                isInputPathMountable = true;
-                break;
-            default:
-                throw new RuntimeException("Unsupported or not implemented yet.");
-            }
-        }
-
-        if (!isInputPathMountable) {
-            Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
-            SysRuntime.newNamedPipe(namedPipePath);
-            hostMountableInputPath = namedPipePath;
-            Process pumpProcess = catInputProcess(inputPath, hostMountableInputPath);
-        }
-
-
-
+        Path hostMountableInputPath = inProcess.path();
+        Path hostMountableOutputPath = outProcess.path();
+        Path hostMountableErrorPath = errProcess.path();
 
         FileMapper finalFileMapper = fileMapper.clone();
         String containerInputPath = finalFileMapper.allocate(hostMountableInputPath.toString(), AccessMode.ro);
-//        String containerOutputPath = finalFileMapper.allocate(hostOutputPipe.toString(), AccessMode.rw);
-//        String containerErrorPath = finalFileMapper.allocate(hostErrorPipe.toString(), AccessMode.rw);
+        String containerOutputPath = finalFileMapper.allocate(hostMountableOutputPath.toString(), AccessMode.rw);
+        String containerErrorPath = finalFileMapper.allocate(hostMountableErrorPath.toString(), AccessMode.rw);
 
         CmdOp op = CmdOpExec.ofLiteralArgs(super.command().toArray(String[]::new));
         op = CmdOps.appendRedirects(op,
-                CmdRedirect.in(containerInputPath)
-                // CmdRedirect.out(containerOutputPath),
-                // CmdRedirect.err(containerErrorPath)
-                );
+            CmdRedirect.in(containerInputPath),
+            CmdRedirect.out(containerOutputPath),
+            CmdRedirect.err(containerErrorPath)
+            );
 
         // If there is a byte source as a file writer then start it.
         org.testcontainers.containers.GenericContainer<?> container;
@@ -201,6 +166,76 @@ public class ProcessBuilderDocker
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // Perhaps use FileWriter abstraction?
+    private record PathAndProcess(Path path, Process process) {}
+
+    private PathAndProcess processInput(Path inputPipePath, JRedirect redirect) throws IOException {
+        // Extract effective raw input path
+        Path rawInputPath = null;
+        if (redirect instanceof JRedirectJava x) {
+            Redirect r = x.redirect();
+            switch (r.type()) {
+            case INHERIT:
+                rawInputPath = inputPipePath;
+                break;
+            case READ:
+                rawInputPath = r.file().toPath();
+                break;
+            default:
+                throw new RuntimeException("Unsupported or not implemented yet.");
+            }
+        }
+
+        // If the raw input path is not docker mountable then we start
+        // a helper process that pumps the bytes from the raw input path to a mountable named pipe.
+        boolean isRawInputPathMountable = isProbablyDockerBindSource(rawInputPath);
+        Path hostMountableInputPath = null;
+        Process pumpProcess = null;
+        if (isRawInputPathMountable) {
+            hostMountableInputPath = rawInputPath;
+        } else {
+            Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
+            SysRuntime.newNamedPipe(namedPipePath);
+            hostMountableInputPath = namedPipePath;
+            pumpProcess = catProcess(rawInputPath, hostMountableInputPath);
+            // TODO Link pump process life cycle to the returned process.
+        }
+        return new PathAndProcess(hostMountableInputPath, pumpProcess);
+    }
+
+    private PathAndProcess processOutput(Path outputPipePath, JRedirect redirect) throws IOException {
+        // Extract effective raw input path
+        Path rawPath = null;
+        if (redirect instanceof JRedirectJava x) {
+            Redirect r = x.redirect();
+            switch (r.type()) {
+            case INHERIT:
+                rawPath = outputPipePath;
+                break;
+            case READ:
+                rawPath = r.file().toPath();
+                break;
+            default:
+                throw new RuntimeException("Unsupported or not implemented yet.");
+            }
+        }
+
+        // If the raw input path is not docker mountable then we start
+        // a helper process that pumps the bytes from the raw input path to a mountable named pipe.
+        boolean isRawPathMountable = isProbablyDockerBindSource(rawPath);
+        Path hostMountablePath = null;
+        Process pumpProcess = null;
+        if (isRawPathMountable) {
+            hostMountablePath = rawPath;
+        } else {
+            Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
+            SysRuntime.newNamedPipe(namedPipePath);
+            hostMountablePath = namedPipePath;
+            pumpProcess = catProcess(hostMountablePath, rawPath);
+        }
+        return new PathAndProcess(hostMountablePath, pumpProcess);
     }
 
     protected String getUserString() throws IOException {
@@ -284,5 +319,27 @@ public class ProcessBuilderDocker
         target.entrypoint(entrypoint());
         target.workingDirectory(workingDirectory());
         target.interactive(interactive());
+    }
+
+    private static boolean isAnonymousProcPipe(Path p) throws IOException {
+        // Only meaningful on Linux procfs /proc/<pid>/fd/N
+
+        // if (p.startsWith("/proc") && p.toString().contains("/fd/")) return false;
+        if (!p.startsWith("/proc")) return false;
+        if (!Files.isSymbolicLink(p)) return false;
+
+        Path target = Files.readSymbolicLink(p);
+        String s = target.toString();
+        // return s.startsWith("pipe:[") || s.startsWith("socket:[") || s.startsWith("anon_inode:[");
+        return s.matches("^(pipe|socket|anon_inode):\\[.*\\]$");
+    }
+
+    /**
+     * Return true if the given path can be bind mounted into a docker container.
+     * Specifically, any path starting with /proc is considered to be NOT bind mountable.
+     */
+    private static boolean isProbablyDockerBindSource(Path p) throws IOException {
+        if (!Files.exists(p)) return false;
+        return !isAnonymousProcPipe(p);
     }
 }

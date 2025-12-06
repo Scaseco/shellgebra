@@ -64,7 +64,7 @@ public class TestProcessRunner {
                 .waitFor();
 
             System.out.println("Process 5");
-            ProcessBuilderDocker.of("cat") // .of("head", "-n 4")
+            ProcessBuilderDocker.of("head", "-n 4") // .of("head", "-n 4")
                 .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
                 .waitFor();
         }

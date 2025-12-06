@@ -36,11 +36,11 @@ public record CmdRedirect(int fd, OpenMode openMode, RedirectTarget target) {
         // XXX '> file' (notice the whitespace) would be nicer than '>file'.
         //   However, the current approach would incorrectly escape the whitespace when trying to quote the whole command.
         String result = switch (openMode) {
-        case READ -> fdStr(fd, 0) + " < " + arg;
-        case WRITE_TRUNCATE -> fdStr(fd, 1) + " > " + arg;
-        case WRITE_APPEND -> fdStr(fd, 1) + " >> " + arg;
-        case CLOBBER -> fdStr(fd, 1) + " >| " + arg;
-        case READ_WRITE -> fdStr(fd, 1) + " <> " + arg;
+        case READ -> fdStr(fd, 0) + "<" + arg;
+        case WRITE_TRUNCATE -> fdStr(fd, 1) + ">" + arg;
+        case WRITE_APPEND -> fdStr(fd, 1) + ">>" + arg;
+        case CLOBBER -> fdStr(fd, 1) + ">|" + arg;
+        case READ_WRITE -> fdStr(fd, 1) + "<>" + arg;
         default -> throw new IllegalArgumentException("Unexpected value: " + openMode);
         };
 
