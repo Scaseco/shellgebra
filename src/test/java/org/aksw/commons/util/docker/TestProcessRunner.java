@@ -12,6 +12,7 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.ProcessBuilderDocker;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
 import org.aksw.vshell.registry.ProcessBuilderNative;
 import org.newsclub.net.unix.FileDescriptorCast;
@@ -24,8 +25,7 @@ public class TestProcessRunner {
     @Test
     public void test01() throws Exception {
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
-
-        try (ProcessRunner runner = ProcessRunner.create()) {
+        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
             runner.setOutputLineReaderUtf8(logger::info);
             runner.setErrorLineReaderUtf8(logger::info);
             runner.setInputPrintStreamUtf8(out -> {
@@ -74,7 +74,7 @@ public class TestProcessRunner {
     public void test02() throws Exception {
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
 
-        try (ProcessRunner runner = ProcessRunner.create()) {
+        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
             runner.setOutputLineReaderUtf8(logger::info);
             runner.setErrorLineReaderUtf8(logger::info);
             runner.setInputPrintStreamUtf8(out -> {
@@ -134,7 +134,7 @@ public class TestProcessRunner {
     public void testDocker() throws Exception {
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
 
-        try (ProcessRunner runner = ProcessRunner.create()) {
+        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
             runner.setOutputLineReaderUtf8(logger::info);
             runner.setErrorLineReaderUtf8(logger::info);
             runner.setInputPrintStreamUtf8(out -> {
