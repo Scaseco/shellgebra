@@ -34,30 +34,6 @@ import org.testcontainers.containers.output.OutputFrame;
 public class ContainerUtils {
     private static final Logger logger = LoggerFactory.getLogger(ContainerUtils.class);
 
-    /** Returns a path such as /proc/process_id/fd/123 */
-    public static Path getFdPath(FileDescriptor fd) {
-        int fdVal;
-        try {
-            fdVal = FileDescriptorCast.using(fd).as(Integer.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        long pid = ProcessHandle.current().pid();
-        Path result = Path.of("/proc", Long.toString(pid), "fd", Integer.toString(fdVal));
-        return result;
-    }
-
-    /** Does not work: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @20abdeca */
-    public static int extractFD(FileDescriptor fd) {
-        try {
-            Field field = FileDescriptor.class.getDeclaredField("fd");
-            field.setAccessible(true);
-            return (int)field.get(fd);
-        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static BindMode toBindMode(AccessMode am) {
         return am == AccessMode.ro ? BindMode.READ_ONLY : BindMode.READ_WRITE;
     }

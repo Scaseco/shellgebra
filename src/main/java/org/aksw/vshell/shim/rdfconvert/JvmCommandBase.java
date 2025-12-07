@@ -1,8 +1,8 @@
 package org.aksw.vshell.shim.rdfconvert;
 
 import org.aksw.commons.util.docker.Argv;
-import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.registry.JvmCommand;
+import org.aksw.vshell.registry.JvmExecCxt;
 
 /**
  * Base class that parses arguments and passes them to the runActual method.
@@ -14,13 +14,13 @@ public abstract class JvmCommandBase<T extends Args>
     implements JvmCommand
 {
     @Override
-    public int run(ProcessRunner cxt, Argv argv) {
+    public int run(JvmExecCxt cxt, Argv argv) {
         int exitValue = 0;
         T argsModel;
         try {
             argsModel = parseArgs(argv.newArgs());
         } catch (Exception e) {
-            e.printStackTrace(cxt.internalPrintErr());
+            e.printStackTrace(cxt.err().printStream());
             exitValue = 2;
             return exitValue;
         }
@@ -29,7 +29,7 @@ public abstract class JvmCommandBase<T extends Args>
             runActual(cxt, argsModel);
             return 0;
         } catch (Exception e) {
-            e.printStackTrace(cxt.internalPrintErr());
+            e.printStackTrace(cxt.err().printStream());
             return 1;
         }
     }
@@ -37,5 +37,5 @@ public abstract class JvmCommandBase<T extends Args>
     @Override
     public abstract T parseArgs(String... args);
 
-    protected abstract void runActual(ProcessRunner cxt, T argv) throws Exception;
+    protected abstract void runActual(JvmExecCxt cxt, T argv) throws Exception;
 }

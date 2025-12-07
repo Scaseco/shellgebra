@@ -13,23 +13,25 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.IProcessBuilder;
+import org.aksw.vshell.registry.FileInputSource;
+import org.aksw.vshell.registry.FileOutputTarget;
 import org.aksw.vshell.registry.JvmCommandRegistry;
-import org.aksw.vshell.registry.ProcessBuilderJvm;
 
 public interface ProcessRunner
     extends AutoCloseable
 {
     JvmCommandRegistry getJvmCmdRegistry();
     Map<String, String> environment();
+    Path directory();
 
     Path inputPipe();
     Path outputPipe();
     Path errorPipe();
 
-    InputStream internalIn();
-    OutputStream internalOut();
+    FileInputSource internalIn();
+    FileOutputTarget internalOut();
+    FileOutputTarget internalErr();
 
-    OutputStream internalErr();
     PrintStream internalPrintOut();
     PrintStream internalPrintErr();
 
@@ -71,8 +73,8 @@ public interface ProcessRunner
     IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder);
 
     /** Does not alter the provided process builder. */
-    Process start(ProcessBuilder nativeProcessBuilder) throws IOException;
-    Process startJvm(ProcessBuilderJvm jvmProcessBuilder);
+    // Process start(ProcessBuilder nativeProcessBuilder) throws IOException;
+    // Process startJvm(ProcessBuilderJvm jvmProcessBuilder);
 
     static void readLines(InputStream in, Charset charset, Consumer<String> lineCallback) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(in, charset))) {

@@ -5,8 +5,8 @@ import java.io.IOException;
 import org.aksw.shellgebra.algebra.stream.transform.StreamingRDFConverter;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.StageJvm;
-import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
+import org.aksw.vshell.registry.JvmExecCxt;
 
 public class JvmCommandRapper
     extends JvmCommandBase<RapperArgs>
@@ -27,9 +27,9 @@ public class JvmCommandRapper
     }
 
     @Override
-    public void runActual(ProcessRunner cxt, RapperArgs model) throws IOException {
+    public void runActual(JvmExecCxt cxt, RapperArgs model) throws IOException {
         InputStreamTransform transform = StreamingRDFConverter.converter(
                 model.getInputFormat(), model.getOutputFormat(), model.getBaseUrl());
-        transform.apply(cxt.getInputStream()).transferTo(cxt.getOutputStream());
+        transform.apply(cxt.in().inputStream()).transferTo(cxt.out().outputStream());
     }
 }

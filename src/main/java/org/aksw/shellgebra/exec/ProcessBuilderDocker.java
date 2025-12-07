@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
@@ -19,7 +18,6 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
@@ -39,19 +37,11 @@ public class ProcessBuilderDocker
 {
     private static final Logger logger = LoggerFactory.getLogger(ProcessBuilderDocker.class);
 
-    // private GenericContainer<?> container;
     protected String imageRef;
     protected String entrypoint;
-
-    // protected String imageTag;
-    // protected CmdOp cmdOp;
     protected String workingDirectory;
-
     protected ContainerPathResolver containerPathResolver;
     protected FileMapper fileMapper;
-
-    protected Function<CmdOpVar, Stage> varResolver;
-    protected List<Bind> binds;
 
     protected boolean interactive;
 
@@ -196,8 +186,7 @@ public class ProcessBuilderDocker
         if (isRawInputPathMountable) {
             hostMountableInputPath = rawInputPath;
         } else {
-            Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
-            SysRuntime.newNamedPipe(namedPipePath);
+            Path namedPipePath = SysRuntime.newNamedPipe();
             hostMountableInputPath = namedPipePath;
             pumpProcess = catProcess(rawInputPath, hostMountableInputPath);
             // TODO Link pump process life cycle to the returned process.
@@ -214,7 +203,7 @@ public class ProcessBuilderDocker
             case INHERIT:
                 rawPath = outputPipePath;
                 break;
-            case READ:
+            case WRITE:
                 rawPath = r.file().toPath();
                 break;
             default:
@@ -230,8 +219,7 @@ public class ProcessBuilderDocker
         if (isRawPathMountable) {
             hostMountablePath = rawPath;
         } else {
-            Path namedPipePath = Path.of("/tmp/named-pipe-" + System.nanoTime());
-            SysRuntime.newNamedPipe(namedPipePath);
+            Path namedPipePath = SysRuntime.newNamedPipe();
             hostMountablePath = namedPipePath;
             pumpProcess = catProcess(hostMountablePath, rawPath);
         }
@@ -314,11 +302,23 @@ public class ProcessBuilderDocker
         return result;
     }
 
+    protected ContainerPathResolver containerPathResolver() {
+        return containerPathResolver;
+    }
+
+    protected ProcessBuilderDocker containerPathResolver(ContainerPathResolver containerPathResolver) {
+        this.containerPathResolver = containerPathResolver;
+        return self();
+    }
+
     protected void applySettings(ProcessBuilderDocker target) {
         target.imageRef(imageRef());
         target.entrypoint(entrypoint());
         target.workingDirectory(workingDirectory());
         target.interactive(interactive());
+
+        target.containerPathResolver(containerPathResolver());
+        target.fileMapper(fileMapper());
     }
 
     private static boolean isAnonymousProcPipe(Path p) throws IOException {

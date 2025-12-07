@@ -25,7 +25,7 @@ public class JvmCmdTest
         try {
             model = parseArgs(argv.newArgs());
         } catch (Exception e) {
-            e.printStackTrace(cxt.err());
+            e.printStackTrace(cxt.err().printStream());
             exitValue = 2;
             return exitValue;
         }

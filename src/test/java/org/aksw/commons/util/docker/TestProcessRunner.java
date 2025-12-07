@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.ProcessBuilderDocker;
+import org.aksw.shellgebra.exec.ProcessBuilderPipeline;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
@@ -63,72 +64,82 @@ public class TestProcessRunner {
                 .start(runner)
                 .waitFor();
 
-            System.out.println("Process 5");
-            ProcessBuilderDocker.of("head", "-n 4") // .of("head", "-n 4")
-                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
+//            System.out.println("Process 5");
+//            ProcessBuilderDocker.of("head", "-n 4") // .of("head", "-n 4")
+//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
+//                .waitFor();
+
+            System.out.println("Process 6");
+            ProcessBuilderPipeline.of(
+                ProcessBuilderJvm.of("/bin/head", "-n10"),
+//                ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
+//                    .imageRef("nestio/lbzip2").entrypoint("bash").fileMapper(fileMapper),
+                // ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
+                ProcessBuilderJvm.of("/bin/cat"))
+                .start(runner)
                 .waitFor();
         }
     }
 
-    @Test
-    public void test02() throws Exception {
-        FileMapper fileMapper = FileMapper.of("/tmp/shared");
-
-        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
-            runner.setOutputLineReaderUtf8(logger::info);
-            runner.setErrorLineReaderUtf8(logger::info);
-            runner.setInputPrintStreamUtf8(out -> {
-                logger.info("Data generation thread started.");
-                for (int i = 0; i < 1000; ++i) {
-                    out.println("" + i);
-                }
-                out.flush();
-                logger.info("Data generation thread terminated.");
-            });
-
-            // XXX Low-level ProcessBuilder.start(runner) is perhaps the better direction?
-            // The process builder can take the pipes and e.g. start the docker container.
-            // This is not the responsibility of the runner. Although, could the runner provide default setups for
-            // docker containers?
-            // Also, the purpose of command line parsing is to auto-detect which files need to be
-            // bind mounted.
-            // So the idea is that given parsed command line, the process builder can auto-wire the arguments.
-
-            System.out.println("stdin source: " + ContainerUtils.getFdPath(((FileInputStream)runner.internalIn()).getFD()));
-
-            ProcessBuilder pb1 = new ProcessBuilder("head", "-n 2");
-            runner.start(pb1).waitFor();
-            Thread.sleep(1000);
-            // System.out.println("Available: " + runner.internalIn().available() + " on " + ContainerUtils.getFdPath(((FileInputStream)runner.internalIn()).getFD()));
-            if (false) {
-                // Issue: It seems that SOMETIMES (not reliable) data is delivered to the read end of any open
-                // reader.
-                runner.internalIn().transferTo(System.out);
-            }
-            System.out.println("Process 2: Starting.");
-            runner.start(new ProcessBuilder("head", "-n 2")).waitFor();
-            System.out.println("Process 2: Terminated.");
-
-            if (false) {
-                TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
-
-                // ProcessBuilderJvm jvmProcessBuilder = ProcessBuilderJvm.of("/bin/cat");
-                // Process jvmProcess = jvmProcessBuilder.start(runner);
-                // runner.startJvm(ProcessBuilderJvm.of("/bin/cat")).waitFor();
-
-
-                // runner.start(ProcessBuilderDocker.of("head", "-n 2").entrypoint("bash"));
-                ProcessBuilderDocker.of("echo", "DOCKERTESTMSG")
-                    .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
-                    .waitFor();
-    //            ProcessBuilderDocker.of("head", "-n 2")
-    //                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
-    //                .waitFor();
-
-                // System.out.println("exit code: " + jvmProcess.exitValue());
-            }
-        }
-    }
+    // @Test
+//    public void test02() throws Exception {
+//        FileMapper fileMapper = FileMapper.of("/tmp/shared");
+//
+//        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
+//            runner.setOutputLineReaderUtf8(logger::info);
+//            runner.setErrorLineReaderUtf8(logger::info);
+//            runner.setInputPrintStreamUtf8(out -> {
+//                logger.info("Data generation thread started.");
+//                for (int i = 0; i < 1000; ++i) {
+//                    out.println("" + i);
+//                }
+//                out.flush();
+//                logger.info("Data generation thread terminated.");
+//            });
+//
+//            // XXX Low-level ProcessBuilder.start(runner) is perhaps the better direction?
+//            // The process builder can take the pipes and e.g. start the docker container.
+//            // This is not the responsibility of the runner. Although, could the runner provide default setups for
+//            // docker containers?
+//            // Also, the purpose of command line parsing is to auto-detect which files need to be
+//            // bind mounted.
+//            // So the idea is that given parsed command line, the process builder can auto-wire the arguments.
+//
+//            System.out.println("stdin source: " + SysRuntime.getFdPath(((FileInputStream)runner.internalIn()).getFD()));
+//
+//            ProcessBuilder pb1 = new ProcessBuilder("head", "-n 2");
+//            runner.start(pb1).waitFor();
+//            Thread.sleep(1000);
+//            // System.out.println("Available: " + runner.internalIn().available() + " on " + ContainerUtils.getFdPath(((FileInputStream)runner.internalIn()).getFD()));
+//            if (false) {
+//                // Issue: It seems that SOMETIMES (not reliable) data is delivered to the read end of any open
+//                // reader.
+//                runner.internalIn().transferTo(System.out);
+//            }
+//            System.out.println("Process 2: Starting.");
+//            runner.start(new ProcessBuilder("head", "-n 2")).waitFor();
+//            System.out.println("Process 2: Terminated.");
+//
+//            if (false) {
+//                TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+//
+//                // ProcessBuilderJvm jvmProcessBuilder = ProcessBuilderJvm.of("/bin/cat");
+//                // Process jvmProcess = jvmProcessBuilder.start(runner);
+//                // runner.startJvm(ProcessBuilderJvm.of("/bin/cat")).waitFor();
+//
+//
+//                // runner.start(ProcessBuilderDocker.of("head", "-n 2").entrypoint("bash"));
+//                ProcessBuilderDocker.of("echo", "DOCKERTESTMSG")
+//                    .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
+//                    .waitFor();
+//    //            ProcessBuilderDocker.of("head", "-n 2")
+//    //                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
+//    //                .waitFor();
+//
+//                // System.out.println("exit code: " + jvmProcess.exitValue());
+//            }
+//        }
+//    }
 
     // @Test
     public void testDocker() throws Exception {

@@ -9,11 +9,11 @@ import java.util.Set;
 
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.Stages;
-import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.registry.codec.InputStreamTransformOverCommonsCompress;
 import org.aksw.shellgebra.registry.codec.OutputStreamTransformOverCommonsCompress;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.aksw.shellgebra.unused.algebra.plan.OutputStreamTransform;
+import org.aksw.vshell.registry.JvmExecCxt;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 public class JvmCommandTranscode
@@ -51,17 +51,17 @@ public class JvmCommandTranscode
     }
 
     @Override
-    protected void runActual(ProcessRunner cxt, ArgsModular<GenericCodecArgs> args) throws IOException {
+    protected void runActual(JvmExecCxt cxt, ArgsModular<GenericCodecArgs> args) throws IOException {
         GenericCodecArgs model = args.model();
         if (model.isDecode()) {
             Objects.requireNonNull(inTransform, "No decoding for " + codecName);
-            InputStream in = cxt.internalIn();
+            InputStream in = cxt.in().inputStream();
             InputStream out = inTransform.apply(in);
-            out.transferTo(cxt.internalOut());
+            out.transferTo(cxt.out().outputStream());
         } else {
             Objects.requireNonNull(inTransform, "No encoding for " + codecName);
-            InputStream in = cxt.internalIn();
-            OutputStream out = outTransform.apply(cxt.internalOut());
+            InputStream in = cxt.in().inputStream();
+            OutputStream out = outTransform.apply(cxt.out().printStream());
             in.transferTo(out);
         }
     }

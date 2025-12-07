@@ -1,15 +1,12 @@
 package org.aksw.shellgebra.exec.graph;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.lang.ProcessBuilder.Redirect.Type;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,18 +19,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.aksw.commons.util.docker.Argv;
-import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.shellgebra.exec.IProcessBuilder;
+import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectFileDescription;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectIn;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectOut;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectPBF;
-import org.aksw.vshell.registry.JvmCommand;
+import org.aksw.vshell.registry.FileInputSource;
+import org.aksw.vshell.registry.FileOutputTarget;
 import org.aksw.vshell.registry.JvmCommandRegistry;
-import org.aksw.vshell.registry.ProcessBuilderJvm;
-import org.aksw.vshell.registry.ProcessOverCompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +40,7 @@ public class ProcessRunnerPosix
     // Bridge to java commands.
     private JvmCommandRegistry jvmCmdRegistry;
     private Map<String, String> environment;
+    private Path directory; // Default working directory. Will be set if process builders don't specify their own.
 
     private Path basePath;
 
@@ -100,6 +96,14 @@ public class ProcessRunnerPosix
         return environment;
     }
 
+//    public FileInputSource asSource() {
+//        return FileInputSource.of(getReadEndProcPath(), in);
+//    }
+//
+//    public FileOutputTarget asTarget() {
+//        return FileOutputTarget.of(getWriteEndProcPath(), out);
+//    }
+
     @Override
     public Path inputPipe() {
         return pipeIn.getReadEndProcPath();
@@ -116,18 +120,21 @@ public class ProcessRunnerPosix
     }
 
     @Override
-    public InputStream internalIn() {
-        return pipeIn.getInputStream();
+    public FileInputSource internalIn() {
+        return FileInputSource.of(pipeIn.getReadEndProcPath(), pipeIn.getInputStream());
+        // return pipeIn.getInputStream();
     }
 
     @Override
-    public OutputStream internalOut() {
-        return pipeOut.getOutputStream();
+    public FileOutputTarget internalOut() {
+        return FileOutputTarget.of(pipeOut.getWriteEndProcPath(), pipeOut.getOutputStream());
+        // return pipeOut.getOutputStream();
     }
 
     @Override
-    public OutputStream internalErr() {
-        return pipeErr.getOutputStream();
+    public FileOutputTarget internalErr() {
+        return FileOutputTarget.of(pipeErr.getWriteEndProcPath(), pipeErr.getOutputStream());
+        // return pipeErr.getOutputStream();
     }
 
     @Override
@@ -207,7 +214,7 @@ public class ProcessRunnerPosix
             try (OutputStream out = getOutputStream()) {
                 inputSupplier.accept(out);
                 out.flush();
-                logger.info("Closing: " + ContainerUtils.getFdPath(((FileOutputStream)out).getFD()));
+                logger.info("Closing: " + SysRuntime.getFdPath(((FileOutputStream)out).getFD()));
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -231,6 +238,11 @@ public class ProcessRunnerPosix
     @Override
     public InputStream getErrorStream() {
         return pipeErr.getInputStream();
+    }
+
+    @Override
+    public Path directory() {
+        return directory;
     }
 
     public static ProcessBuilder clone(ProcessBuilder original) {
@@ -263,29 +275,31 @@ public class ProcessRunnerPosix
     }
 
     /** Does not alter the provided process builder. */
-    @Override
-    public Process start(ProcessBuilder nativeProcessBuilder) throws IOException {
-        ProcessBuilder configuredProcessBuilder = configure(nativeProcessBuilder);
-        Process result = configuredProcessBuilder.start();
-        return result;
-    }
+//    @Override
+//    public Process start(ProcessBuilder nativeProcessBuilder) throws IOException {
+//        ProcessBuilder configuredProcessBuilder = configure(nativeProcessBuilder);
+//        Process result = configuredProcessBuilder.start();
+//        return result;
+//    }
 
     //public Process startDocker(ProcessBuilderDocker processBuilder) {
     //	ProcessBuilderDocker.start(this);
     //}
 
-    @Override
-    public Process startJvm(ProcessBuilderJvm jvmProcessBuilder) {
-        Argv a = Argv.of(jvmProcessBuilder.command());
-        String command = a.command();
-        JvmCommand cmd = getJvmCmdRegistry().get(command)
-                .orElseThrow(() -> new RuntimeException("Command not found: " + command));
-        Process process = ProcessOverCompletableFuture.of(() -> {
-            int exitValue = cmd.run(ProcessRunnerPosix.this, a);
-            return exitValue;
-        });
-        return process;
-    }
+//    @Override
+//    public Process startJvm(ProcessBuilderJvm jvmProcessBuilder) {
+//        Argv a = Argv.of(jvmProcessBuilder.command());
+//        String command = a.command();
+//        JvmCommand cmd = getJvmCmdRegistry().get(command)
+//                .orElseThrow(() -> new RuntimeException("Command not found: " + command));
+//        Process process = ProcessOverCompletableFuture.of(() -> {
+//        	JvmExecCxt execCxt = new JvmExecCxt(this, environment(), directory(), )
+//
+//            int exitValue = cmd.run(ProcessRunnerPosix.this, a);
+//            return exitValue;
+//        });
+//        return process;
+//    }
 
     public static ProcessRunner create() throws IOException {
         Path basePath = Files.createTempDirectory("process-exec-");
@@ -325,7 +339,7 @@ public class ProcessRunnerPosix
 
         cancelAndGet(inFuture);
         // Close the internal output pipe ends to indicate EOF to the outside readers.
-        internalIn().close();
+        internalIn().inputStream().close();
 
         // TODO Clean up / harden clean up procedure.
         // inThread.cancel(true);
@@ -339,8 +353,8 @@ public class ProcessRunnerPosix
             }
         }
 
-        internalOut().close();
-        internalErr().close();
+        internalOut().outputStream().close();
+        internalErr().outputStream().close();
 
         cancelAndGet(outFuture);
         cancelAndGet(errFuture);

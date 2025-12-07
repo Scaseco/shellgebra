@@ -1,12 +1,15 @@
 package org.aksw.shellgebra.exec;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
+import org.newsclub.net.unix.FileDescriptorCast;
 
 public interface SysRuntime
     extends AutoCloseable
@@ -55,8 +58,44 @@ public interface SysRuntime
     @Override
     public void close();
 
+    public static Path newNamedPipePath() throws IOException {
+        String baseDir = System.getProperty("java.io.tmpdir");
+        String fileName = "named-pipe-" + System.nanoTime();
+        Path result = Path.of(baseDir).resolve(fileName);
+        return result;
+    }
+
+    public static Path newNamedPipe() throws IOException {
+        Path result = newNamedPipePath();
+        newNamedPipe(result);
+        return result;
+    }
 
     public static void newNamedPipe(Path path) throws IOException {
         SysRuntimeImpl.forCurrentOs().createNamedPipe(path);
+    }
+
+    /** Returns a path such as /proc/process_id/fd/123 */
+    public static Path getFdPath(FileDescriptor fd) {
+        int fdVal;
+        try {
+            fdVal = FileDescriptorCast.using(fd).as(Integer.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        long pid = ProcessHandle.current().pid();
+        Path result = Path.of("/proc", Long.toString(pid), "fd", Integer.toString(fdVal));
+        return result;
+    }
+
+    /** Does not work: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @20abdeca */
+    private static int extractFD(FileDescriptor fd) {
+        try {
+            Field field = FileDescriptor.class.getDeclaredField("fd");
+            field.setAccessible(true);
+            return (int)field.get(fd);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

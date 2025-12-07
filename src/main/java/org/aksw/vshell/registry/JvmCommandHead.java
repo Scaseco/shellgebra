@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandBase;
 import org.apache.commons.exec.ExecuteException;
 
@@ -28,7 +27,7 @@ public class JvmCommandHead
     }
 
     @Override
-    public void runActual(ProcessRunner cxt, ArgsHead model) throws ExecuteException {
+    public void runActual(JvmExecCxt cxt, ArgsHead model) throws ExecuteException {
         int exitValue = 0;
         List<String> names = model.getFileNames().isEmpty()
             ? List.of("-")
@@ -37,20 +36,20 @@ public class JvmCommandHead
         for (String name : names) {
             try {
                 if (name.equals("-")) {
-                    new BufferedReader(new InputStreamReader(cxt.internalIn(), StandardCharsets.UTF_8))
+                    cxt.in().reader(StandardCharsets.UTF_8)
                         .lines()
                         .limit(model.getLines().orElse(10l))
-                        .forEach(cxt.internalPrintOut()::println);
+                        .forEach(cxt.out().printStream()::println);
                 } else {
                     Path path = Path.of(name);
                     try (Stream<String> stream = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))
                         .lines()
                         .limit(model.getLines().orElse(10l))) {
-                        stream.forEach(cxt.internalPrintOut()::println);
+                        stream.forEach(cxt.out().printStream()::println);
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace(cxt.internalPrintErr());
+                e.printStackTrace(cxt.err().printStream());
                 exitValue = 1;
                 break;
             }
