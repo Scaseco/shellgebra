@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.ProcessBuilder.Redirect;
-import java.lang.ProcessBuilder.Redirect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -147,38 +146,6 @@ public class ProcessRunnerPosix
         return pipeErr.printer(StandardCharsets.UTF_8);
     }
 
-    private void configureInput(Redirect redirect, Path fd, boolean fdOverridesInherit, Consumer<Redirect> redirectConsumer) {
-        Type type = redirect.type();
-        switch (type) {
-        case PIPE:
-            redirectConsumer.accept(Redirect.from(fd.toFile()));
-            break;
-        case INHERIT:
-            if (fdOverridesInherit) {
-                redirectConsumer.accept(Redirect.from(fd.toFile()));
-            }
-            break;
-        default:
-            // nothing to do.
-        }
-    }
-
-    private void configureOutput(Redirect redirect, Path fd, boolean fdOverridesInherit, Consumer<Redirect> redirectConsumer) {
-        Type type = redirect.type();
-        switch (type) {
-        case PIPE:
-            redirectConsumer.accept(Redirect.to(fd.toFile()));
-            break;
-        case INHERIT:
-            if (fdOverridesInherit) {
-                redirectConsumer.accept(Redirect.to(fd.toFile()));
-            }
-            break;
-        default:
-            // nothing to do.
-        }
-    }
-
     @Override
     public Thread setOutputReader(Consumer<InputStream> reader) {
         Runnable runnable = () -> {
@@ -253,14 +220,6 @@ public class ProcessRunnerPosix
         clone.redirectOutput(original.redirectOutput());
         clone.redirectError(original.redirectError());
         clone.directory(original.directory());
-        return clone;
-    }
-
-    public ProcessBuilder configure(ProcessBuilder processBuilder) {
-        ProcessBuilder clone = clone(processBuilder);
-        configureInput(clone.redirectInput(), inputPipe(), inheritInFromSystem, clone::redirectInput);
-        configureOutput(clone.redirectOutput(), outputPipe(), inheritOutFromSystem, clone::redirectOutput);
-        configureOutput(clone.redirectError(), errorPipe(), inheritErrFromSystem, clone::redirectError);
         return clone;
     }
 

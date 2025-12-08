@@ -151,7 +151,16 @@ public class ProcessBuilderDocker
         org.testcontainers.containers.GenericContainer<?> container;
         try {
             container = setupContainer(op, finalFileMapper);
-            container.start();
+            Runnable runnable = () -> {
+                try {
+                    container.start();
+                } finally {
+
+                }
+            };
+            // TODO Probably start container in a thread and then wait for termination
+            // so that a final termination callback can be reliably called.
+            runnable.run();
             return new ProcessOverDockerContainer(container);
         } catch (Exception e) {
             throw new RuntimeException(e);

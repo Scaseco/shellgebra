@@ -47,22 +47,22 @@ public class TestProcessRunner {
 
             TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
-            System.out.println("Process 3");
-            ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
+//            System.out.println("Process 3");
+//            ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
 
-            System.out.println("Process 4a");
-            ProcessBuilderDocker.of("echo", "FIRST DOCKER TEST STRING")
-                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
-                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
-                .start(runner)
-                .waitFor();
-
-            System.out.println("Process 4b");
-            ProcessBuilderDocker.of("echo", "SECOND DOCKER TEST STRING")
-                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
-                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
-                .start(runner)
-                .waitFor();
+//            System.out.println("Process 4a");
+//            ProcessBuilderDocker.of("echo", "FIRST DOCKER TEST STRING")
+//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
+//                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
+//                .start(runner)
+//                .waitFor();
+//
+//            System.out.println("Process 4b");
+//            ProcessBuilderDocker.of("echo", "SECOND DOCKER TEST STRING")
+//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
+//                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
+//                .start(runner)
+//                .waitFor();
 
 //            System.out.println("Process 5");
 //            ProcessBuilderDocker.of("head", "-n 4") // .of("head", "-n 4")
@@ -72,10 +72,11 @@ public class TestProcessRunner {
             System.out.println("Process 6");
             ProcessBuilderPipeline.of(
                 ProcessBuilderJvm.of("/bin/head", "-n10"),
-//                ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
-//                    .imageRef("nestio/lbzip2").entrypoint("bash").fileMapper(fileMapper),
-                // ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
-                ProcessBuilderJvm.of("/bin/cat"))
+                // ProcessBuilderNative.of("/bin/head", "-n10"),
+                ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
+                    .imageRef("nestio/lbzip2").entrypoint("bash").fileMapper(fileMapper),
+                ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
+                // ProcessBuilderJvm.of("/bin/cat"))
                 .start(runner)
                 .waitFor();
         }

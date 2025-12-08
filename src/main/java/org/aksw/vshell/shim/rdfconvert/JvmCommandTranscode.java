@@ -61,7 +61,7 @@ public class JvmCommandTranscode
         } else {
             Objects.requireNonNull(inTransform, "No encoding for " + codecName);
             InputStream in = cxt.in().inputStream();
-            OutputStream out = outTransform.apply(cxt.out().printStream());
+            OutputStream out = outTransform.apply(cxt.out().outputStream());
             in.transferTo(out);
         }
     }
