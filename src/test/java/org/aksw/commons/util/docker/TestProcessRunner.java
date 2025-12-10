@@ -1,8 +1,6 @@
 package org.aksw.commons.util.docker;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -10,8 +8,8 @@ import org.junit.Test;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.ProcessBuilderDocker;
+import org.aksw.shellgebra.exec.ProcessBuilderGroup;
 import org.aksw.shellgebra.exec.ProcessBuilderPipeline;
-import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
@@ -74,13 +72,51 @@ public class TestProcessRunner {
                 ProcessBuilderJvm.of("/bin/head", "-n10"),
                 // ProcessBuilderNative.of("/bin/head", "-n10"),
                 ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
+                    // .interactive(true)
                     .imageRef("nestio/lbzip2").entrypoint("bash").fileMapper(fileMapper),
                 ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
                 // ProcessBuilderJvm.of("/bin/cat"))
                 .start(runner)
                 .waitFor();
+
+            System.out.println("All processes completed.");
         }
     }
+
+    @Test
+    public void testGroup() throws Exception {
+        FileMapper fileMapper = FileMapper.of("/tmp/shared");
+        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
+            runner.setOutputLineReaderUtf8(logger::info);
+            runner.setErrorLineReaderUtf8(logger::info);
+            runner.setInputPrintStreamUtf8(out -> {
+                logger.info("Data generation thread started.");
+                for (int i = 0; i < 10000; ++i) {
+                    out.println("" + i);
+                }
+                out.flush();
+                logger.info("Data generation thread terminated.");
+            });
+
+            TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+
+            ProcessBuilderGroup.of(
+                ProcessBuilderJvm.of("/bin/echo", "Process 1"),
+                ProcessBuilderNative.of("head", "-n 2"),
+
+                ProcessBuilderJvm.of("/bin/echo", "Process 2"),
+                ProcessBuilderNative.of("head", "-n 4"),
+
+                ProcessBuilderJvm.of("/bin/echo", "Process 3"),
+                ProcessBuilderPipeline.of(
+                    ProcessBuilderJvm.of("/bin/head", "-n10"),
+                    ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
+                        .imageRef("nestio/lbzip2").entrypoint("bash").fileMapper(fileMapper),
+                    ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
+            ).start(runner).waitFor();
+        }
+    }
+
 
     // @Test
 //    public void test02() throws Exception {

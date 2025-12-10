@@ -46,6 +46,7 @@ import org.aksw.vshell.registry.FinalPlacer;
 import org.aksw.vshell.registry.JvmCmdTest;
 import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandCat;
+import org.aksw.vshell.registry.JvmCommandEcho;
 import org.aksw.vshell.registry.JvmCommandExecutor;
 import org.aksw.vshell.registry.JvmCommandExecutorImpl;
 import org.aksw.vshell.registry.JvmCommandHead;
@@ -215,6 +216,7 @@ public class TestCommandRegistry {
         // Core command: test - return 0 if name is fully qualified command name - 1 otherwise.
         jvmCmdRegistry.put("/bin/test", new JvmCmdTest());
 
+        jvmCmdRegistry.put("/bin/echo", new JvmCommandEcho());
         jvmCmdRegistry.put("/bin/cat", new JvmCommandCat());
         jvmCmdRegistry.put("/bin/head", new JvmCommandHead());
 

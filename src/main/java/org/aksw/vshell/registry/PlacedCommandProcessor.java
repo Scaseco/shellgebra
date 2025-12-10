@@ -26,9 +26,7 @@ public class PlacedCommandProcessor
     // private Map<CmdOp, ExecSite> opToExecSite;
     private PlacedCommand root;
     private Map<CmdOpVar, PlacedCommand> inVarToCandPlacement;
-
     private Map<CmdOpVar, PlacedCmd> outVarToPlacement;
-
 
     class Processor
         implements CmdOpVisitor<PlacedCmdOp>

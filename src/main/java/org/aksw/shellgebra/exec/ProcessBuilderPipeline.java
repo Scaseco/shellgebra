@@ -14,32 +14,26 @@ import org.aksw.shellgebra.exec.graph.PathResource;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
 public class ProcessBuilderPipeline
-    extends ProcessBuilderBase<ProcessBuilderPipeline>
+    extends ProcessBuilderCompound<ProcessBuilderPipeline>
 {
-    private List<IProcessBuilder<?>> processBuilders;
-
-    public ProcessBuilderPipeline() {
+     public ProcessBuilderPipeline() {
         super();
-        this.processBuilders = List.of();
     }
 
-    public ProcessBuilderPipeline processBuilders(IProcessBuilder<?>... processBuilders) {
-        processBuilders(List.of(processBuilders));
-        return self();
-    }
-
-    public ProcessBuilderPipeline processBuilders(List<IProcessBuilder<?>> processBuilders) {
-        this.processBuilders = List.copyOf(processBuilders);
-        return self();
-    }
-
-    public static ProcessBuilderPipeline of(IProcessBuilder<?> ... processBuilders) {
+    public static ProcessBuilderPipeline of(IProcessBuilderCore<?> ... processBuilders) {
         return new ProcessBuilderPipeline().processBuilders(processBuilders);
     }
 
     @Override
+    protected ProcessBuilderPipeline cloneActual() {
+        return new ProcessBuilderPipeline();
+    }
+
+    @Override
     public Process start(ProcessRunner executor) throws IOException {
-        int n = processBuilders.size();
+        List<? extends IProcessBuilderCore<?>> pbs = copyProcessBuilders();
+
+        int n = pbs.size();
         if (n == 0) {
             throw new IllegalStateException("Pipeline must have at least one member.");
         }
@@ -56,8 +50,8 @@ public class ProcessBuilderPipeline
 
         for (int i = 0; i < n; ++i) {
             boolean isLast = i == n - 1;
-            IProcessBuilder<?> current = processBuilders.get(i);
-            IProcessBuilder<?> tmp = current.clone();
+            IProcessBuilderCore<?> current = pbs.get(i);
+            IProcessBuilderCore<?> tmp = current.clone();
 
             // Set up redirect input.
             if (priorPath == null) {
@@ -109,9 +103,8 @@ public class ProcessBuilderPipeline
         return new ProcessPipeline(processes, pipes);
     }
 
-    @Override
-    protected ProcessBuilderPipeline cloneActual() {
-        ProcessBuilderPipeline result = new ProcessBuilderPipeline();
-        return result;
-    }
+    // @Override
+//    protected void applySettings(ProcessBuilderPipeline target) {
+//        target.processBuilders(processBuilders());
+//    }
 }
