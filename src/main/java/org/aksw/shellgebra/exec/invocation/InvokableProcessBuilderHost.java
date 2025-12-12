@@ -1,0 +1,46 @@
+package org.aksw.shellgebra.exec.invocation;
+
+import java.io.IOException;
+
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.vshell.registry.ProcessBuilderNative;
+
+public class InvokableProcessBuilderHost
+    extends InvokableProcessBuilderBase<InvokableProcessBuilderHost>
+{
+    /** If unset then fall back to {@link InvocationCompilerImpl#getDefault()}. */
+    private InvocationCompiler compiler = null;
+
+    public InvokableProcessBuilderHost compiler(InvocationCompiler compiler) {
+        this.compiler = compiler;
+        return self();
+    }
+
+    public InvocationCompiler compiler() {
+        return compiler;
+    }
+
+    @Override
+    public Process start(ProcessRunner executor) throws IOException {
+        CompileContext ctx = CompileContext.noResolve();
+
+        Invocation inv = invocation();
+        if (inv == null) throw new IllegalStateException("No invocation set");
+
+        InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
+
+        ExecutableInvocation exec = finalCompiler.compile(inv, ctx);
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command(exec.argv());
+        ProcessBuilderNative.configure(pb, this, executor);
+
+        Process p = pb.start();
+
+        // cleanup after process exit
+        p.toHandle().onExit().thenRun(() -> {
+            try { exec.close(); } catch (Exception ignored) {}
+        });
+
+        return p;
+    }
+}

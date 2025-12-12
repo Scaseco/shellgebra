@@ -7,8 +7,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
-import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.Stages;
 import org.aksw.shellgebra.registry.codec.InputStreamTransformOverCommonsCompress;
 import org.aksw.shellgebra.registry.codec.OutputStreamTransformOverCommonsCompress;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
@@ -17,7 +15,7 @@ import org.aksw.vshell.registry.JvmExecCxt;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 public class JvmCommandTranscode
-    extends JvmCommandBase<ArgsModular<GenericCodecArgs>>
+    extends JvmCommandBase<GenericCodecArgs>
 {
     private String codecName;
     private InputStreamTransform inTransform;
@@ -32,27 +30,27 @@ public class JvmCommandTranscode
 
     @Override
     public ArgsModular<GenericCodecArgs> parseArgs(String... args) {
-        ArgsModular<GenericCodecArgs> argsModel = GenericCodecArgs.parse(args);
-        return argsModel;
-    }
-
-    @Override
-    public Stage newStage(String... args) {
-        GenericCodecArgs model = parseArgs(args).model();
-        Stage result;
-        if (model.isDecode()) {
-            Objects.requireNonNull(inTransform, "No decoding for " + codecName);
-            result = Stages.javaIn(inTransform);
-        } else {
-            Objects.requireNonNull(inTransform, "No encoding for " + codecName);
-            result = Stages.javaOut(outTransform);
-        }
+        ArgsModular<GenericCodecArgs> result = GenericCodecArgs.parse(args);
         return result;
     }
+//
+//    @Override
+//    public Stage newStage(String... args) {
+//        GenericCodecArgs model = parseArgs(args).model();
+//        Stage result;
+//        if (model.isDecode()) {
+//            Objects.requireNonNull(inTransform, "No decoding for " + codecName);
+//            result = Stages.javaIn(inTransform);
+//        } else {
+//            Objects.requireNonNull(inTransform, "No encoding for " + codecName);
+//            result = Stages.javaOut(outTransform);
+//        }
+//        return result;
+//    }
 
     @Override
-    protected void runActual(JvmExecCxt cxt, ArgsModular<GenericCodecArgs> args) throws IOException {
-        GenericCodecArgs model = args.model();
+    protected void runActual(JvmExecCxt cxt, GenericCodecArgs model) throws IOException {
+        // GenericCodecArgs model = args.model();
         if (model.isDecode()) {
             Objects.requireNonNull(inTransform, "No decoding for " + codecName);
             InputStream in = cxt.in().inputStream();

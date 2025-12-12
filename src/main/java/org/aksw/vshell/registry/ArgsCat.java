@@ -3,7 +3,6 @@ package org.aksw.vshell.registry;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.aksw.vshell.shim.rdfconvert.Args;
 import org.aksw.vshell.shim.rdfconvert.ArgsModular;
 import org.aksw.vshell.shim.rdfconvert.ArgsParserPicocli;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
@@ -12,7 +11,7 @@ import org.aksw.vshell.shim.rdfconvert.ArgumentListBuilder;
 import picocli.CommandLine.Parameters;
 
 public class ArgsCat
-    implements Args
+//     implements Args
 {
     @Parameters(arity = "0..*", description = "File names")
     public List<String> fileNames = new ArrayList<>();
@@ -21,10 +20,10 @@ public class ArgsCat
         return fileNames;
     }
 
-    @Override
-    public ArgumentList toArgList() {
-        return renderArgList(this);
-    }
+//    @Override
+//    public ArgumentList toArgList() {
+//        return renderArgList(this);
+//    }
 
     @Override
     public String toString() {

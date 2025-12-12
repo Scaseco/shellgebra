@@ -10,7 +10,7 @@ import org.aksw.vshell.registry.JvmExecCxt;
  * An exception during argument parsing results by default in exit code 2.
  * An exception during runActual results by default in exit code 1.
  */
-public abstract class JvmCommandBase<T extends Args>
+public abstract class JvmCommandBase<T>
     implements JvmCommand
 {
     @Override
@@ -18,7 +18,8 @@ public abstract class JvmCommandBase<T extends Args>
         int exitValue = 0;
         T argsModel;
         try {
-            argsModel = parseArgs(argv.newArgs());
+            ArgsModular<T> argsModular = parseArgs(argv.newArgs());
+            argsModel = argsModular.model();
         } catch (Exception e) {
             e.printStackTrace(cxt.err().printStream());
             exitValue = 2;
@@ -35,7 +36,7 @@ public abstract class JvmCommandBase<T extends Args>
     }
 
     @Override
-    public abstract T parseArgs(String... args);
+    public abstract ArgsModular<T> parseArgs(String... args);
 
     protected abstract void runActual(JvmExecCxt cxt, T argv) throws Exception;
 }

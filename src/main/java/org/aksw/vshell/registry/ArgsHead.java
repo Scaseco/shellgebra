@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.aksw.vshell.shim.rdfconvert.Args;
 import org.aksw.vshell.shim.rdfconvert.ArgsModular;
 import org.aksw.vshell.shim.rdfconvert.ArgsParserPicocli;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
@@ -13,10 +12,7 @@ import org.aksw.vshell.shim.rdfconvert.ArgumentListBuilder;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-public class ArgsHead
-    implements Args
-{
-
+public class ArgsHead {
     // TODO Add support for '-' prefix
     @Option(names = {"-n", "--lines"}, description = "Lines")
     private Long lines = null;
@@ -33,11 +29,6 @@ public class ArgsHead
     }
 
     @Override
-    public ArgumentList toArgList() {
-        return renderArgList(this);
-    }
-
-    @Override
     public String toString() {
         return "ArgsCat [fileNames=" + fileNames + "]";
     }
@@ -50,8 +41,12 @@ public class ArgsHead
         return result;
     }
 
+    public static Boolean stdinTest(ArgsHead args) {
+        return args.getFileNames().isEmpty() || args.getFileNames().contains("-");
+    }
+
     public static ArgsModular<ArgsHead> parse(String[] args) {
         ArgsHead model = ArgsParserPicocli.of(ArgsHead::new).parse(args);
-        return new ArgsModular<>(model, ArgsHead::renderArgList);
+        return new ArgsModular<>(model, ArgsHead::renderArgList, ArgsHead::stdinTest);
     }
 }

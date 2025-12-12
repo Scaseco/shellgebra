@@ -1,5 +1,5 @@
 package org.aksw.vshell.shim.rdfconvert;
 
-public interface ArgsParser<T extends Args> {
+public interface ArgsParser<T> {
     T parse(String[] args);
 }

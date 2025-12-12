@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 import picocli.CommandLine;
 
-public class ArgsParserPicocli<T extends Args>
+public class ArgsParserPicocli<T>
     implements ArgsParser<T>
 {
     private final Supplier<T> modelSupplier;
@@ -24,11 +24,11 @@ public class ArgsParserPicocli<T extends Args>
         return model;
     }
 
-    public static <T extends Args> ArgsParser<T> of(Class<T> clazz) {
+    public static <T> ArgsParser<T> of(Class<T> clazz) {
         return new ArgsParserPicocli<>(asInstanceSupplier(clazz));
     }
 
-    public static <T extends Args> ArgsParser<T> of(Supplier<T> instanceCreator) {
+    public static <T> ArgsParser<T> of(Supplier<T> instanceCreator) {
         return new ArgsParserPicocli<>(instanceCreator);
     }
 

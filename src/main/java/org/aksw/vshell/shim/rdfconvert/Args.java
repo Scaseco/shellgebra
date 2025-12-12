@@ -1,5 +1,7 @@
 package org.aksw.vshell.shim.rdfconvert;
 
+import java.util.Optional;
+
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 
 /**
@@ -10,4 +12,10 @@ import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
  */
 public interface Args {
     ArgumentList toArgList();
+
+    /**
+     * Whether this argument configuration would read from stdin.
+     * Used to automatically enable/disable interative mode when docker containers are involved.
+     */
+    Optional<Boolean> readsStdin();
 }

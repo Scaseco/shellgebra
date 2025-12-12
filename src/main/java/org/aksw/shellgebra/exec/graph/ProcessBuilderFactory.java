@@ -4,7 +4,7 @@ import java.util.function.Supplier;
 
 import org.aksw.shellgebra.exec.IProcessBuilder;
 
-public interface ProcessBuilderFactory
-    extends Supplier<IProcessBuilder<?>>
+public interface ProcessBuilderFactory<X extends IProcessBuilder<X>>
+    extends Supplier<X>
 {
 }

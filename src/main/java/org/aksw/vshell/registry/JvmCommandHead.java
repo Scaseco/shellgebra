@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.aksw.shellgebra.exec.Stage;
+import org.aksw.vshell.shim.rdfconvert.ArgsModular;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandBase;
 import org.apache.commons.exec.ExecuteException;
 
@@ -16,14 +16,9 @@ public class JvmCommandHead
     extends JvmCommandBase<ArgsHead>
 {
     @Override
-    public ArgsHead parseArgs(String... args) {
-        ArgsHead model = ArgsHead.parse(args).model();
-        return model;
-    }
-
-    @Override
-    public Stage newStage(String... args) {
-        throw new UnsupportedOperationException();
+    public ArgsModular<ArgsHead> parseArgs(String... args) {
+        ArgsModular<ArgsHead> result = ArgsHead.parse(args);
+        return result;
     }
 
     @Override

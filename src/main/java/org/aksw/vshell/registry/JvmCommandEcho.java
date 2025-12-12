@@ -3,7 +3,7 @@ package org.aksw.vshell.registry;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.aksw.shellgebra.exec.Stage;
+import org.aksw.vshell.shim.rdfconvert.ArgsModular;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandBase;
 import org.apache.commons.exec.ExecuteException;
 
@@ -11,14 +11,9 @@ public class JvmCommandEcho
     extends JvmCommandBase<ArgsEcho>
 {
     @Override
-    public ArgsEcho parseArgs(String... args) {
-        ArgsEcho model = ArgsEcho.parse(args).model();
-        return model;
-    }
-
-    @Override
-    public Stage newStage(String... args) {
-        throw new UnsupportedOperationException();
+    public ArgsModular<ArgsEcho> parseArgs(String... args) {
+        ArgsModular<ArgsEcho> result = ArgsEcho.parse(args);
+        return result;
     }
 
     @Override

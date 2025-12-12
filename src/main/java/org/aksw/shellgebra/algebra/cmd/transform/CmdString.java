@@ -2,6 +2,7 @@ package org.aksw.shellgebra.algebra.cmd.transform;
 
 import java.util.Arrays;
 
+@Deprecated // Superseded by invocation.
 public record CmdString(String[] cmd, String scriptString) {
     public CmdString(String[] cmd, String scriptString) {
         if (cmd != null && scriptString != null) {

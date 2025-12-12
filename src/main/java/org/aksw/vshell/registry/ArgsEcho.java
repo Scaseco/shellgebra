@@ -3,7 +3,6 @@ package org.aksw.vshell.registry;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.aksw.vshell.shim.rdfconvert.Args;
 import org.aksw.vshell.shim.rdfconvert.ArgsModular;
 import org.aksw.vshell.shim.rdfconvert.ArgsParserPicocli;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
@@ -11,19 +10,12 @@ import org.aksw.vshell.shim.rdfconvert.ArgumentListBuilder;
 
 import picocli.CommandLine.Parameters;
 
-public class ArgsEcho
-    implements Args
-{
+public class ArgsEcho {
     @Parameters(arity = "0..*", description = "Arguments")
     public List<String> args = new ArrayList<>();
 
     public List<String> getArgs() {
         return args;
-    }
-
-    @Override
-    public ArgumentList toArgList() {
-        return renderArgList(this);
     }
 
     @Override
@@ -38,8 +30,12 @@ public class ArgsEcho
         return result;
     }
 
+    public static Boolean stdinTest(ArgsEcho model) {
+        return false;
+    }
+
     public static ArgsModular<ArgsEcho> parse(String[] args) {
         ArgsEcho model = ArgsParserPicocli.of(ArgsEcho::new).parse(args);
-        return new ArgsModular<>(model, ArgsEcho::renderArgList);
+        return new ArgsModular<>(model, ArgsEcho::renderArgList, ArgsEcho::stdinTest);
     }
 }

@@ -49,8 +49,13 @@ public class GenericCodecArgs
         return result;
     }
 
+    public static Boolean stdinTest(GenericCodecArgs model) {
+        // TODO Check for absent file list or '-' filename.
+        return true;
+    }
+
     public static ArgsModular<GenericCodecArgs> parse(String[] args) {
         GenericCodecArgs model = ArgsParserPicocli.of(GenericCodecArgs::new).parse(args);
-        return new ArgsModular<>(model, GenericCodecArgs::renderArgList);
+        return new ArgsModular<>(model, GenericCodecArgs::renderArgList, GenericCodecArgs::stdinTest);
     }
 }

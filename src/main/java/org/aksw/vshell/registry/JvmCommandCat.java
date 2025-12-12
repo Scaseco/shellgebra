@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.aksw.shellgebra.exec.Stage;
+import org.aksw.vshell.shim.rdfconvert.ArgsModular;
 import org.aksw.vshell.shim.rdfconvert.JvmCommandBase;
 import org.apache.commons.exec.ExecuteException;
 
@@ -13,14 +13,9 @@ public class JvmCommandCat
     extends JvmCommandBase<ArgsCat>
 {
     @Override
-    public ArgsCat parseArgs(String... args) {
-        ArgsCat model = ArgsCat.parse(args).model();
-        return model;
-    }
-
-    @Override
-    public Stage newStage(String... args) {
-        throw new UnsupportedOperationException();
+    public ArgsModular<ArgsCat> parseArgs(String... args) {
+        ArgsModular<ArgsCat> result = ArgsCat.parse(args);
+        return result;
     }
 
     @Override

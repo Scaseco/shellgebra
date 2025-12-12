@@ -25,6 +25,9 @@ public class SysRuntimeFactoryDocker {
         return new SysRuntimeFactoryDocker(imageIntrospector);
     }
 
+
+
+
     public SysRuntimeCore createCore(String imageRef) {
         ImageIntrospection introspection = imageIntrospector.inspect(imageRef, true);
         ShellSupport bash = introspection.getShellStatus().get("bash");
