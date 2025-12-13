@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.IProcessBuilder;
-import org.aksw.vshell.registry.FileInputSource;
-import org.aksw.vshell.registry.FileOutputTarget;
+import org.aksw.vshell.registry.FileInput;
+import org.aksw.vshell.registry.FileOutput;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 
 public interface ProcessRunner
@@ -28,9 +28,9 @@ public interface ProcessRunner
     Path outputPipe();
     Path errorPipe();
 
-    FileInputSource internalIn();
-    FileOutputTarget internalOut();
-    FileOutputTarget internalErr();
+    FileInput internalIn();
+    FileOutput internalOut();
+    FileOutput internalErr();
 
     PrintStream internalPrintOut();
     PrintStream internalPrintErr();
@@ -69,7 +69,6 @@ public interface ProcessRunner
     InputStream getInputStream();
     InputStream getErrorStream();
 
-    ProcessBuilder configure(ProcessBuilder processBuilder);
     IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder);
 
     /** Does not alter the provided process builder. */

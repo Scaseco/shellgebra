@@ -20,13 +20,9 @@ import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.shellgebra.exec.SysRuntime;
-import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectFileDescription;
-import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectIn;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectOut;
-import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectPBF;
-import org.aksw.vshell.registry.FileInputSource;
-import org.aksw.vshell.registry.FileOutputTarget;
+import org.aksw.vshell.registry.FileInput;
+import org.aksw.vshell.registry.FileOutput;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,20 +115,20 @@ public class ProcessRunnerPosix
     }
 
     @Override
-    public FileInputSource internalIn() {
-        return FileInputSource.of(pipeIn.getReadEndProcPath(), pipeIn.getInputStream());
+    public FileInput internalIn() {
+        return FileInput.of(pipeIn.getReadEndProcPath(), pipeIn.getInputStream());
         // return pipeIn.getInputStream();
     }
 
     @Override
-    public FileOutputTarget internalOut() {
-        return FileOutputTarget.of(pipeOut.getWriteEndProcPath(), pipeOut.getOutputStream());
+    public FileOutput internalOut() {
+        return FileOutput.of(pipeOut.getWriteEndProcPath(), pipeOut.getOutputStream());
         // return pipeOut.getOutputStream();
     }
 
     @Override
-    public FileOutputTarget internalErr() {
-        return FileOutputTarget.of(pipeErr.getWriteEndProcPath(), pipeErr.getOutputStream());
+    public FileOutput internalErr() {
+        return FileOutput.of(pipeErr.getWriteEndProcPath(), pipeErr.getOutputStream());
         // return pipeErr.getOutputStream();
     }
 
@@ -233,36 +229,9 @@ public class ProcessRunnerPosix
         return clone;
     }
 
-    /** Does not alter the provided process builder. */
-//    @Override
-//    public Process start(ProcessBuilder nativeProcessBuilder) throws IOException {
-//        ProcessBuilder configuredProcessBuilder = configure(nativeProcessBuilder);
-//        Process result = configuredProcessBuilder.start();
-//        return result;
-//    }
-
-    //public Process startDocker(ProcessBuilderDocker processBuilder) {
-    //	ProcessBuilderDocker.start(this);
-    //}
-
-//    @Override
-//    public Process startJvm(ProcessBuilderJvm jvmProcessBuilder) {
-//        Argv a = Argv.of(jvmProcessBuilder.command());
-//        String command = a.command();
-//        JvmCommand cmd = getJvmCmdRegistry().get(command)
-//                .orElseThrow(() -> new RuntimeException("Command not found: " + command));
-//        Process process = ProcessOverCompletableFuture.of(() -> {
-//        	JvmExecCxt execCxt = new JvmExecCxt(this, environment(), directory(), )
-//
-//            int exitValue = cmd.run(ProcessRunnerPosix.this, a);
-//            return exitValue;
-//        });
-//        return process;
-//    }
-
     public static ProcessRunner create() throws IOException {
         Path basePath = Files.createTempDirectory("process-exec-");
-        System.out.println("Created path at  " + basePath);
+        logger.debug("Created temporary directory for named and anonymous pipes at  " + basePath);
         ProcessRunner result = ProcessRunnerPosix.create(basePath);
         return result;
     }
@@ -323,39 +292,5 @@ public class ProcessRunnerPosix
         pipeErr.close();
 
         Files.deleteIfExists(basePath);
-    }
-
-    public Process start(ProcessBuilder2 processBuilder) {
-        JRedirect redirectIn = processBuilder.redirectInput();
-        redirectIn.accept(new JRedirectVisitor<Object>() {
-            @Override
-            public Object visit(JRedirectJava redirect) {
-                // TODO Auto-generated method stub
-                return null;
-            }
-            @Override
-            public Object visit(JRedirectFileDescription redirect) {
-                throw new UnsupportedOperationException();
-            }
-            @Override
-            public Object visit(JRedirectIn redirect) {
-                throw new UnsupportedOperationException();
-            }
-            @Override
-            public Object visit(JRedirectOut redirect) {
-                throw new UnsupportedOperationException();
-            }
-            @Override
-            public Object visit(JRedirectPBF redirect) {
-                PBF pbf = redirect.pbf();
-
-                return null;
-            }
-        });
-
-        processBuilder.redirectOutput();
-        processBuilder.redirectError();
-        // processBuilder
-        return null;
     }
 }

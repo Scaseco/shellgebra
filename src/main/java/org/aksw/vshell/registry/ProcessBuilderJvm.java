@@ -22,8 +22,8 @@ public class ProcessBuilderJvm
         return new ProcessBuilderJvm().command(argv);
     }
 
-    protected static ClosePolicyWrapper<FileInputSource> resolveInputRedirect(FileInputSource defaultSource, JRedirect redirect) throws FileNotFoundException {
-        ClosePolicyWrapper<FileInputSource> result;
+    protected static ClosePolicyWrapper<FileInput> resolveInputRedirect(FileInput defaultSource, JRedirect redirect) throws FileNotFoundException {
+        ClosePolicyWrapper<FileInput> result;
         if (redirect instanceof JRedirectJava x) {
             Redirect r = x.redirect();
             switch (r.type()) {
@@ -31,7 +31,7 @@ public class ProcessBuilderJvm
                 result = ClosePolicyWrapper.dontClose(defaultSource);
                 break;
             case READ:
-                result = ClosePolicyWrapper.doClose(FileInputSource.of(r.file()));
+                result = ClosePolicyWrapper.doClose(FileInput.of(r.file()));
                 break;
             default:
                 throw new RuntimeException("Unsupported or not implemented");
@@ -42,8 +42,8 @@ public class ProcessBuilderJvm
         return result;
     }
 
-    protected static ClosePolicyWrapper<FileOutputTarget> resolveOutputRedirect(FileOutputTarget defaultTarget, JRedirect redirect) throws FileNotFoundException {
-        ClosePolicyWrapper<FileOutputTarget> result;
+    protected static ClosePolicyWrapper<FileOutput> resolveOutputRedirect(FileOutput defaultTarget, JRedirect redirect) throws FileNotFoundException {
+        ClosePolicyWrapper<FileOutput> result;
         if (redirect instanceof JRedirectJava x) {
             Redirect r = x.redirect();
             switch (r.type()) {
@@ -51,7 +51,7 @@ public class ProcessBuilderJvm
                 result = ClosePolicyWrapper.dontClose(defaultTarget);
                 break;
             case WRITE:
-                result = ClosePolicyWrapper.doClose(FileOutputTarget.of(r.file()));
+                result = ClosePolicyWrapper.doClose(FileOutput.of(r.file()));
                 break;
             default:
                 throw new RuntimeException("Unsupported or not implemented");
@@ -76,9 +76,9 @@ public class ProcessBuilderJvm
     private Integer runCommand(ProcessRunner executor, Argv a, JvmCommand cmd) {
         // XXX Is ClosePolicyWrapper sufficient or is reference counting needed?
         try(
-            ClosePolicyWrapper<FileInputSource> in = resolveInputRedirect(executor.internalIn(), redirectInput());
-            ClosePolicyWrapper<FileOutputTarget> out = resolveOutputRedirect(executor.internalOut(), redirectOutput());
-            ClosePolicyWrapper<FileOutputTarget> err = resolveOutputRedirect(executor.internalErr(), redirectError())) {
+            ClosePolicyWrapper<FileInput> in = resolveInputRedirect(executor.internalIn(), redirectInput());
+            ClosePolicyWrapper<FileOutput> out = resolveOutputRedirect(executor.internalOut(), redirectOutput());
+            ClosePolicyWrapper<FileOutput> err = resolveOutputRedirect(executor.internalErr(), redirectError())) {
 
             JvmExecCxt execCxt = new JvmExecCxt(
                 executor,

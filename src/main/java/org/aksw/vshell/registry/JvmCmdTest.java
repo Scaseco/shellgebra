@@ -7,8 +7,8 @@ public class JvmCmdTest
     implements JvmCommand
 {
     @Override
-    public ArgsTest parseArgs(String... args) {
-        ArgsTest model = ArgsTest.parse(args).model();
+    public ArgsCommand parseArgs(String... args) {
+        ArgsCommand model = ArgsCommand.parse(args).model();
         return model;
     }
 
@@ -19,7 +19,7 @@ public class JvmCmdTest
 
     @Override
     public int run(JvmExecCxt cxt, Argv argv) {
-        ArgsTest model;
+        ArgsCommand model;
 
         int exitValue = 0;
         try {

@@ -10,20 +10,13 @@ import org.aksw.vshell.shim.rdfconvert.ArgumentListBuilder;
 
 import picocli.CommandLine.Parameters;
 
-public class ArgsCat
-//     implements Args
-{
+public class ArgsCat {
     @Parameters(arity = "0..*", description = "File names")
     public List<String> fileNames = new ArrayList<>();
 
     public List<String> getFileNames() {
         return fileNames;
     }
-
-//    @Override
-//    public ArgumentList toArgList() {
-//        return renderArgList(this);
-//    }
 
     @Override
     public String toString() {
@@ -37,8 +30,12 @@ public class ArgsCat
         return result;
     }
 
+    public static Boolean stdinTest(ArgsCat args) {
+        return args.getFileNames().isEmpty() || args.getFileNames().contains("-");
+    }
+
     public static ArgsModular<ArgsCat> parse(String[] args) {
         ArgsCat model = ArgsParserPicocli.of(ArgsCat::new).parse(args);
-        return new ArgsModular<>(model, ArgsCat::renderArgList);
+        return new ArgsModular<>(model, ArgsCat::renderArgList, ArgsCat::stdinTest);
     }
 }

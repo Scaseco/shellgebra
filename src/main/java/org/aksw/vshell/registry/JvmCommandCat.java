@@ -33,7 +33,6 @@ public class JvmCommandCat
                     Path path = Path.of(name);
                     try (InputStream in = Files.newInputStream(path)) {
                         in.transferTo(cxt.out().outputStream());
-                        // XXX flush?
                     }
                 }
             } catch (Exception e) {

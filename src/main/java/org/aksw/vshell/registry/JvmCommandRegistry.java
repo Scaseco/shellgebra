@@ -5,8 +5,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.aksw.shellgebra.exec.Stage;
-
 public class JvmCommandRegistry {
     private Map<String, JvmCommand> map = new ConcurrentHashMap<>();
 
@@ -40,9 +38,9 @@ public class JvmCommandRegistry {
     }
 
     /** Shorthand to lookup a command a build a stage for it. */
-    public Stage newStage(String commandName, String ...args) {
-        JvmCommand cmd = require(commandName);
-        Stage result = cmd.newStage(args);
-        return result;
-    }
+//    public Stage newStage(String commandName, String ...args) {
+//        JvmCommand cmd = require(commandName);
+//        Stage result = cmd.newStage(args);
+//        return result;
+//    }
 }

@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
 import org.aksw.jenax.model.osreo.ImageIntrospection;
 import org.aksw.jenax.model.osreo.LocatorCommand;
 import org.aksw.jenax.model.osreo.OsreoUtils;
@@ -24,9 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
-
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 
 public class ImageIntrospectorImpl
     implements ImageIntrospector
@@ -155,7 +155,7 @@ public class ImageIntrospectorImpl
 
         Set<String> shellProbeLocations = shell.getProbeLocations();
         for (String shellLocation : shellProbeLocations) {
-            Argv entrypoint = Argv.of(shellLocation, commandOptions);
+            Argv entrypoint = Argv.ofArgs(shellLocation, commandOptions);
             boolean canRunEntrypoint = canRunEntrypoint(imageName, entrypoint);
 
             logger.info("Probe image [{}] for shell [{}]: {}", imageName, shellName,
@@ -222,7 +222,7 @@ public class ImageIntrospectorImpl
                         .withCreateContainerCmdModifier(x -> x.withEntrypoint(ep))
                         .withCommand(finalCmd);
                 c.start();
-                result = new SysRuntimeCoreDocker(c, CmdStrOpsBash.get());
+                result = new SysRuntimeCoreDocker(c, entrypoint, CmdStrOpsBash.get());
                 break;
             } catch (Exception e) {
                 last = e; // try next

@@ -19,18 +19,18 @@ public abstract class InvokableProcessBuilderBase<X extends InvokableProcessBuil
     }
 
     public X command(String... argv) {
-        this.invocation = new Invocation.Argv(List.of(argv));
+        invocation(new Invocation.Argv(List.of(argv)));
         return self();
     }
 
     // @Override
     public X script(String content, String mediaType) {
-        this.invocation = new Invocation.Script(content, mediaType);
+        invocation(new Invocation.Script(content, mediaType));
         return self();
     }
 
     @Override
-    protected X cloneActual() {
+    public X clone() {
         X result = super.clone();
         result.invocation(invocation());
         return result;

@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
@@ -25,6 +26,13 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.exec.invocation.CompileContext;
+import org.aksw.shellgebra.exec.invocation.ExecutableInvocation;
+import org.aksw.shellgebra.exec.invocation.Invocation;
+import org.aksw.shellgebra.exec.invocation.InvocationCompiler;
+import org.aksw.shellgebra.exec.invocation.InvocationCompilerImpl;
+import org.aksw.shellgebra.exec.invocation.InvokableProcessBuilderBase;
+import org.aksw.shellgebra.exec.invocation.ScriptContent;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +41,8 @@ import org.slf4j.LoggerFactory;
  * Process builder that starts a process in a docker container via docker run.
  */
 public class ProcessBuilderDocker
-    extends ProcessBuilderBase<ProcessBuilderDocker>
+    // extends ProcessBuilderBase<ProcessBuilderDocker>
+    extends InvokableProcessBuilderBase<ProcessBuilderDocker>
 {
     private static final Logger logger = LoggerFactory.getLogger(ProcessBuilderDocker.class);
 
@@ -42,8 +51,9 @@ public class ProcessBuilderDocker
     protected String workingDirectory;
     protected ContainerPathResolver containerPathResolver;
     protected FileMapper fileMapper;
-
     protected boolean interactive;
+
+    protected InvocationCompiler compiler;
 
     public ProcessBuilderDocker() {
         super();
@@ -105,6 +115,15 @@ public class ProcessBuilderDocker
         return self();
     }
 
+    public ProcessBuilderDocker compiler(InvocationCompiler compiler) {
+        this.compiler = compiler;
+        return self();
+    }
+
+    public InvocationCompiler compiler() {
+        return compiler;
+    }
+
     @Override
     public Process start(ProcessRunner executor) throws IOException {
         return execInternal(executor);
@@ -124,6 +143,13 @@ public class ProcessBuilderDocker
 
     // protected Process execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) {
     protected Process execInternal(ProcessRunner executor) throws IOException {
+        Objects.requireNonNull(imageRef, "image not set.");
+
+        Invocation inv = invocation();
+        if (inv == null) {
+            throw new IllegalStateException("No invocation set");
+        }
+
         // Closer closer = Closer.create();
         List<FileWriterTask> inputTasks = new ArrayList<>();
 
@@ -140,7 +166,28 @@ public class ProcessBuilderDocker
         String containerOutputPath = finalFileMapper.allocate(hostMountableOutputPath.toString(), AccessMode.rw);
         String containerErrorPath = finalFileMapper.allocate(hostMountableErrorPath.toString(), AccessMode.rw);
 
-        CmdOp op = CmdOpExec.ofLiteralArgs(super.command().toArray(String[]::new));
+        // Resolver over SysRuntime. Container is started only on-demand.
+//        SysRuntimeFactoryDocker sysRuntimeFactory = SysRuntimeFactoryDocker.create();
+//
+//        CompileContext cxt = CompileContext.of(resolver -> {
+//            try (SysRuntime runtime = SysRuntimeCoreLazy.of(() -> sysRuntimeFactory.create(imageRef))) {
+//                try {
+//                    String resolvedCommand = runtime.which(entrypoint);
+//                    return resolvedCommand;
+//                } catch (IOException | InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        });
+//
+//        InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
+//        ExecutableInvocation exec = finalCompiler.compile(inv, cxt);
+
+        // CmdOp op = CmdOpExec.ofLiteralArgs(super.command().toArray(String[]::new));
+
+        List<String> argv = inv.asArgv().argv();
+
+        CmdOp op = CmdOpExec.ofLiteralArgs(argv);
         op = CmdOps.appendRedirects(op,
             CmdRedirect.in(containerInputPath),
             CmdRedirect.out(containerOutputPath),
@@ -155,17 +202,56 @@ public class ProcessBuilderDocker
                 try {
                     container.start();
                 } finally {
-
                 }
             };
             // TODO Probably start container in a thread and then wait for termination
             // so that a final termination callback can be reliably called.
             runnable.run();
+
+            // TODOD In general exec.close() must be called!
             return new ProcessOverDockerContainer(container);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+//
+//    @Override
+//    public Process start(ProcessRunner executor) throws IOException {
+//        Objects.requireNonNull(imageRef, "image not set.");
+//
+//        // Resolver over SysRuntime. Container is started only on-demand.
+//        CompileContext cxt = CompileContext.of(resolver -> {
+//            try (SysRuntime runtime = SysRuntimeCoreLazy.of(() -> SysRuntimeFactoryDocker.create().create(imageRef))) {
+//                try {
+//                    String resolvedCommand = runtime.which(entrypoint);
+//                    return resolvedCommand;
+//                } catch (IOException | InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        });
+//
+//        Invocation inv = invocation();
+//        if (inv == null) {
+//            throw new IllegalStateException("No invocation set");
+//        }
+//
+//        InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
+//        ExecutableInvocation exec = finalCompiler.compile(inv, cxt);
+//        ProcessBuilder pb = new ProcessBuilder();
+//        pb.command(exec.argv());
+//        ProcessBuilderNative.configure(pb, this, executor);
+//        Process p = pb.start();
+//        // Cleanup after process exit.
+//        p.toHandle().onExit().thenRun(() -> {
+//            try {
+//                exec.close();
+//            } catch (Exception e) {
+//                logger.warn("Error during close", e);
+//            }
+//        });
+//        return p;
+//    }
 
     // Perhaps use FileWriter abstraction?
     private record PathAndProcess(Path path, Process process) {}
@@ -254,24 +340,36 @@ public class ProcessBuilderDocker
         logger.info("Setting up container " + imageRef + " with UID:GID=" + userStr);
 
         String scriptString = toScriptString(cmdOp);
+        Invocation inv = new Invocation.Script(scriptString, ScriptContent.contentTypeBash);
 
-        // String[] entrypoint = new String[]{"bash"};
-        String[] cmdParts;
-        if (true) { // cmdString.isScriptString()) {
-            cmdParts = new String[] {
-                "-c",
-                // List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
-                scriptString
-            };
-        } else {
-//            CmdStrOps strOps = runtime.getStrOps();
-//            cmdParts = cmdString.cmd(); // XXX Must ensure that the command is resolvable!
+        SysRuntimeFactoryDocker sysRuntimeFactory = SysRuntimeFactoryDocker.create();
+
+        ExecutableInvocation exec;
+        String actualEntryPoint = entrypoint;
+        try (SysRuntime runtime = SysRuntimeCoreLazy.of(() -> sysRuntimeFactory.create(imageRef))) {
+            if (actualEntryPoint == null) {
+                sysRuntimeFactory.create(actualEntryPoint);
+            }
+
+            CompileContext cxt = CompileContext.of(commandName -> {
+                try {
+                    String resolvedCommand = runtime.which(commandName);
+                    return resolvedCommand;
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
+            exec = finalCompiler.compile(inv, cxt);
         }
+
+        String[] cmdParts = exec.argv().toArray(String[]::new);
 
         List.of(cmdParts).stream().forEach(p -> logger.info("Command part: [" + p + "]"));
 
         org.testcontainers.containers.GenericContainer<?> result = new org.testcontainers.containers.GenericContainer<>(imageRef)
-            .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr).withEntrypoint(entrypoint))
+            .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr).withEntrypoint(actualEntryPoint))
             .withCommand(cmdParts)
             .withLogConsumer(frame -> logger.info(frame.getUtf8StringWithoutLineEnding()))
             ;
@@ -352,3 +450,21 @@ public class ProcessBuilderDocker
         return !isAnonymousProcPipe(p);
     }
 }
+
+//// String[] entrypoint = new String[]{"bash"};
+//String[] cmdParts;
+//if (true) { // cmdString.isScriptString()) {
+//  cmdParts = new String[] {
+//      "-c",
+//      // List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
+//      scriptString
+//  };
+//} else {
+////  CmdStrOps strOps = runtime.getStrOps();
+////  cmdParts = cmdString.cmd(); // XXX Must ensure that the command is resolvable!
+//}
+//
+//
+//
+//InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
+//ExecutableInvocation exec = finalCompiler.compile(inv, cxt);

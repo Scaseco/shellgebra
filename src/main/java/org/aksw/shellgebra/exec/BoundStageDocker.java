@@ -209,8 +209,6 @@ public class BoundStageDocker
             inputTasks.add(itask);
         }
 
-
-
         Set<CmdOpVar> vars = CmdOps.accVars(cmdOp);
         // Map<CmdOpVar, Stage> varToStage = new LinkedHashMap<>();
         Map<CmdOpVar, String> varToContainerPath = new LinkedHashMap<>();

@@ -1,55 +1,43 @@
 package org.aksw.vshell.registry;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Objects;
 
-public class FileInputSource
-    implements Closeable
+public abstract class InputBase
+    implements Input
 {
-    private Path path;
     private InputStream inputStream;
-    private BufferedReader reader;
-    private Charset readerCharset;
+    private BufferedReader reader = null;
+    private Charset readerCharset = null;
 
-    protected FileInputSource(Path path, InputStream inputStream) {
+    public InputBase(InputStream inputStream) {
         super();
-        this.path = path;
         this.inputStream = inputStream;
     }
 
-    public static FileInputSource of(Path path, InputStream inputStream) {
-        return new FileInputSource(path, inputStream);
+    protected abstract InputStream openInputStream() throws IOException;
+
+    @Override
+    public Charset getReaderCharset() {
+        return readerCharset;
     }
 
-    public static FileInputSource of(Path path) {
-        return of(path, null);
+    @Override
+    public boolean hasReader() {
+        return reader != null;
     }
 
-    public static FileInputSource of(File file) {
-        return of(file.toPath());
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public File getFile() {
-        return path.toFile();
-    }
-
+    @Override
     public InputStream inputStream() {
         synchronized (this) {
             if (inputStream == null) {
                 try {
-                    inputStream = Files.newInputStream(path);
+                    inputStream = openInputStream(); // Files.newInputStream(path);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -58,10 +46,12 @@ public class FileInputSource
         return inputStream;
     }
 
+    @Override
     public final BufferedReader reader() {
         return reader(Charset.defaultCharset());
     }
 
+    @Override
     public final BufferedReader reader(Charset charset) {
         Objects.requireNonNull(charset, "charset");
         synchronized (this) {
@@ -73,6 +63,25 @@ public class FileInputSource
                     throw new IllegalStateException("BufferedReader was created with charset: " + readerCharset);
             }
             return reader;
+        }
+    }
+
+    @Override
+    public final void transferTo(Output output) throws IOException {
+        if (hasReader()) {
+            if (output.hasPrinter()) {
+                reader().transferTo(new OutputStreamWriter(output.printStream(), output.getWriterCharset()));
+            } else {
+                reader().transferTo(output.writer());
+            }
+        } else {
+            if (output.hasPrinter()) {
+                reader().transferTo(new OutputStreamWriter(output.printStream(), readerCharset));
+            } else if (output.hasWriter()) {
+                reader().transferTo(output.writer());
+            } else {
+                inputStream().transferTo(output.outputStream());
+            }
         }
     }
 

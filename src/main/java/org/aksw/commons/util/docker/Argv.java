@@ -13,7 +13,7 @@ public record Argv(List<String> argv) {
     }
 
     public static Argv of(List<String> argv) {
-        return of(argv.get(0), argv.subList(1, argv.size()));
+        return ofArgs(argv.get(0), argv.subList(1, argv.size()));
     }
 
     public static Argv of(String... argv) {
@@ -23,11 +23,11 @@ public record Argv(List<String> argv) {
         return new Argv(List.of(argv));
     }
 
-    public static Argv of(String command, String ...args) {
-        return of(command, List.of(args));
+    public static Argv ofArgs(String command, String ...args) {
+        return ofArgs(command, List.of(args));
     }
 
-    public static Argv of(String command, List<String> args) {
+    public static Argv ofArgs(String command, List<String> args) {
         List<String> argv = new ArrayList<>(1 + args.size());
         argv.add(command);
         argv.addAll(args);

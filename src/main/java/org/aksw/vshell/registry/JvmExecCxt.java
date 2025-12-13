@@ -10,56 +10,39 @@ public class JvmExecCxt {
     private ProcessRunner executor;
     // private JvmContext context; // Used executor + JvmCommandRegistry registry;
 
-    // private List<String> command; // Perhaps use Argv?
+    // Track the parent command or process (if exists)?
+    //   Might requires wrapped context with additional info.
+    // private List<String> command;
     private Map<String, String> environment;
     private Path directory;
 
-    private FileInputSource inputSource;
-    private FileOutputTarget outputTarget;
-    private FileOutputTarget errorTarget;
+    private DynamicInput inputSource;
+    private DynamicOutput outputTarget;
+    private DynamicOutput errorTarget;
 
     public JvmExecCxt(
-            // JvmContext context,
-            // List<String> command,
             ProcessRunner executor,
             Map<String, String> environment,
             Path directory,
-            FileInputSource inputSource, FileOutputTarget outputTarget, FileOutputTarget errorTarget) {
+            DynamicInput inputSource, DynamicOutput outputTarget, DynamicOutput errorTarget) {
         super();
+        this.executor = executor;
+        this.environment = environment;
+        this.directory = directory;
         this.inputSource = inputSource;
         this.outputTarget = outputTarget;
         this.errorTarget = errorTarget;
-        // this.command = command;
-        this.environment = environment;
-        this.directory = directory;
-        //this.context = context;
     }
 
-//    public List<String> command() {
-//        return command;
-//    }
-
-//    public InputStream in() {
-//        return inputSource.getInputStream();
-//    }
-//
-//    public PrintStream out() {
-//        return outputTarget.printer();
-//    }
-//
-//    public PrintStream err() {
-//        return errorTarget.printer();
-//    }
-
-    public FileInputSource in() {
+    public DynamicInput in() {
         return inputSource;
     }
 
-    public FileOutputTarget out() {
+    public DynamicOutput out() {
         return outputTarget;
     }
 
-    public FileOutputTarget err() {
+    public DynamicOutput err() {
         return errorTarget;
     }
 
@@ -67,17 +50,9 @@ public class JvmExecCxt {
         return environment;
     }
 
-//    public void env(Map<String, String> env) {
-//        this.environment = env;
-//    }
-
     public Path directory() {
         return directory;
     }
-
-//    public JvmContext context() {
-//        return context;
-//    }
 
     public ProcessRunner getExecutor() {
         return executor;
