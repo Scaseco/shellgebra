@@ -31,7 +31,7 @@ import org.aksw.shellgebra.exec.model.PlacedCommand;
 import org.aksw.shellgebra.exec.shell.ShellEnv;
 import org.aksw.vshell.registry.CandidatePlacement;
 import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
-import org.aksw.vshell.registry.CommandAvailability;
+import org.aksw.vshell.registry.ExecSiteProbeResults;
 import org.aksw.vshell.registry.CommandCatalog;
 import org.aksw.vshell.registry.CommandCatalogOverLocator;
 import org.aksw.vshell.registry.CommandCatalogUnion;
@@ -79,7 +79,7 @@ public class TestCommandRegistry {
 
         CommandCatalog unionCatalog = new CommandCatalogUnion(List.of(candidates, hostCatalog, jvmCatalog, inferredCatalog));
 
-        CommandAvailability cmdAvailability = new CommandAvailability();
+        ExecSiteProbeResults cmdAvailability = new ExecSiteProbeResults();
         // TODO Have image introspector write into cmdAvailability without having to know about exec sites.
         // Need an adapter or cmdAvailability.asDockerImageMap().
 

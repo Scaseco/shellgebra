@@ -29,13 +29,13 @@ public class ExecSiteResolver2 {
 
     // private JvmCommandRegistry jvmCmdRegistry;
     private SysRuntimeCoreExecSiteFactoryPool runtimePool;
-    private CommandAvailability cmdAvailability;
+    private ExecSiteProbeResults cmdAvailability;
     private ImageIntrospector dockerImageIntrospector;
 
     public ExecSiteResolver2(CommandCatalog cmdCatalog,
             //JvmCommandRegistry jvmCmdRegistry,
             SysRuntimeCoreExecSiteFactoryPool runtimePool,
-            CommandAvailability cmdAvailability, ImageIntrospector dockerImageIntrospector) {
+            ExecSiteProbeResults cmdAvailability, ImageIntrospector dockerImageIntrospector) {
         super();
         this.cmdCatalog = cmdCatalog;
         this.runtimePool = runtimePool;

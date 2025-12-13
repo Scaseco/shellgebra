@@ -35,7 +35,7 @@ public class SysRuntimeCoreJvm
     public String execCmd(String... argv) throws IOException, InterruptedException {
         Argv a = Argv.of(argv);
         String c = a.command();
-        String[] s = a.newArgs();
+        String[] s = a.argsToArray();
         JvmCommand cmd = jvmCmdRegistry.require(c);
 
         // TODO Tidy up with property try-with-resources.

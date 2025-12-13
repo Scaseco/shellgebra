@@ -14,7 +14,7 @@ import org.aksw.jenax.model.osreo.ShellSupport;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
-import org.aksw.vshell.registry.CommandAvailability;
+import org.aksw.vshell.registry.ExecSiteProbeResults;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.slf4j.Logger;
@@ -48,15 +48,15 @@ public class ImageIntrospectorSystem
 
     // Not ideal having this class here because it uses ExecSite and is more high level.
     // Also, we should track metadata for (imageRef, command): the used entry point and commandOption for the availability.
-    protected CommandAvailability cmdAvailability;
+    protected ExecSiteProbeResults cmdAvailability;
 
-    public static ImageIntrospector of(Model osreoModel, CommandAvailability cmdAvailability) {
+    public static ImageIntrospector of(Model osreoModel, ExecSiteProbeResults cmdAvailability) {
         List<Shell> shells = OsreoUtils.listShells(osreoModel);
         List<LocatorCommand> locatorCommands = OsreoUtils.listLocatorCommands(osreoModel);
         return new ImageIntrospectorImpl(shells, locatorCommands, cmdAvailability);
     }
 
-    public ImageIntrospectorSystem(List<Shell> shells, List<LocatorCommand> locatorCommands, CommandAvailability cmdAvailability) {
+    public ImageIntrospectorSystem(List<Shell> shells, List<LocatorCommand> locatorCommands, ExecSiteProbeResults cmdAvailability) {
         super();
         this.shells = shells;
         this.locatorCommands = locatorCommands;

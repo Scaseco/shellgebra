@@ -26,7 +26,7 @@ public class JvmCommandWhich
 
         int exitValue = 0;
         try {
-            model = parseArgs(argv.newArgs());
+            model = parseArgs(argv.argsToArray());
         } catch (Exception e) {
             e.printStackTrace(cxt.internalPrintErr());
             exitValue = 2;

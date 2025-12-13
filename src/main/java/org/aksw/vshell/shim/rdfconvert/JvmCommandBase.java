@@ -18,7 +18,7 @@ public abstract class JvmCommandBase<T>
         int exitValue = 0;
         T argsModel;
         try {
-            ArgsModular<T> argsModular = parseArgs(argv.newArgs());
+            ArgsModular<T> argsModular = parseArgs(argv.argsToArray());
             argsModel = argsModular.model();
         } catch (Exception e) {
             e.printStackTrace(cxt.err().printStream());

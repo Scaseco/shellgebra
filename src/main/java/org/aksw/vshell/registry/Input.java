@@ -1,9 +1,9 @@
 package org.aksw.vshell.registry;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.nio.charset.Charset;
 
 public interface Input
@@ -11,8 +11,8 @@ public interface Input
 {
     InputStream inputStream();
     boolean hasReader();
-    Reader reader();
-    Reader reader(Charset charset);
+    BufferedReader reader();
+    BufferedReader reader(Charset charset);
     Charset getReaderCharset();
 
     void transferTo(Output output) throws IOException;

@@ -15,6 +15,11 @@ public class InvokableProcessBuilderHost
     /** If unset then fall back to {@link InvocationCompilerImpl#getDefault()}. */
     private InvocationCompiler compiler = null;
 
+    @Override
+    protected InvokableProcessBuilderHost cloneActual() {
+        return new InvokableProcessBuilderHost();
+    }
+
     public InvokableProcessBuilderHost compiler(InvocationCompiler compiler) {
         this.compiler = compiler;
         return self();

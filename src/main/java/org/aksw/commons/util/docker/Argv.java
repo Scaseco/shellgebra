@@ -42,11 +42,11 @@ public record Argv(List<String> argv) {
         return argv.subList(1, argv.size());
     }
 
-    public String[] newArgv() {
+    public String[] toArray() {
         return argv.toArray(String[]::new);
     }
 
-    public String[] newArgs() {
+    public String[] argsToArray() {
         return args().toArray(String[]::new);
     }
 }

@@ -23,8 +23,8 @@ public class TestDynamicIo {
                 DynamicInput input = DynamicInputFromStream.of(in);
                 DynamicOutput output = DynamicOutputFromStream.of(out)) {
 
-            input.getPipe();
-            output.getPipe();
+            input.getFile();
+            output.getFile();
 
             input.transferTo(output);
             output.flush();

@@ -26,11 +26,11 @@ public class ExecSiteResolver {
     private CommandCatalog cmdCatalog;
 
     private JvmCommandRegistry jvmCmdRegistry;
-    private CommandAvailability cmdAvailability;
+    private ExecSiteProbeResults cmdAvailability;
     private ImageIntrospector dockerImageIntrospector;
 
     public ExecSiteResolver(CommandCatalog cmdCatalog, JvmCommandRegistry jvmCmdRegistry,
-            CommandAvailability cmdAvailability, ImageIntrospector dockerImageIntrospector) {
+            ExecSiteProbeResults cmdAvailability, ImageIntrospector dockerImageIntrospector) {
         super();
         this.cmdCatalog = cmdCatalog;
         this.jvmCmdRegistry = jvmCmdRegistry;

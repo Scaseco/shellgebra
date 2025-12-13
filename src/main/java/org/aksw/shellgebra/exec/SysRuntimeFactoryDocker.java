@@ -6,25 +6,30 @@ import org.aksw.commons.util.docker.ImageIntrospectorCaching;
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
 import org.aksw.jenax.model.osreo.ImageIntrospection;
 import org.aksw.jenax.model.osreo.ShellSupport;
-import org.aksw.shellgebra.exec.model.ExecSites;
-import org.aksw.vshell.registry.CommandAvailability;
+import org.aksw.vshell.registry.ExecSiteProbeResults;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
 
 public class SysRuntimeFactoryDocker {
     private ImageIntrospector imageIntrospector;
+    private ExecSiteProbeResults probeResults;
 
-    public SysRuntimeFactoryDocker(ImageIntrospector imageIntrospector) {
+    public SysRuntimeFactoryDocker(ImageIntrospector imageIntrospector, ExecSiteProbeResults probeResults) {
         this.imageIntrospector = imageIntrospector;
+        this.probeResults = probeResults;
     }
 
     public static SysRuntimeFactoryDocker create() {
         Model shellModel = RDFDataMgr.loadModel("shell-ontology.ttl");
         // Could use a default disk-based database to track command availabilities.
-        CommandAvailability cmdAvailability = CommandAvailability.get(); // new CommandAvailability();
-        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(shellModel, cmdAvailability);
+        ExecSiteProbeResults probeResults = ExecSiteProbeResults.get(); // new CommandAvailability();
+        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(shellModel, probeResults);
         imageIntrospector = new ImageIntrospectorCaching(imageIntrospector);
-        return new SysRuntimeFactoryDocker(imageIntrospector);
+        return new SysRuntimeFactoryDocker(imageIntrospector, probeResults);
+    }
+
+    public ExecSiteProbeResults getProbeResults() {
+        return probeResults;
     }
 
 //    public ProcessBuilderFactoryDocker newProcessBuilder(String imageRef) {
@@ -51,7 +56,7 @@ public class SysRuntimeFactoryDocker {
         }
 //
         Argv entrypointArgv = Argv.ofArgs(bash.getCommandPath(), ListBuilder.forString().addAllNonNull(bash.getCommandOption()).buildList());
-        SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, entrypointArgv);
+        SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, entrypointArgv, probeResults);
         return core;
     }
 
@@ -81,10 +86,9 @@ public class SysRuntimeFactoryDocker {
 //            loc = locator.toArray(String[]::new);
 //        }
 
-        SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, entrypointArgv);
+        SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, entrypointArgv, probeResults);
         SysRuntimeDocker result = new SysRuntimeDocker(core, locatorArgv, existsCmd);
-        CommandAvailability cmdAvailability = CommandAvailability.get();
-        cmdAvailability.put(core.getEntrypoint().command(), ExecSites.docker(imageRef), true);
+
         return result;
     }
 }

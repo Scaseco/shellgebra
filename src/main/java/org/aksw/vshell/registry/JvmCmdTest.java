@@ -23,7 +23,7 @@ public class JvmCmdTest
 
         int exitValue = 0;
         try {
-            model = parseArgs(argv.newArgs());
+            model = parseArgs(argv.argsToArray());
         } catch (Exception e) {
             e.printStackTrace(cxt.err().printStream());
             exitValue = 2;
