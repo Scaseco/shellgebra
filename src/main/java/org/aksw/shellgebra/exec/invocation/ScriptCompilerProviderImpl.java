@@ -14,6 +14,7 @@ public class ScriptCompilerProviderImpl
         this.scriptCompiler = scriptCompiler;
     }
 
+    /** Whether the given media type can be handled by this compiler. */
     @Override
     public boolean supports(String mediaType) {
         return supportedMediaTypes.contains(mediaType);

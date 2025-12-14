@@ -9,5 +9,6 @@ import java.util.List;
 public interface ExecutableInvocation
     extends AutoCloseable
 {
+    // Argv argv();
     List<String> argv();
 }

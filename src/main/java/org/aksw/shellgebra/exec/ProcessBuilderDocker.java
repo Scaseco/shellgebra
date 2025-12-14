@@ -72,9 +72,9 @@ public class ProcessBuilderDocker
         return self();
     }
 
-    public String entrypoint() {
-        return entrypoint;
-    }
+//    public String entrypoint() {
+//        return entrypoint;
+//    }
 
     public ProcessBuilderDocker interactive(boolean onOrOff) {
         this.interactive = onOrOff;
@@ -92,10 +92,10 @@ public class ProcessBuilderDocker
      * @param entrypoint
      * @return
      */
-    public ProcessBuilderDocker entrypoint(String entrypoint) {
-        this.entrypoint = entrypoint;
-        return self();
-    }
+//    public ProcessBuilderDocker entrypoint(String entrypoint) {
+//        this.entrypoint = entrypoint;
+//        return self();
+//    }
 
     public FileMapper fileMapper() {
         return fileMapper;
@@ -340,17 +340,19 @@ public class ProcessBuilderDocker
         logger.info("Setting up container " + imageRef + " with UID:GID=" + userStr);
 
         String scriptString = toScriptString(cmdOp);
+
+        // Create an invocation of the script string as an inline bash script.
         Invocation inv = new Invocation.Script(scriptString, ScriptContent.contentTypeBash);
 
         SysRuntimeFactoryDocker sysRuntimeFactory = SysRuntimeFactoryDocker.create();
 
         ExecutableInvocation exec;
-        String actualEntryPoint = entrypoint;
+        // XXX The entrypoint would only be needed to start a container for resolving commands!
+        // String actualEntryPoint = entrypoint;
         try (SysRuntime runtime = SysRuntimeCoreLazy.of(() -> sysRuntimeFactory.create(imageRef))) {
-            if (actualEntryPoint == null) {
-                sysRuntimeFactory.create(actualEntryPoint);
-            }
-
+//            if (actualEntryPoint == null) {
+//                sysRuntimeFactory.create(actualEntryPoint);
+//            }
             CompileContext cxt = CompileContext.of(commandName -> {
                 try {
                     String resolvedCommand = runtime.which(commandName);
@@ -359,17 +361,18 @@ public class ProcessBuilderDocker
                     throw new RuntimeException(e);
                 }
             });
-
             InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
             exec = finalCompiler.compile(inv, cxt);
         }
 
-        String[] cmdParts = exec.argv().toArray(String[]::new);
+        List<String> tmp = exec.argv();
+        String actualEntrypoint = tmp.get(0);
+        String[] cmdParts = tmp.subList(1, tmp.size()).toArray(String[]::new);
 
+        // String[] cmdParts = exec.argv().toArray(String[]::new);
         List.of(cmdParts).stream().forEach(p -> logger.info("Command part: [" + p + "]"));
-
         org.testcontainers.containers.GenericContainer<?> result = new org.testcontainers.containers.GenericContainer<>(imageRef)
-            .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr).withEntrypoint(actualEntryPoint))
+            .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr).withEntrypoint(actualEntrypoint))
             .withCommand(cmdParts)
             .withLogConsumer(frame -> logger.info(frame.getUtf8StringWithoutLineEnding()))
             ;
@@ -420,7 +423,7 @@ public class ProcessBuilderDocker
 
     protected void applySettings(ProcessBuilderDocker target) {
         target.imageRef(imageRef());
-        target.entrypoint(entrypoint());
+        // target.entrypoint(entrypoint());
         target.workingDirectory(workingDirectory());
         target.interactive(interactive());
 

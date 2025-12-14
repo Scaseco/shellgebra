@@ -73,7 +73,7 @@ public class TestProcessRunner {
                 // ProcessBuilderNative.of("/bin/head", "-n10"),
                 ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
                     // .interactive(true)
-                    .imageRef("nestio/lbzip2").entrypoint("bash").fileMapper(fileMapper),
+                    .imageRef("nestio/lbzip2").fileMapper(fileMapper), // .entrypoint("bash")
                 ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
                 // ProcessBuilderJvm.of("/bin/cat"))
                 .start(runner)
@@ -111,7 +111,7 @@ public class TestProcessRunner {
                 ProcessBuilderPipeline.of(
                     ProcessBuilderJvm.of("/bin/head", "-n10"),
                     ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
-                        .imageRef("nestio/lbzip2").entrypoint("bash").fileMapper(fileMapper),
+                        .imageRef("nestio/lbzip2").fileMapper(fileMapper), // entrypoint("bash")
                     ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
             ).start(runner).waitFor();
         }
@@ -207,7 +207,7 @@ public class TestProcessRunner {
         // SharedSecrets.getJavaIOFileDescriptorAccess();
 
         ProcessBuilderDocker.of("echo", "DOCKERTESTMSG")
-            .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
+            .imageRef("ubuntu:24.04").fileMapper(fileMapper).start(runner) // .entrypoint("bash")
             .waitFor();
 //            ProcessBuilderDocker.of("head", "-n 2")
 //                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
