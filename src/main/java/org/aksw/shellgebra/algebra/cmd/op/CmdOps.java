@@ -53,7 +53,6 @@ public class CmdOps {
         return new CmdOpExec(List.of(new CmdPrefix(key, value)), null, null);
     }
 
-
     public static Set<CmdOpVar> accVars(CmdOp op) {
         return accVars(new LinkedHashSet<>(), op);
     }

@@ -32,5 +32,25 @@ public interface IProcessBuilderCore<X extends IProcessBuilderCore<X>>
     X redirectError(JRedirect redirect);
     JRedirect redirectError();
 
-    // redirectError()
+    /**
+     * Whether the process builder can read from anonymous pipes.
+     *
+     * Docker containers can only bind-mount named pipes but not anonymous pipes.
+     * When building pipelines, this flag is used to avoid needless
+     * intermediate anon pipes where named ones can be used directly.
+     *
+     * For pipelines, this is the value of the first process builder.
+     */
+    boolean supportsAnonPipeRead();
+
+    /**
+     * Whether the process builder can write to an anonymous pipe.
+     *
+     * Docker containers can only bind-mount named pipes but not anonymous pipes.
+     * When building pipelines, this flag is used to avoid needless
+     * intermediate anon pipes where named ones can be used directly.
+     *
+     * For pipelines, this is the value of the last process builder.
+     */
+    boolean supportsAnonPipeWrite();
 }

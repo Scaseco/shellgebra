@@ -16,8 +16,22 @@ import org.aksw.shellgebra.exec.graph.ProcessRunner;
 public class ProcessBuilderPipeline
     extends ProcessBuilderCompound<ProcessBuilderPipeline>
 {
-     public ProcessBuilderPipeline() {
+    public ProcessBuilderPipeline() {
         super();
+    }
+
+    @Override
+    public boolean supportsAnonPipeRead() {
+        List<? extends IProcessBuilderCore<?>> pbs = processBuilders();
+        IProcessBuilderCore<?> first = pbs.get(0);
+        return first.supportsAnonPipeRead();
+    }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        List<? extends IProcessBuilderCore<?>> pbs = processBuilders();
+        IProcessBuilderCore<?> last = pbs.get(pbs.size() - 1);
+        return last.supportsAnonPipeWrite();
     }
 
     public static ProcessBuilderPipeline of(IProcessBuilderCore<?> ... processBuilders) {

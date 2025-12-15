@@ -1,6 +1,9 @@
 package org.aksw.commons.util.docker;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -14,9 +17,15 @@ import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
 import org.aksw.vshell.registry.ProcessBuilderNative;
+import org.aksw.vshell.shim.rdfconvert.ArgsModular;
+import org.aksw.vshell.shim.rdfconvert.GenericCodecArgs;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.io.IOUtils;
 import org.newsclub.net.unix.FileDescriptorCast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junit.framework.Assert;
 
 public class TestProcessRunner {
     private static final Logger logger = LoggerFactory.getLogger(TestProcessRunner.class);
@@ -216,4 +225,48 @@ public class TestProcessRunner {
         }
     }
 
+    @Test
+    public void testProcessBuilderLbzip2() throws Exception {
+        String expectedStr = "Hello World";
+        Path in = Files.createTempFile("data-", ".bz2");
+        try {
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+                BZip2CompressorOutputStream bzip = new BZip2CompressorOutputStream(out)) {
+                bzip.write(expectedStr.getBytes(StandardCharsets.UTF_8));
+                bzip.finish();
+                bzip.flush();
+                Files.write(in, out.toByteArray());
+            }
+
+            // TODO FileMapper could be part of the process runner
+            FileMapper fileMapper = FileMapper.of("/tmp/shared");
+            try (ProcessRunner runner = ProcessRunnerPosix.create()) {
+                // runner.setOutputLineReaderUtf8(logger::info);
+
+                String[] args = new String[] {"/usr/bin/lbzip2", "-cd", in.toString()};
+                ArgsModular<GenericCodecArgs> model = GenericCodecArgs.parse(args);
+                model.toArgList().args();
+                // model.toArgList();
+
+                // Rewrite args w.r.t.
+
+                ProcessBuilderDocker
+                    .of("/usr/bin/lbzip2", "-cd", in.toString())
+                    .imageRef("nestio/lbzip2")
+                    .commandParser(GenericCodecArgs::parse)
+                    .fileMapper(fileMapper)
+                    .start(runner);
+
+                // TODO We need an API to close the runner for all further processes - which
+                //      also closes the process-facing ends of all pipes.
+                //      The outside-facing pipe ends need to remain open for final consumption.
+                runner.internalOut().close();
+
+                String actualStr = IOUtils.toString(runner.getInputStream(), StandardCharsets.UTF_8);
+                Assert.assertEquals(expectedStr, actualStr);
+            }
+        } finally {
+            Files.deleteIfExists(in);
+        }
+    }
 }

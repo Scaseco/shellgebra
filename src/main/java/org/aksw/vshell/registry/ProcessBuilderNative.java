@@ -113,4 +113,9 @@ public class ProcessBuilderNative
     protected ProcessBuilderNative cloneActual() {
         return new ProcessBuilderNative();
     }
+
+    @Override
+    public boolean supportsAnonPipeRead() {
+        return true;
+    }
 }

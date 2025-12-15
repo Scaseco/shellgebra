@@ -4,11 +4,16 @@ import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
@@ -24,6 +29,7 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
@@ -34,6 +40,7 @@ import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetFil
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetProcessSubstitution;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTargetVisitor;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
 import org.aksw.shellgebra.exec.IProcessBuilderCore;
 import org.aksw.shellgebra.exec.ProcessBuilderCore;
@@ -41,7 +48,18 @@ import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.PosixPipe;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.exec.invocation.ExecutableInvocation;
 import org.aksw.shellgebra.exec.model.ExecSite;
+
+/**
+ *
+ */
+record Rewrite(
+    PlacedCmd placedCmd,
+    FinalPlacement placement,
+    IProcessBuilderCore<?> processBuilderPrototype,
+    ExecutableInvocation invocation) {
+}
 
 public class ProcessBuilderFinalPlacement
     extends ProcessBuilderCore<ProcessBuilderFinalPlacement>
@@ -103,13 +121,34 @@ public class ProcessBuilderFinalPlacement
 
     public IProcessBuilderCore<?> toProcessBuilder(FinalPlacement placement) {
         Map<CmdOpVar, PlacedCmd> varToPlacement = placement.placements();
+        Executor executor = Executors.newCachedThreadPool();
         CmdOpVisitorToProcessBuilder visitor = new CmdOpVisitorToProcessBuilder(varToPlacement, fileMapper, resolver, executor);
         PlacedCmd root = placement.cmdOp();
         IProcessBuilderCore<?> processBuilder = root.accept(visitor);
+
+        // Issue: A process builder should not have active resources - so any resource allocation
+        // would have to be deferred until execution.
+        // ExecutableInvocation invocation;
+
         return processBuilder;
     }
-}
 
+    public void resolveExecSite(ExecSite execSite) {
+        // So the problem is that directly returning a process builder does not work, because
+        // we don't know what command object we are going to pass to it.
+        // Background: I am not sure whether all commands for process builders need to be of type String[].
+        // E.g. A process builder pipeline or group just accept a list of sub-process builders.
+        // But "leaf" process builders probably always use String[].
+        // We could have a process builder wrapper where the command is an ExecutableInvocation.
+        // Hm, I rather keep that separate - the result of a PlacedCmdExec transformation should be:
+        //   (1) Here is an ExecutableInvocation
+        //   (2) Here is a process builder that would execute it.
+        // The essential aspect of the process builder is the configurability of redirects.
+        // So we have ExecutableInvocation: Argv + Closable
+        // Perhaps ActiveProcessBuilder: ProcessBuilder + Closable.
+        // resolver.newProcessBuilderShim()
+    }
+}
 
 /**
  * Resolver for variables in arguments and redirects. Substitutes with
@@ -120,20 +159,47 @@ class CmdOpVisitorToProcessBuilder
 {
     // exec site to preconfigured process builder?
     // protected IProcessBuilder
-    private ProcessRunner executor;
+    private ProcessRunner context;
     private FileMapper fileMapper;
     private Map<CmdOpVar, PlacedCmd> varToPlacement;
     private ExecSiteResolver resolver;
+    private ExecutorService executor;
 
     // Paths that are written to by processes that we created.
     private Map<Object, Process> pipeToProcess = new ConcurrentHashMap<>();
 
-    public CmdOpVisitorToProcessBuilder(ProcessRunner executor, FileMapper fileMapper, Map<CmdOpVar, PlacedCmd> varToPlacement, ExecSiteResolver resolver) {
+    public CmdOpVisitorToProcessBuilder(ProcessRunner context, FileMapper fileMapper, Map<CmdOpVar, PlacedCmd> varToPlacement, ExecSiteResolver resolver, ExecutorService executor) {
         super();
-        this.executor = executor;
+        this.context = context;
         this.fileMapper = fileMapper;
         this.varToPlacement = varToPlacement;
         this.resolver = resolver;
+        this.executor = executor;
+    }
+
+    /**
+     * Pipelines may be transformed into groups where statements have redirects with pipes.
+     */
+    @Override
+    public CmdOp transform(CmdOpPipeline op, List<CmdOp> subOps) {
+        boolean hasVars = subOps.stream().anyMatch(CmdOp::isVar);
+        CmdOp result;
+        if (!hasVars) {
+            // If there are no vars there is nothing to do.
+            result = new CmdOpPipeline(subOps);
+        } else {
+        }
+        return result;
+    }
+
+    // Note: all statements of the group (except for perhaps the last) need to run in the background!
+    public CmdOp transformPipelineToGroup(List<CmdOp> subOps) {
+        List<CmdOp> group = new ArrayList<>();
+        for (CmdOp subOp : subOps) {
+            if (subOp.isVar()) {
+
+            }
+        }
     }
 
     @Override
@@ -175,12 +241,40 @@ class CmdOpVisitorToProcessBuilder
         return outArg;
     }
 
+    protected CmdOpVisitorToProcessBuilder newSubVisitor() {
+        return new CmdOpVisitorToProcessBuilder(context, fileMapper, varToPlacement, resolver, executor);
+    }
+
+    /**
+     * Vars can appear as pipeline or group members.
+     * They become "cat named-pipe-read-end" expressions:
+     * site0:[cat foo] | site1:[lbzip2]
+     * becomes
+     *   site0[cat namedPipe[readEnd]]
+     *   with:
+     *     site0[cat foo > anonPipe(0)[writeEnd]]
+     *     site1[cat anonPipe(0)[readEnd] | lbzip2 > namePipe[writeEnd]]
+     * TODO If the pipeline goes into a container then avoid the anonPipe!
+     *      Implication: Need API to query for supported pipe types.
+     */
     @Override
     public CmdOp transform(CmdOpVar op) {
         PlacedCmd placement = varToPlacement.get(op);
         PosixPipe pipe = PosixPipe.open();
 
+        ExecSite execSite = placement.execSite();
+        CmdOp cmdOp = placement.cmdOp();
 
+        // TODO how to pass on the pipe? it needs to end up as a redirect
+        // on the sub-process builder.
+        Consumer<IProcessBuilderCore<?>> configurer = pb ->
+            pb.redirectOutput(new JRedirectJava(Redirect.to(pipe.getWriteEndProcFile())));
+
+        CmdOpVisitorToProcessBuilder subVisitor = newSubVisitor();
+        CmdOp outOp = CmdOpTransformer.transform(cmdOp, subVisitor);
+
+        CmdOp result = CmdOps.exec("cat", CmdArg.ofPathString(pipe.getReadEndProcPath().toString()));
+        return result;
     }
 
     @Override
@@ -197,7 +291,7 @@ class CmdOpVisitorToProcessBuilder
         PosixPipe pipe = PosixPipe.open();
         IProcessBuilderCore<?> processBuilder = toProcessBuilder(cmdOp);
         processBuilder.redirectOutput(new JRedirectJava(Redirect.to(pipe.getWriteEndProcFile())));
-        Process process = processBuilder.start(executor);
+        Process process = processBuilder.start(context);
         pipeToProcess.put(pipe, process);
         return pipe.getReadEndProcPath();
     }

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
@@ -21,8 +20,10 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.transform.CmdOpTransformLib;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransform;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
@@ -33,6 +34,8 @@ import org.aksw.shellgebra.exec.invocation.InvocationCompiler;
 import org.aksw.shellgebra.exec.invocation.InvocationCompilerImpl;
 import org.aksw.shellgebra.exec.invocation.InvokableProcessBuilderBase;
 import org.aksw.shellgebra.exec.invocation.ScriptContent;
+import org.aksw.vshell.registry.JvmCommandParser;
+import org.aksw.vshell.shim.rdfconvert.Args;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +44,6 @@ import org.slf4j.LoggerFactory;
  * Process builder that starts a process in a docker container via docker run.
  */
 public class ProcessBuilderDocker
-    // extends ProcessBuilderBase<ProcessBuilderDocker>
     extends InvokableProcessBuilderBase<ProcessBuilderDocker>
 {
     private static final Logger logger = LoggerFactory.getLogger(ProcessBuilderDocker.class);
@@ -54,9 +56,24 @@ public class ProcessBuilderDocker
     protected boolean interactive;
 
     protected InvocationCompiler compiler;
+    protected JvmCommandParser commandParser;
+
+    // XXX In general, we need a CmdOp such that we can auto-map the arguments.
+    // We could allow setting a BiFunction<String, Args, CmdOp> parser function for parser registry lookups.
+    // protected CmdOpExec cmdOpExec;
 
     public ProcessBuilderDocker() {
         super();
+    }
+
+    @Override
+    public boolean supportsAnonPipeRead() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        return false;
     }
 
     public static ProcessBuilderDocker of(String ... command) {
@@ -83,6 +100,15 @@ public class ProcessBuilderDocker
 
     public boolean interactive() {
         return interactive;
+    }
+
+    public ProcessBuilderDocker commandParser(JvmCommandParser commandParser) {
+        this.commandParser = commandParser;
+        return self();
+    }
+
+    public JvmCommandParser jvmCommandParser() {
+        return commandParser;
     }
 
     /**
@@ -162,9 +188,11 @@ public class ProcessBuilderDocker
         Path hostMountableErrorPath = errProcess.path();
 
         FileMapper finalFileMapper = fileMapper.clone();
+        /*
         String containerInputPath = finalFileMapper.allocate(hostMountableInputPath.toString(), AccessMode.ro);
         String containerOutputPath = finalFileMapper.allocate(hostMountableOutputPath.toString(), AccessMode.rw);
         String containerErrorPath = finalFileMapper.allocate(hostMountableErrorPath.toString(), AccessMode.rw);
+        */
 
         // Resolver over SysRuntime. Container is started only on-demand.
 //        SysRuntimeFactoryDocker sysRuntimeFactory = SysRuntimeFactoryDocker.create();
@@ -186,14 +214,27 @@ public class ProcessBuilderDocker
         // CmdOp op = CmdOpExec.ofLiteralArgs(super.command().toArray(String[]::new));
 
         List<String> argv = inv.asArgv().argv();
+        List<String> args = argv.subList(1, argv.size());
 
-        CmdOp op = CmdOpExec.ofLiteralArgs(argv);
+        CmdOp op;
+        if (commandParser != null) {
+            Args ar = commandParser.parseArgs(args.toArray(String[]::new));
+            op = new CmdOpExec(argv.get(0), ar.toArgList());
+        } else {
+            op = CmdOpExec.ofLiteralArgs(argv);
+        }
+        op = CmdOps.appendRedirects(op,
+            CmdRedirect.in(hostMountableInputPath.toString()),
+            CmdRedirect.out(hostMountableOutputPath.toString()),
+            CmdRedirect.err(hostMountableErrorPath.toString())
+        );
+        /*
         op = CmdOps.appendRedirects(op,
             CmdRedirect.in(containerInputPath),
             CmdRedirect.out(containerOutputPath),
             CmdRedirect.err(containerErrorPath)
             );
-
+        */
         // If there is a byte source as a file writer then start it.
         org.testcontainers.containers.GenericContainer<?> container;
         try {
@@ -333,8 +374,10 @@ public class ProcessBuilderDocker
         return scriptString;
     }
 
-    protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp cmdOp, FileMapper fileMapper) throws IOException {
+    protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp rawCmdOp, FileMapper fileMapper) throws IOException {
         // TODO Consolidate with SysRuntimeCore: Need to get the appropriate bash entry point from some registry.
+
+        CmdOp cmdOp = CmdOpRewriter.rewriteForContainer(rawCmdOp, fileMapper);
 
         String userStr = getUserString();
         logger.info("Setting up container " + imageRef + " with UID:GID=" + userStr);

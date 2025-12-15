@@ -1,11 +1,12 @@
 package org.aksw.vshell.registry;
 
 import org.aksw.commons.util.docker.Argv;
-import org.aksw.vshell.shim.rdfconvert.Args;
 
-public interface JvmCommand {
-    Args parseArgs(String... args);
-    // Stage newStage(String... args);
+public interface JvmCommand
+    extends JvmCommandParser
+{
+    // Args parseArgs(String... args);
 
+    // XXX Alternatively: void run(JvmExecCxt cxt, Argv argv) throws ExecuteException
     int run(JvmExecCxt cxt, Argv argv);
 }

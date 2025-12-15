@@ -12,6 +12,11 @@ public class CmdOpVar
         this.name = name;
     }
 
+    @Override
+    public boolean isVar() {
+        return true;
+    }
+
     public String getValue() {
         return name;
     }

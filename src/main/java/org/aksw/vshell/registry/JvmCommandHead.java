@@ -1,7 +1,6 @@
 package org.aksw.vshell.registry;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,10 +36,12 @@ public class JvmCommandHead
                         .forEach(cxt.out().printStream()::println);
                 } else {
                     Path path = Path.of(name);
-                    try (Stream<String> stream = new BufferedReader(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8))
-                        .lines()
-                        .limit(model.getLines().orElse(10l))) {
-                        stream.forEach(cxt.out().printStream()::println);
+                    try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+                        try (Stream<String> stream = reader
+                            .lines()
+                            .limit(model.getLines().orElse(10l))) {
+                            stream.forEach(cxt.out().printStream()::println);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -51,7 +52,7 @@ public class JvmCommandHead
         }
 
         if (exitValue != 0) {
-            // TODO Improve exception - should we reuse ExecuteException or roll our own?
+            // TODO Improve exception - should  we reuse ExecuteException or roll our own?
             throw new ExecuteException("One or more arguments failed to open as files.", 1);
         }
     }

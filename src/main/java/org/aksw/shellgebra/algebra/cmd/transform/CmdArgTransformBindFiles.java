@@ -3,14 +3,15 @@ package org.aksw.shellgebra.algebra.cmd.transform;
 import java.util.Objects;
 import java.util.Set;
 
+import com.github.dockerjava.api.model.AccessMode;
+
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect.OpenMode;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget;
+import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetFile;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
-
-import com.github.dockerjava.api.model.AccessMode;
 
 /**
  * Extract file name arguments and map them as flat files under a given prefix.
@@ -27,7 +28,7 @@ import com.github.dockerjava.api.model.AccessMode;
  * </pre>
  */
 public class CmdArgTransformBindFiles
-    extends CmdArgTransformBase
+    implements CmdArgTransformBase
 {
     private FileMapper fileMapper;
 
@@ -47,18 +48,19 @@ public class CmdArgTransformBindFiles
     }
 
     protected CmdRedirect processRedirect(CmdRedirect redirect) {
-        CmdRedirect result = redirect instanceof RedirectFile f
-            ? processRedirect(f)
+        RedirectTarget target = redirect.target();
+        CmdRedirect result = target instanceof RedirectTargetFile f
+            ? processRedirect(redirect, f)
             : redirect;
         return result;
     }
 
-    protected CmdRedirect processRedirect(RedirectFile f) {
+    protected CmdRedirect processRedirect(CmdRedirect redirect, RedirectTargetFile f) {
         String hostPath = f.file();
-        OpenMode openMode = f.openMode();
+        OpenMode openMode = redirect.openMode();
         AccessMode accessMode = toAccessMode(openMode);
         String containerPath = fileMapper.allocate(hostPath, accessMode);
-        CmdRedirect newRedirect = new RedirectFile(containerPath, openMode, f.fd());
+        CmdRedirect newRedirect = new CmdRedirect(redirect.fd(), openMode, new RedirectTargetFile(containerPath));
         return newRedirect;
     }
 

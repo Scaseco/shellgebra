@@ -16,6 +16,7 @@ import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 
+// XXX Silently allow duplicates with upgrade from ro to rw?
 public class FileMapper {
     private List<Bind> binds;
 

@@ -7,6 +7,7 @@ import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
+// XXX Add a background flag
 public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args) // , List<Redirect> redirects)
     implements CmdOp
 {

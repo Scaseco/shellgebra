@@ -22,6 +22,16 @@ public class ProcessBuilderJvm
         return new ProcessBuilderJvm().command(argv);
     }
 
+    @Override
+    public boolean supportsAnonPipeRead() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        return true;
+    }
+
     protected static ClosePolicyWrapper<FileInput> resolveInputRedirect(FileInput defaultSource, JRedirect redirect) throws FileNotFoundException {
         ClosePolicyWrapper<FileInput> result;
         if (redirect instanceof JRedirectJava x) {

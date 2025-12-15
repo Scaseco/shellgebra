@@ -13,6 +13,10 @@ import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 public interface CmdOp {
     <T> T accept(CmdOpVisitor<T> visitor);
 
+    default boolean isVar() {
+        return false;
+    }
+
     public static String toStrings(ArgumentList argList) {
         return toStrings(argList.args());
     }

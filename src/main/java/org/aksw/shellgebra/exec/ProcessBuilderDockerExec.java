@@ -24,6 +24,17 @@ public class ProcessBuilderDockerExec
     }
 
     @Override
+    public boolean supportsAnonPipeRead() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
     public Process start(ProcessRunner executor) throws IOException {
         // TODO Mount the redirects into the container and adjust the command to make use of the redirects:
         // command <input >stdout 2>stderr

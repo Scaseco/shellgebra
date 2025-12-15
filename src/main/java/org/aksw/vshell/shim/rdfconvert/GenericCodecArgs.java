@@ -2,8 +2,10 @@ package org.aksw.vshell.shim.rdfconvert;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Unmatched;
 
 public class GenericCodecArgs
@@ -14,6 +16,13 @@ public class GenericCodecArgs
 
     @Option(names = {"-c", "--stdout"}, description = "Output to console.")
     boolean stdout;
+
+    @Parameters(arity = "0..*", description = "File names")
+    public List<String> fileNames = new ArrayList<>();
+
+    public List<String> getFileNames() {
+        return fileNames;
+    }
 
     @Unmatched
     List<String> unmatchedArgs = new ArrayList<>();
@@ -44,18 +53,24 @@ public class GenericCodecArgs
         ArgumentList result = ArgumentListBuilder.newBuilder()
             .ifTrue(model.isDecode(), "-d")
             .ifTrue(model.isStdout(), "-c")
+            .files(model.getFileNames())
             .args(model.getUnmatchedArgs())
             .build();
         return result;
     }
 
     public static Boolean stdinTest(GenericCodecArgs model) {
-        // TODO Check for absent file list or '-' filename.
-        return true;
+        return model.readsStdin().orElse(null);
     }
 
     public static ArgsModular<GenericCodecArgs> parse(String[] args) {
         GenericCodecArgs model = ArgsParserPicocli.of(GenericCodecArgs::new).parse(args);
         return new ArgsModular<>(model, GenericCodecArgs::renderArgList, GenericCodecArgs::stdinTest);
+    }
+
+    @Override
+    public Optional<Boolean> readsStdin() {
+        boolean result = fileNames.isEmpty() || fileNames.contains("-");
+        return Optional.of(result);
     }
 }

@@ -54,4 +54,14 @@ public class InvokableProcessBuilderHost
         });
         return p;
     }
+
+    @Override
+    public boolean supportsAnonPipeRead() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        return true;
+    }
 }
