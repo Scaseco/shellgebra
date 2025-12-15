@@ -241,14 +241,9 @@ public class TestProcessRunner {
             // TODO FileMapper could be part of the process runner
             FileMapper fileMapper = FileMapper.of("/tmp/shared");
             try (ProcessRunner runner = ProcessRunnerPosix.create()) {
-                // runner.setOutputLineReaderUtf8(logger::info);
-
                 String[] args = new String[] {"/usr/bin/lbzip2", "-cd", in.toString()};
                 ArgsModular<GenericCodecArgs> model = GenericCodecArgs.parse(args);
                 model.toArgList().args();
-                // model.toArgList();
-
-                // Rewrite args w.r.t.
 
                 ProcessBuilderDocker
                     .of("/usr/bin/lbzip2", "-cd", in.toString())
@@ -257,10 +252,9 @@ public class TestProcessRunner {
                     .fileMapper(fileMapper)
                     .start(runner);
 
-                // TODO We need an API to close the runner for all further processes - which
-                //      also closes the process-facing ends of all pipes.
-                //      The outside-facing pipe ends need to remain open for final consumption.
-                runner.internalOut().close();
+                // Close the process-facing pipes so that any remaining data can be consumed without
+                // causing a deadlock while waiting for new data.
+                runner.shutdown();
 
                 String actualStr = IOUtils.toString(runner.getInputStream(), StandardCharsets.UTF_8);
                 Assert.assertEquals(expectedStr, actualStr);

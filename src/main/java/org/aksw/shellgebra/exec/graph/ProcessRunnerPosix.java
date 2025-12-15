@@ -293,4 +293,17 @@ public class ProcessRunnerPosix
 
         Files.deleteIfExists(basePath);
     }
+
+    @Override
+    public void shutdown() throws IOException {
+        try {
+            internalIn().close();
+        } finally {
+            try {
+                internalOut().close();
+            } finally {
+                internalErr().close();
+            }
+        }
+    }
 }

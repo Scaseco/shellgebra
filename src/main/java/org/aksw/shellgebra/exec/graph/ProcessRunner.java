@@ -71,6 +71,9 @@ public interface ProcessRunner
 
     IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder);
 
+    /** Close this runner for new processes, immediately close all process-facing pipes. */
+    void shutdown() throws IOException;
+
     /** Does not alter the provided process builder. */
     // Process start(ProcessBuilder nativeProcessBuilder) throws IOException;
     // Process startJvm(ProcessBuilderJvm jvmProcessBuilder);

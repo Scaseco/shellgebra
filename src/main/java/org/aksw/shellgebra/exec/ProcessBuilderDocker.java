@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.github.dockerjava.api.model.Bind;
 
@@ -20,10 +21,8 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.transform.CmdOpTransformLib;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransform;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
@@ -53,7 +52,7 @@ public class ProcessBuilderDocker
     protected String workingDirectory;
     protected ContainerPathResolver containerPathResolver;
     protected FileMapper fileMapper;
-    protected boolean interactive;
+    protected Boolean interactive;
 
     protected InvocationCompiler compiler;
     protected JvmCommandParser commandParser;
@@ -93,12 +92,12 @@ public class ProcessBuilderDocker
 //        return entrypoint;
 //    }
 
-    public ProcessBuilderDocker interactive(boolean onOrOff) {
-        this.interactive = onOrOff;
+    public ProcessBuilderDocker interactive(Boolean interactive) {
+        this.interactive = interactive;
         return self();
     }
 
-    public boolean interactive() {
+    public Boolean interactive() {
         return interactive;
     }
 
@@ -217,17 +216,27 @@ public class ProcessBuilderDocker
         List<String> args = argv.subList(1, argv.size());
 
         CmdOp op;
+        boolean actualInteractive;
+        Optional<Boolean> baseInteractive = Optional.ofNullable(interactive);
         if (commandParser != null) {
             Args ar = commandParser.parseArgs(args.toArray(String[]::new));
             op = new CmdOpExec(argv.get(0), ar.toArgList());
+            actualInteractive = baseInteractive.or(ar::readsStdin).orElse(true);
         } else {
             op = CmdOpExec.ofLiteralArgs(argv);
+            actualInteractive = baseInteractive.orElse(true);
         }
+
+        if (actualInteractive) {
+            op = CmdOps.appendRedirects(op,
+                CmdRedirect.in(hostMountableInputPath.toString()));
+        }
+
         op = CmdOps.appendRedirects(op,
-            CmdRedirect.in(hostMountableInputPath.toString()),
             CmdRedirect.out(hostMountableOutputPath.toString()),
             CmdRedirect.err(hostMountableErrorPath.toString())
         );
+
         /*
         op = CmdOps.appendRedirects(op,
             CmdRedirect.in(containerInputPath),
