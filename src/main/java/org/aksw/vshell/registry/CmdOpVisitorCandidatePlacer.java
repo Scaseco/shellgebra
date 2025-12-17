@@ -121,6 +121,11 @@ public class CmdOpVisitorCandidatePlacer
             execSites.addAll(resolutions.keySet());
         }
 
+
+        if (execSites.isEmpty()) {
+            throw new RuntimeException("No exec sites found for: " + virtCmdName);
+        }
+
         // Whether to check all sub-op images (based on arguments of the command)
         // for whether it contains the command.
         boolean checkPresenceInImages = true;

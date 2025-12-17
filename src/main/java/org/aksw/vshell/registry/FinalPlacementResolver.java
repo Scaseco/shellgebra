@@ -37,12 +37,18 @@ public class FinalPlacementResolver {
             @Override
             public CmdOp transform(CmdOpExec op, List<CmdArg> subOps) {
                 String inName = op.name();
-                String outName = inferredCatalog.get(inName, execSite).map(s -> s.iterator().next()).orElse(null);
-                if (outName == null) {
-                    outName = resolver.resolve(inName, execSite)
-                        .orElseThrow(() -> {
-                            return new RuntimeException("Should not happen - could not resolve: " + inName + " on site " + execSite);
-                        });
+                boolean doResolve = false;
+                String outName;
+                if (doResolve) {
+                    outName = inferredCatalog.get(inName, execSite).map(s -> s.iterator().next()).orElse(null);
+                    if (outName == null) {
+                        outName = resolver.resolve(inName, execSite)
+                            .orElseThrow(() -> {
+                                return new RuntimeException("Should not happen - could not resolve: " + inName + " on site " + execSite);
+                            });
+                    }
+                } else {
+                    outName = inName;
                 }
                 return new CmdOpExec(op.prefixes(), outName, ArgumentList.of(subOps));
             }

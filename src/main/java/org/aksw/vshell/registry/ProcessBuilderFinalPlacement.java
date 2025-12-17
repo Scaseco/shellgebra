@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,39 +42,45 @@ import org.aksw.shellgebra.exec.IProcessBuilderCore;
 import org.aksw.shellgebra.exec.ListBuilder;
 import org.aksw.shellgebra.exec.ProcessBuilderCore;
 import org.aksw.shellgebra.exec.ProcessBuilderDocker;
+import org.aksw.shellgebra.exec.ProcessBuilderGroup;
+import org.aksw.shellgebra.exec.ProcessBuilderPipeline;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
-import org.aksw.shellgebra.exec.invocation.ExecutableInvocation;
 import org.aksw.shellgebra.exec.invocation.InvokableProcessBuilderHost;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
+import org.aksw.shellgebra.exec.model.ExecSites;
 
 /**
  *
  */
-record Rewrite(
-    PlacedCmd placedCmd,
-    FinalPlacement placement,
-    IProcessBuilderCore<?> processBuilderPrototype,
-    ExecutableInvocation invocation) {
-}
+//record Rewrite(
+//    PlacedCmd placedCmd,
+//    FinalPlacement placement,
+//    IProcessBuilderCore<?> processBuilderPrototype,
+//    ExecutableInvocation invocation) {
+//}
 
 public class ProcessBuilderFinalPlacement
     extends ProcessBuilderCore<ProcessBuilderFinalPlacement>
 {
     private FileMapper fileMapper;
     private ExecSiteResolver resolver;
+    // private CommandParserCatalog parserCatalog;
+    private CommandCatalog commandCatalog;
 
     private FinalPlacement placement;
 
-    public ProcessBuilderFinalPlacement(FileMapper fileMapper, ExecSiteResolver resolver) {
+    public ProcessBuilderFinalPlacement(FileMapper fileMapper, ExecSiteResolver resolver, CommandCatalog commandCatalog) {
         super();
         this.fileMapper = Objects.requireNonNull(fileMapper);
         this.resolver = Objects.requireNonNull(resolver);
+        // this.parserCatalog = Objects.requireNonNull(parserCatalog);
+        this.commandCatalog = Objects.requireNonNull(commandCatalog);
     }
 
     public ProcessBuilderFinalPlacement command(FinalPlacement placement) {
@@ -104,7 +112,7 @@ public class ProcessBuilderFinalPlacement
 
     @Override
     protected ProcessBuilderFinalPlacement cloneActual() {
-        return new ProcessBuilderFinalPlacement(fileMapper, resolver);
+        return new ProcessBuilderFinalPlacement(fileMapper, resolver, commandCatalog);
     }
 
     protected void applySettings(ProcessBuilderFinalPlacement target) {
@@ -122,7 +130,7 @@ public class ProcessBuilderFinalPlacement
     public IProcessBuilderCore<?> toProcessBuilder(FinalPlacement placement, ProcessRunner context) {
         Map<CmdOpVar, PlacedCmd> varToPlacement = placement.placements();
         ExecutorService executorService = Executors.newCachedThreadPool();
-        Dispatcher dispatcher = new Dispatcher(placement, context, fileMapper, executorService);
+        Dispatcher dispatcher = new Dispatcher(placement, context, commandCatalog, fileMapper, executorService);
 
         PlacedCmd root = placement.cmdOp();
         IProcessBuilderCore<?> result = dispatcher.resolve(root);
@@ -152,6 +160,9 @@ class Dispatcher
     implements ExecSiteVisitor<CmdOpVisitor<IProcessBuilderCore<?>>>
 {
     private FinalPlacement finalPlacement;
+    // private CommandParserCatalog parserCatalog;
+    private CommandCatalog commandCatalog;
+
     private FileMapper fileMapper;
     private ExecutorService executorService;
 
@@ -162,10 +173,12 @@ class Dispatcher
 
     private Deque<AutoCloseable> closeables = new ArrayDeque<>();
 
-    public Dispatcher(FinalPlacement finalPlacement, ProcessRunner context, FileMapper fileMapper, ExecutorService executorService) {
+    public Dispatcher(FinalPlacement finalPlacement, ProcessRunner context, CommandCatalog commandCatalog, FileMapper fileMapper, ExecutorService executorService) {
         super();
         this.fileMapper = fileMapper;
         this.context = context;
+        // this.parserCatalog = parserCatalog;
+        this.commandCatalog = commandCatalog;
 
         this.finalPlacement = finalPlacement;
         this.executorService = executorService;
@@ -185,6 +198,14 @@ class Dispatcher
     public FileMapper getFileMapper() {
         return fileMapper;
     }
+
+    public CommandCatalog getCommandCatalog() {
+        return commandCatalog;
+    }
+
+//    public CommandParserCatalog getParserCatalog() {
+//        return parserCatalog;
+//    }
 
     @Override
     public CmdOpVisitor<IProcessBuilderCore<?>> visit(ExecSiteDockerImage execSite) {
@@ -307,7 +328,9 @@ class CmdArgTransform
 
     @Override
     public CmdArg visit(CmdArgCmdOp arg) {
-        throw new UnsupportedOperationException();
+        CmdOp cmdOp = arg.cmdOp();
+        Path path = processToPipe(cmdOp);
+        return CmdArg.ofPathString(path.toString());
     }
 }
 
@@ -337,18 +360,21 @@ abstract class CmdOpVisitorToBase
         List<CmdArg> resolvedArgs = CmdArgTransform.transformArgs(cmdArgTransformer, args);
         List<String> resolvedArgStrs = CmdArgVisitorRenderAsBashString.render(resolvedArgs);
 
-        IProcessBuilderCore<?> result = toProcessBuilder(ListBuilder.ofString().add(op.getName()).addAll(resolvedArgStrs).buildList());
+        List<String> argv = ListBuilder.ofString().add(op.getName()).addAll(resolvedArgStrs).buildList();
+        IProcessBuilderCore<?> result = toProcessBuilder(argv);
         return result;
     }
 
     @Override
     public IProcessBuilderCore<?> visit(CmdOpPipeline op) {
-        throw new UnsupportedOperationException("not implemented yet");
+        List<? extends IProcessBuilderCore<?>> list = op.subOps().stream().map(subOp -> subOp.accept(this)).toList();
+        return ProcessBuilderPipeline.of(list);
     }
 
     @Override
     public IProcessBuilderCore<?> visit(CmdOpGroup op) {
-        throw new UnsupportedOperationException("not implemented yet");
+        List<? extends IProcessBuilderCore<?>> list = op.subOps().stream().map(subOp -> subOp.accept(this)).toList();
+        return ProcessBuilderGroup.of(list);
     }
 
     @Override
@@ -365,8 +391,16 @@ class CmdOpVisitorToPbJvm
     }
 
     @Override
-    protected IProcessBuilderCore<?> toProcessBuilder(List<String> args) {
-        IProcessBuilderCore<?> result = ProcessBuilderJvm.of(args);
+    protected IProcessBuilderCore<?> toProcessBuilder(List<String> argv) {
+        CommandCatalog commandCatalog = getDispatcher().getCommandCatalog();
+        ExecSite execSite = ExecSites.jvm();
+        String commandName = argv.get(0);
+
+        String actualCommandName = CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, commandName, execSite);
+        argv = new ArrayList<>(argv);
+        argv.set(0, actualCommandName);
+
+        IProcessBuilderCore<?> result = ProcessBuilderJvm.of(argv);
         return result;
     }
 }
@@ -390,25 +424,79 @@ class CmdOpVisitorToPbDocker
 
     public CmdOpVisitorToPbDocker(Dispatcher dispatcher, ExecSiteDockerImage execSite) {
         super(dispatcher);
+        this.execSite = execSite;
     }
 
     @Override
     protected IProcessBuilderCore<?> toProcessBuilder(List<String> args) {
-        ProcessRunner context = getDispatcher().getContext();
+        Dispatcher dispatcher = getDispatcher();
+
+        // ProcessRunner context = dispatcher.getContext();
         String commandName = args.get(0);
-        JvmCommandParser parser = context.getJvmCmdRegistry().get(commandName)
-            .orElseThrow(() -> new RuntimeException("No command parser found for: " + commandName));
+        // CommandParserCatalog parserCatalog = dispatcher.getParserCatalog();
+        CommandCatalog commandCatalog = dispatcher.getCommandCatalog();
+        JvmCommandRegistry commandRegistry = dispatcher.getContext().getJvmCmdRegistry();
+
+        // Parser candidates are inferred from the jvm site - whereas the actual command is resolved against the
+        // docker exec site.
+
+        JvmCommandParser parser = null;
+        Set<String> parserCands = commandCatalog.get(commandName, ExecSites.jvm()).orElse(null);
+        String parserCand = null;
+        if (parserCands != null) {
+            for (String tmp : parserCands) {
+                parser = commandRegistry.get(tmp).orElse(null);
+                if (parser != null) {
+                    parserCand = tmp;
+                    break;
+                }
+            }
+        }
+
+        if (parser == null) {
+            throw new RuntimeException("No command parser found for: " + commandName);
+        }
+
+        // FIXME The actual command should re-use the prior resolution - probably need to bass the resolver or "probe results" tracker here.
+        String actualCommandName = resolveOrFail(commandCatalog, commandName, execSite);
+        List<String> newArgs = new ArrayList<>(args);
+        newArgs.set(0, actualCommandName);
+
+
+//        JvmCommandParser parser = parserCatalog.getParser(commandName)
+////        JvmCommandParser parser = context.getJvmCmdRegistry().get(commandName)
+//            .orElseThrow(() -> new RuntimeException("No command parser found for: " + commandName));
+
+        // TODO Resolve command name
+        // getDispatcher().getContext().getJvmCmdRegistry().
 
         String imageRef = execSite.imageRef();
-        FileMapper fileMapper = getDispatcher().getFileMapper();
+        FileMapper fileMapper = dispatcher.getFileMapper();
 
-        IProcessBuilderCore<?> result = ProcessBuilderDocker.of(args)
+        // Issue: We need access to the Args model, especially readsStdin.
+        // The CmdOp AST is not sufficient because it does not cover readsStdin (which is an interpretation of the args model).
+        // The original command has been resolved, but the args parser was only linked to the original command.
+        // Perhaps we can retain the original command - original command + exec site should
+        // unambiguously give the actual command.
+
+        IProcessBuilderCore<?> result = ProcessBuilderDocker.of(newArgs)
                 .commandParser(parser)
                 .imageRef(imageRef)
                 .fileMapper(fileMapper)
                 ;
 
         return result;
+    }
+
+    public static String resolveOrFail(CommandCatalog commandCatalog, String commandName, ExecSite execSite) {
+        // FIXME The actual command should re-use the prior resolution - probably need to bass the resolver or "probe results" tracker here.
+        Set<String> nameCands = commandCatalog.get(commandName, execSite)
+            .orElseThrow(() -> new RuntimeException("command " + commandName + " not found on exec site " + execSite));
+        if (nameCands.isEmpty()) {
+            throw new RuntimeException("Command " + commandName + " does not have resolutions on exec site " + execSite);
+        }
+        String resolvedName = nameCands.iterator().next();
+        return resolvedName;
     }
 }
 

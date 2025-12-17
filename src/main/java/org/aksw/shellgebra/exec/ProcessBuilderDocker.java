@@ -57,6 +57,8 @@ public class ProcessBuilderDocker
     protected InvocationCompiler compiler;
     protected JvmCommandParser commandParser;
 
+    // protected CmdOp commandOp;
+
     // XXX In general, we need a CmdOp such that we can auto-map the arguments.
     // We could allow setting a BiFunction<String, Args, CmdOp> parser function for parser registry lookups.
     // protected CmdOpExec cmdOpExec;
@@ -91,6 +93,15 @@ public class ProcessBuilderDocker
         this.imageRef = imageRef;
         return self();
     }
+
+//    public ProcessBuilderDocker commandOp(CmdOp commandOp) {
+//        this.commandOp = commandOp;
+//        return self();
+//    }
+//
+//    public CmdOp commandOp() {
+//        return commandOp;
+//    }
 
 //    public String entrypoint() {
 //        return entrypoint;

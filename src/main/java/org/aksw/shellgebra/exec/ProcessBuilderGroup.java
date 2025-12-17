@@ -18,6 +18,10 @@ public class ProcessBuilderGroup
         return new ProcessBuilderGroup().processBuilders(processBuilders);
     }
 
+    public static ProcessBuilderGroup of(List<? extends IProcessBuilderCore<?>> processBuilders) {
+        return new ProcessBuilderGroup().processBuilders(processBuilders);
+    }
+
     @Override
     protected ProcessBuilderGroup cloneActual() {
         return new ProcessBuilderGroup();
@@ -52,6 +56,18 @@ public class ProcessBuilderGroup
             result = exitValue;
             runningProcesses.remove(process);
         }
+        return result;
+    }
+
+    @Override
+    public boolean supportsAnonPipeRead() {
+        boolean result = processBuilders().stream().allMatch(IProcessBuilderCore::supportsAnonPipeRead);
+        return result;
+    }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        boolean result = processBuilders().stream().allMatch(IProcessBuilderCore::supportsAnonPipeWrite);
         return result;
     }
 }

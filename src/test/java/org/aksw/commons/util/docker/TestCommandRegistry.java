@@ -209,6 +209,7 @@ public class TestCommandRegistry {
         }
     }
 
+    /** These are the physical jvms. */
     public static JvmCommandRegistry initJvmCmdRegistry(JvmCommandRegistry jvmCmdRegistry) {
         // Core command: which - resolve short name to fully qualified command name.
         jvmCmdRegistry.put("/bin/which", new JvmCommandWhich());
@@ -218,6 +219,8 @@ public class TestCommandRegistry {
 
         jvmCmdRegistry.put("/bin/echo", new JvmCommandEcho());
         jvmCmdRegistry.put("/bin/cat", new JvmCommandCat());
+        jvmCmdRegistry.put("/usr/bin/echo", new JvmCommandEcho());
+        jvmCmdRegistry.put("/usr/bin/cat", new JvmCommandCat());
         jvmCmdRegistry.put("/bin/head", new JvmCommandHead());
 
         CompressorStreamFactory csf = new CompressorStreamFactory();
@@ -227,6 +230,12 @@ public class TestCommandRegistry {
         return jvmCmdRegistry;
     }
 
+    /*
+     * XXX Should we indirectly access the command parser via the jvm exec site?!
+     *     Or should the jvm parser be linked to the virt command?
+     */
+
+    /** These are the candidate mappings. */
     public static CommandRegistry initCmdCandRegistry(CommandRegistry registry) {
         registry.put("/virt/lbzip2", ExecSites.docker("nestio/lbzip2"), "/usr/bin/lbzip2");
         // Note: There can be multiple candidates per exec site.
@@ -235,7 +244,8 @@ public class TestCommandRegistry {
 
         registry.put("/virt/bzip2", ExecSites.jvm(), "/jvm/bzip2");
 
-        registry.put("/usr/bin/echo", ExecSites.host(), "/usr/bin/echo");
+        registry.put("/virt/echo", ExecSites.host(), "/usr/bin/echo");
+        registry.put("/virt/echo", ExecSites.jvm(), "/bin/echo");
         registry.put("/usr/bin/cat", ExecSites.host(), "/usr/bin/cat");
 
         registry.put("/virt/cat", ExecSites.jvm(), "/bin/cat");

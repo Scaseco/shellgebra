@@ -35,6 +35,7 @@ public interface CmdArg {
         return new CmdArgWord(StringEscapeType.SINGLE_QUOTED, new TokenVar(varName));
     }
 
+    /** "foo$(echo bar)" -> foobar */
     public static CmdArg ofCommandSubstitution(CmdOp cmdOp) {
         return new CmdArgWord(StringEscapeType.SINGLE_QUOTED, new TokenCmdOp(cmdOp));
     }
