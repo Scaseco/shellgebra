@@ -19,7 +19,12 @@ public abstract class InvokableProcessBuilderBase<X extends InvokableProcessBuil
     }
 
     public X command(String... argv) {
-        invocation(new Invocation.Argv(List.of(argv)));
+        command(List.of(argv));
+        return self();
+    }
+
+    public X command(List<String> argv) {
+        invocation(new Invocation.Argv(argv));
         return self();
     }
 

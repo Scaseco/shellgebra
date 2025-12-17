@@ -22,6 +22,10 @@ public class ProcessBuilderJvm
         return new ProcessBuilderJvm().command(argv);
     }
 
+    public static ProcessBuilderJvm of(List<String> argv) {
+        return new ProcessBuilderJvm().command(argv);
+    }
+
     @Override
     public boolean supportsAnonPipeRead() {
         return true;

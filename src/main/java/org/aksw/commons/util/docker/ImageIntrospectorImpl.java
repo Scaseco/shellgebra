@@ -244,7 +244,7 @@ public class ImageIntrospectorImpl
 
             String str = String.join(" ", keepAliveArgv.toArray());
 
-            String[] finalCmd = ListBuilder.forString().addAll(entrypoint.args()).add(str).buildArray();
+            String[] finalCmd = ListBuilder.ofString().addAll(entrypoint.args()).add(str).buildArray();
             try {
                 GenericContainer<?> c = new GenericContainer<>(imageRef)
                         .withCreateContainerCmdModifier(x -> x.withEntrypoint(actualEntryPoint))

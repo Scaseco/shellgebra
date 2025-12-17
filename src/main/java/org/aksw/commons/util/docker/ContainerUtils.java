@@ -1,12 +1,10 @@
 package org.aksw.commons.util.docker;
 
-import java.io.FileDescriptor;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,7 +22,6 @@ import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Container;
 
 import org.aksw.jenax.engine.qlever.SystemUtils;
-import org.newsclub.net.unix.FileDescriptorCast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
@@ -33,6 +30,13 @@ import org.testcontainers.containers.output.OutputFrame;
 
 public class ContainerUtils {
     private static final Logger logger = LoggerFactory.getLogger(ContainerUtils.class);
+
+    public static void setGlobalRetryCountIfAbsent(int retryCount) {
+        String testcontainers_retryCount = System.getProperty("testcontainers.retryCount");
+        if (testcontainers_retryCount == null) {
+            System.setProperty("testcontainers.retryCount", Integer.toString(retryCount));
+        }
+    }
 
     public static BindMode toBindMode(AccessMode am) {
         return am == AccessMode.ro ? BindMode.READ_ONLY : BindMode.READ_WRITE;

@@ -208,27 +208,6 @@ public class ProcessRunnerPosix
         return directory;
     }
 
-    public static ProcessBuilder clone(ProcessBuilder original) {
-        ProcessBuilder clone = new ProcessBuilder();
-        clone.command(original.command());
-        clone.environment().putAll(original.environment());
-        clone.redirectInput(original.redirectInput());
-        clone.redirectOutput(original.redirectOutput());
-        clone.redirectError(original.redirectError());
-        clone.directory(original.directory());
-        return clone;
-    }
-
-    public IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder) {
-        IProcessBuilder<?> clone = processBuilder.clone();
-
-        // TODO Properly process the redirects
-        clone.redirectInput(new JRedirectJava(Redirect.from(pipeIn.getReadEndProcFile())));
-        clone.redirectOutput(new JRedirectJava(Redirect.to(pipeOut.getWriteEndProcFile())));
-        clone.redirectError(new JRedirectJava(Redirect.to(pipeIn.getWriteEndProcFile())));
-        return clone;
-    }
-
     public static ProcessRunner create() throws IOException {
         Path basePath = Files.createTempDirectory("process-exec-");
         logger.debug("Created temporary directory for named and anonymous pipes at  " + basePath);
@@ -263,8 +242,20 @@ public class ProcessRunnerPosix
     }
 
     @Override
-    public void close() throws Exception {
+    public void shutdown() throws IOException {
+        try {
+            internalIn().close();
+        } finally {
+            try {
+                internalOut().close();
+            } finally {
+                internalErr().close();
+            }
+        }
+    }
 
+    @Override
+    public void close() throws Exception {
         cancelAndGet(inFuture);
         // Close the internal output pipe ends to indicate EOF to the outside readers.
         internalIn().inputStream().close();
@@ -294,16 +285,24 @@ public class ProcessRunnerPosix
         Files.deleteIfExists(basePath);
     }
 
-    @Override
-    public void shutdown() throws IOException {
-        try {
-            internalIn().close();
-        } finally {
-            try {
-                internalOut().close();
-            } finally {
-                internalErr().close();
-            }
-        }
+    public static ProcessBuilder clone(ProcessBuilder original) {
+        ProcessBuilder clone = new ProcessBuilder();
+        clone.command(original.command());
+        clone.environment().putAll(original.environment());
+        clone.redirectInput(original.redirectInput());
+        clone.redirectOutput(original.redirectOutput());
+        clone.redirectError(original.redirectError());
+        clone.directory(original.directory());
+        return clone;
+    }
+
+    public IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder) {
+        IProcessBuilder<?> clone = processBuilder.clone();
+
+        // TODO Properly process the redirects
+        clone.redirectInput(new JRedirectJava(Redirect.from(pipeIn.getReadEndProcFile())));
+        clone.redirectOutput(new JRedirectJava(Redirect.to(pipeOut.getWriteEndProcFile())));
+        clone.redirectError(new JRedirectJava(Redirect.to(pipeIn.getWriteEndProcFile())));
+        return clone;
     }
 }

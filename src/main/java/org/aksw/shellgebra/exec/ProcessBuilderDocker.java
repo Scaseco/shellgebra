@@ -79,6 +79,10 @@ public class ProcessBuilderDocker
         return new ProcessBuilderDocker().command(command);
     }
 
+    public static ProcessBuilderDocker of(List<String> command) {
+        return new ProcessBuilderDocker().command(command);
+    }
+
     public String imageRef() {
         return imageRef;
     }

@@ -6,10 +6,15 @@ import java.nio.file.Path;
 public interface DynamicInput
     extends Input
 {
-    // boolean hasPipe();
-
-    /** Return a pipe. It may be created on-demand, hence the IOException. */
-    // PosixPipe getPipe() throws IOException;
     boolean hasFile();
+
+    /**
+     * Return a file (typically a pipe).
+     * Calling this function may be create the pipe on-demand, hence the IOException.
+     * Use {@link #hasFile()} to check for file backing without on-demand creation.
+     */
     Path getFile() throws IOException;
+
+    // boolean hasPipe();
+    // PosixPipe getPipe() throws IOException;
 }

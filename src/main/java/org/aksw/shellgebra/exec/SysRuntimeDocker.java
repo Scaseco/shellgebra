@@ -30,7 +30,7 @@ public class SysRuntimeDocker
 
     @Override
     public String which(String cmdName) throws IOException, InterruptedException {
-        String[] argv = ListBuilder.forString().addAll(locatorCommand.argv()).add(cmdName).buildArray();
+        String[] argv = ListBuilder.ofString().addAll(locatorCommand.argv()).add(cmdName).buildArray();
         String result = execCmd(argv);
         // Remove any trailing newlines.
         return result;
@@ -38,7 +38,7 @@ public class SysRuntimeDocker
 
     @Override
     public boolean exists(String cmdName) throws IOException, InterruptedException {
-        String[] argv = ListBuilder.forString().addAll(existsCommand.argv()).add(cmdName).buildArray();
+        String[] argv = ListBuilder.ofString().addAll(existsCommand.argv()).add(cmdName).buildArray();
         int exitValue = core.runCmd(argv);
         return exitValue == 0;
         // String result = execCmd(argv);

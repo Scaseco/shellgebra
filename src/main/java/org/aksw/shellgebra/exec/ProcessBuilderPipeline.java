@@ -38,6 +38,10 @@ public class ProcessBuilderPipeline
         return new ProcessBuilderPipeline().processBuilders(processBuilders);
     }
 
+    public static ProcessBuilderPipeline of(List<? extends IProcessBuilderCore<?>> processBuilders) {
+        return new ProcessBuilderPipeline().processBuilders(processBuilders);
+    }
+
     @Override
     protected ProcessBuilderPipeline cloneActual() {
         return new ProcessBuilderPipeline();

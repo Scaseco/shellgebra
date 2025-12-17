@@ -55,7 +55,7 @@ public class SysRuntimeFactoryDocker {
             throw new RuntimeException("No bash found");
         }
 //
-        Argv entrypointArgv = Argv.ofArgs(bash.getCommandPath(), ListBuilder.forString().addAllNonNull(bash.getCommandOption()).buildList());
+        Argv entrypointArgv = Argv.ofArgs(bash.getCommandPath(), ListBuilder.ofString().addAllNonNull(bash.getCommandOption()).buildList());
         SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, entrypointArgv, probeResults);
         return core;
     }
@@ -67,7 +67,7 @@ public class SysRuntimeFactoryDocker {
             throw new RuntimeException("No bash found");
         }
 
-        Argv entrypointArgv = Argv.ofArgs(bash.getCommandPath(), ListBuilder.forString().addAllNonNull(bash.getCommandOption()).buildList());
+        Argv entrypointArgv = Argv.ofArgs(bash.getCommandPath(), ListBuilder.ofString().addAllNonNull(bash.getCommandOption()).buildList());
         String locatorCmd = bash.getLocatorCommand();
         Argv locatorArgv = locatorCmd == null ? null : Argv.of(locatorCmd);
 

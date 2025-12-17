@@ -21,6 +21,11 @@ public sealed interface Token {
         }
     }
 
+    /**
+     * XXX Extend with optional read/write flags.
+     * XXX Extend with flag whether this path is relative to a container - as to remapping paths already mapped to a container?
+     *       Alternatively, this could be partly detected via fileMapper lookups (i.e. is this a mapped path?)
+     */
     public record TokenPath(String path) implements Token {
         @Override
         public <T> T accept(TokenVisitor<T> visitor) {

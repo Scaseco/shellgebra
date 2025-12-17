@@ -1,6 +1,7 @@
 package org.aksw.shellgebra.exec.invocation;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.registry.ProcessBuilderNative;
@@ -14,6 +15,10 @@ public class InvokableProcessBuilderHost
 
     /** If unset then fall back to {@link InvocationCompilerImpl#getDefault()}. */
     private InvocationCompiler compiler = null;
+
+    public static InvokableProcessBuilderHost of(List<String> args) {
+        return new InvokableProcessBuilderHost().command(args);
+    }
 
     @Override
     protected InvokableProcessBuilderHost cloneActual() {
