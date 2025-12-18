@@ -68,17 +68,30 @@ public class TestProcessBuilderFinalPlacement {
         // Some command expression.
         // "echo 'test' | lbzip2 -c | bzip2 -cd | cat - <(echo done)"
         System.out.println(resolver.resolve("/virt/lbzip2"));
-        CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
-        CmdOp cmdOp2 = CmdOpGroup.of(
-            CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),
-            new CmdOpExec(List.<CmdPrefix>of(), "/virt/cat", ArgumentList.of(
-                CmdArg.ofLiteral("-"),
-                CmdArg.ofProcessSubstution(CmdOpExec.ofLiterals("/virt/echo", "done."))))
-        );
-        // TODO Do not use CmdOpExec.ofLiterals
-        // Instead: use a command registry with shim-parsers so that arguments are validated.
+        CmdOp cmdOp;
+        if (false) {
+            CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
+            CmdOp cmdOp2 = CmdOpGroup.of(
+                CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),
+                new CmdOpExec(List.<CmdPrefix>of(), "/virt/cat", ArgumentList.of(
+                    CmdArg.ofLiteral("-"),
+                    CmdArg.ofProcessSubstution(CmdOpExec.ofLiterals("/virt/echo", "done."))))
+            );
+            // TODO Do not use CmdOpExec.ofLiterals
+            // Instead: use a command registry with shim-parsers so that arguments are validated.
 
-        CmdOp cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
+            cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
+        } else {
+            CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
+            CmdOp cmdOp2 = CmdOpGroup.of(
+                CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),
+                CmdOpExec.ofLiterals("/virt/echo", "done.")
+            );
+            // TODO Do not use CmdOpExec.ofLiterals
+            // Instead: use a command registry with shim-parsers so that arguments are validated.
+
+            cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
+        }
 
         // Try to resolve the command on a certain docker image.
         ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
@@ -113,7 +126,6 @@ public class TestProcessBuilderFinalPlacement {
 //                out.flush();
 //                logger.info("Data generation thread terminated.");
             });
-
 
             // FIXME Reuse existing jvmCmdRegistry!
             TestCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());

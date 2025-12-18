@@ -68,10 +68,14 @@ public class ArgumentListBuilder {
         return this;
     }
 
+    /** Note: '-' becomes a literal instead of a path! */
     public ArgumentListBuilder files(List<String> list) {
         if (list != null) {
             for (String item : list) {
-                args.add(CmdArg.ofPathString(item));
+                CmdArg arg = ("-".equals(item))
+                    ? CmdArg.ofLiteral(item)
+                    : CmdArg.ofPathString(item);
+                args.add(arg);
             }
         }
         return this;
