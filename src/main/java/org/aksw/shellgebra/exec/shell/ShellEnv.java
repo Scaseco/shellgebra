@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import org.aksw.shellgebra.exec.io.FdTable;
+import org.aksw.shellgebra.exec.graph.FdTable;
 import org.aksw.vshell.registry.PathResolutionUtils;
 
 public class ShellEnv

@@ -109,38 +109,38 @@ public class FdTable<T>
             }
         }
     }
-
-    class FileDescriptionEntry<T>
-        extends FileDescriptionWrapper
-    {
-        @Override
-        public boolean isOpen() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public T getRaw() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public T get() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public FileDescription<T> dup() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public void close() {
-            // TODO Auto-generated method stub
-
-        }
-    }
+//
+//    class FileDescriptionEntry<T>
+//        extends FileDescriptionWrapper
+//    {
+//        @Override
+//        public boolean isOpen() {
+//            // TODO Auto-generated method stub
+//            return false;
+//        }
+//
+//        @Override
+//        public T getRaw() {
+//            // TODO Auto-generated method stub
+//            return null;
+//        }
+//
+//        @Override
+//        public T get() {
+//            // TODO Auto-generated method stub
+//            return null;
+//        }
+//
+//        @Override
+//        public FileDescription<T> dup() {
+//            // TODO Auto-generated method stub
+//            return null;
+//        }
+//
+//        @Override
+//        public void close() {
+//            // TODO Auto-generated method stub
+//
+//        }
+//    }
 }

@@ -20,6 +20,14 @@ public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args
 //        return ofLiterals(cmd.get(0), cmd.subList(1, cmd.size()));
 //    }
 
+    public static CmdOpExec of(String name, CmdArg...args) {
+        return of(name, List.of(args));
+    }
+
+    public static CmdOpExec of(String name, List<CmdArg> args) {
+        return new CmdOpExec(List.of(), name, ArgumentList.of(args));
+    }
+
     /** Args array where the first element is the program name. */
     public static CmdOpExec ofLiteralArgs(String... argv) {
         return ofLiteralArgs(List.of(argv));

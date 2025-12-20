@@ -70,4 +70,11 @@ public class ProcessBuilderGroup
         boolean result = processBuilders().stream().allMatch(IProcessBuilderCore::supportsAnonPipeWrite);
         return result;
     }
+
+    /** Groups only support direct named pipes if there is only a single member that accepts a direct named pipe. */
+    @Override
+    public boolean supportsDirectNamedPipe() {
+        boolean result = processBuilders().stream().filter(IProcessBuilderCore::supportsDirectNamedPipe).count() <= 1;
+        return result;
+    }
 }

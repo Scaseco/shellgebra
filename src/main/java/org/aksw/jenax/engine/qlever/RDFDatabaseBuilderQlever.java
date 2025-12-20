@@ -21,6 +21,17 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.async.ResultCallback.Adapter;
+import com.github.dockerjava.api.command.AttachContainerCmd;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.model.AccessMode;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.api.model.Volume;
+import com.google.common.io.ByteSource;
+import com.nimbusds.jose.util.StandardCharset;
+
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.commons.util.exception.FinallyRunAll;
 import org.aksw.jena_sparql_api.http.domain.api.RdfEntityInfo;
@@ -32,13 +43,12 @@ import org.aksw.jenax.sparql.query.rx.RDFDataMgrEx;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile.OpenMode;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
+import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.common.TranscodeMode;
 import org.aksw.shellgebra.algebra.stream.op.CodecSysEnv;
 import org.aksw.shellgebra.algebra.stream.op.StreamOp;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
@@ -65,17 +75,6 @@ import org.apache.jena.sparql.core.Quad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
-
-import com.github.dockerjava.api.async.ResultCallback;
-import com.github.dockerjava.api.async.ResultCallback.Adapter;
-import com.github.dockerjava.api.command.AttachContainerCmd;
-import com.github.dockerjava.api.command.WaitContainerResultCallback;
-import com.github.dockerjava.api.model.AccessMode;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.api.model.Volume;
-import com.google.common.io.ByteSource;
-import com.nimbusds.jose.util.StandardCharset;
 
 import jenax.engine.qlever.docker.GenericContainer;
 import jenax.engine.qlever.docker.QleverConstants;
@@ -425,9 +424,9 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
             if (sysOp instanceof StreamOpCommand streamOpCmd) {
                 CmdOp cmdOp = streamOpCmd.getCmdOp();
                 String hostPathStr = hostPath.toString();
-                RedirectFile redirect = RedirectFile.fileFromStdIn(hostPathStr, OpenMode.WRITE_TRUNCATE);
+                CmdRedirect redirect = CmdRedirect.out(hostPathStr);
                 // CmdOpRedirectRight redirectOp = new CmdOpRedirectRight(hostPathStr, cmdOp);
-                CmdOp redirectOp = CmdOp.appendRedirect(cmdOp, redirect);
+                CmdOp redirectOp = CmdOps.appendRedirect(cmdOp, redirect);
 
                 SysRuntime runtime = getRuntime();
                 String[] cmd = runtime.compileCommand(redirectOp);
@@ -710,7 +709,7 @@ public class RDFDatabaseBuilderQlever<X extends RDFDatabaseBuilderQlever<X>>
     protected void runContainerViaSysCall(CmdOp generatorCmd, Lang lang) throws NumberFormatException, IOException, InterruptedException {
         GenericContainer<?> container = setupContainerSysCall("-", lang);
         String[] cmdLine = container.buildCmdLine();
-        CmdOp pipe = new CmdOpPipeline(generatorCmd, CmdOpExec.ofLiteralArgs(cmdLine));
+        CmdOp pipe = CmdOpPipeline.of(generatorCmd, CmdOpExec.ofLiteralArgs(cmdLine));
 
         SysRuntime runtime = getRuntime();
         String[] cmd = runtime.compileCommand(pipe);

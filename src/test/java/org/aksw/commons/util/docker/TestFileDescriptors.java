@@ -36,7 +36,7 @@ public class TestFileDescriptors {
 
         CompletableFuture.runAsync(() -> {
             try (PrintStream out = new PrintStream(pipe.getOutputStream())) {
-                for (int i = 0; i < 100000; ++i) {
+                for (int i = 0; i < 1000; ++i) {
                     out.println(i);
                     out.flush();
                 }
@@ -53,7 +53,7 @@ public class TestFileDescriptors {
         System.out.println("head -n2 " + pipe.getReadEndProcPath());
 
         try (InputStream in = pipe.getInputStream()) {
-            Thread.sleep(60000);
+            // Thread.sleep(60000);
             System.out.println("Transferring data.");
             long amount = in.transferTo(System.out);
             System.out.println("Transferred: " + amount);

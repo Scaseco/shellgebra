@@ -69,4 +69,9 @@ public class InvokableProcessBuilderHost
     public boolean supportsAnonPipeWrite() {
         return true;
     }
+
+    @Override
+    public boolean supportsDirectNamedPipe() {
+        return true;
+    }
 }

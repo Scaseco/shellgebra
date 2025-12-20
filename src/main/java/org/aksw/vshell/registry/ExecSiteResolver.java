@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.commons.util.docker.ImageIntrospector;
+import org.aksw.commons.util.docker.ImageIntrospectorImpl;
 import org.aksw.jenax.model.osreo.ImageIntrospection;
 import org.aksw.jenax.model.osreo.ShellSupport;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
@@ -19,6 +20,8 @@ import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RDFDataMgr;
 import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
 
@@ -36,6 +39,12 @@ public class ExecSiteResolver {
         this.jvmCmdRegistry = jvmCmdRegistry;
         this.cmdAvailability = cmdAvailability;
         this.dockerImageIntrospector = dockerImageIntrospector;
+    }
+
+    public static ExecSiteResolver of(CommandCatalog commandCatalog, JvmCommandRegistry jvmCmdRegistry) {
+        Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
+        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(model);
+        return new ExecSiteResolver(commandCatalog, jvmCmdRegistry, ExecSiteProbeResults.get(), imageIntrospector);
     }
 
     public CommandCatalog getCommandCatalog() {

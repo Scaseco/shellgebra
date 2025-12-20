@@ -45,12 +45,12 @@ public sealed interface JRedirect {
         }
     }
 
-    public record JRedirectPBF(PBF pbf) implements JRedirect {
-        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
-            T result = visitor.visit(this);
-            return result;
-        }
-    }
+//    public record JRedirectPBF(PBF pbf) implements JRedirect {
+//        @Override public <T> T accept(JRedirectVisitor<T> visitor) {
+//            T result = visitor.visit(this);
+//            return result;
+//        }
+//    }
 
     //public record PRedirectProcess(ByteSource in) implements JRedirect { }
     public record JRedirectIn(InputStream in) implements JRedirect {

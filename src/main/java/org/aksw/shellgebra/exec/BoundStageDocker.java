@@ -35,8 +35,6 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect.OpenMode;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectFile;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
@@ -198,7 +196,7 @@ public class BoundStageDocker
             }
 
             // Path hostPath = inputBind.getKey();
-            tmpOp = CmdOp.prependRedirect(tmpOp, new RedirectFile(containerPath, OpenMode.READ, 0));
+            tmpOp = CmdOps.prependRedirect(tmpOp, CmdRedirect.in(containerPath));
 //            closer.register(() -> {
 //                try { inputTask.close(); }
 //                catch (Exception e) { throw new RuntimeException(e); }

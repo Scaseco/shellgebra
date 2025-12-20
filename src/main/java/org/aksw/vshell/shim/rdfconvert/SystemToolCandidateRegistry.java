@@ -10,23 +10,23 @@ import com.google.common.collect.Multimap;
 
 record PathEntry(String path, boolean availability) {}
 
-class ToolEntry {
-    Map<String, PathEntry> pathEntries = new LinkedHashMap<>();
-
-    public ToolEntry declarePresence(String path) {
-        pathEntries.put(path, new PathEntry(path, true));
-        return this;
-    }
-
-    public ToolEntry declareAbsence(String path) {
-        pathEntries.put(path, new PathEntry(path, false));
-        return this;
-    }
-
-    public Optional<String> getPresent() {
-
-    }
-}
+//class ToolEntry {
+//    Map<String, PathEntry> pathEntries = new LinkedHashMap<>();
+//
+//    public ToolEntry declarePresence(String path) {
+//        pathEntries.put(path, new PathEntry(path, true));
+//        return this;
+//    }
+//
+//    public ToolEntry declareAbsence(String path) {
+//        pathEntries.put(path, new PathEntry(path, false));
+//        return this;
+//    }
+//
+////    public Optional<String> getPresent() {
+////
+////    }
+//}
 
 
 class SystemToolRegistry {

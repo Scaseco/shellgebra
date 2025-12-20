@@ -82,6 +82,7 @@ public class TestProcessBuilderFinalPlacement {
 
             cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
         } else {
+            // ISSUE If in a pipeline there is a group then we MUST use anon pipes!
             CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
             CmdOp cmdOp2 = CmdOpGroup.of(
                 CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),

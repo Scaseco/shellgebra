@@ -8,7 +8,6 @@ import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpResolution;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpVar;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpVisitor;
@@ -76,10 +75,5 @@ public class StreamOpVisitorToGraph
     @Override
     public OpSpecNode visit(StreamOpVar op) {
         throw new RuntimeException("Variable not supported (should it?)");
-    }
-
-    @Override
-    public OpSpecNode visit(StreamOpResolution op) {
-        throw new RuntimeException("OpResolution should be removed");
     }
 }

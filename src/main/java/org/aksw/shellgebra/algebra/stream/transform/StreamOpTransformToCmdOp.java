@@ -100,15 +100,15 @@ public class StreamOpTransformToCmdOp
 
                 if (false) { //supportsFile && cmdOp instanceof CmdOpFile fileOp) {
                     // args.add(CmdArg.ofPath(fileOp.getPath()));
-                    newCmdOp = new CmdOpExec(resolvedCmdName, args);
+                    newCmdOp = CmdOpExec.of(resolvedCmdName, args);
                 } else if (supportsStdIn) {
-                    newCmdOp = new CmdOpExec(resolvedCmdName, args);
-                    newCmdOp = new CmdOpPipeline(cmdOp, newCmdOp);
+                    newCmdOp = CmdOpExec.of(resolvedCmdName, args);
+                    newCmdOp = CmdOpPipeline.of(cmdOp, newCmdOp);
                 } else {
                     // String[] parts = runtime.compileCommand(cmdOp);
                     // CmdOp subC = new CmdOpSubst(CmdOpExec.of(parts));
                     args.add(new CmdArgCmdOp(cmdOp));
-                    newCmdOp = new CmdOpExec(resolvedCmdName, args);
+                    newCmdOp = CmdOpExec.of(resolvedCmdName, args);
                 }
                 result = new StreamOpCommand(newCmdOp);
             } if (subOp instanceof StreamOpFile cmdOfFile) {

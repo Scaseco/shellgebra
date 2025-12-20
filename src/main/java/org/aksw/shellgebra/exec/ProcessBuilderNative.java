@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
 // TODO Remove this wrapper class in favor of the non-wrapper version.
@@ -20,6 +21,12 @@ public class ProcessBuilderNative
     public ProcessBuilderNative(ProcessBuilder delegate) {
         super();
         this.delegate = delegate;
+    }
+
+    @Override
+    public ProcessBuilderNative clone() {
+        throw new RuntimeException("not implemented yet");
+//    	return new ProcessBuilderNative(
     }
 
     private ProcessBuilder getDelegate() {
@@ -77,6 +84,61 @@ public class ProcessBuilderNative
 
     @Override
     public Process start(ProcessRunner executor) throws IOException {
-        return executor.start(delegate);
+//        return executor.start(delegate);
+        return null;
+    }
+
+    @Override
+    public ProcessBuilderNative redirectInput(JRedirect redirect) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public JRedirect redirectInput() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ProcessBuilderNative redirectOutput(JRedirect redirect) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public JRedirect redirectOutput() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ProcessBuilderNative redirectError(JRedirect redirect) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public JRedirect redirectError() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean supportsAnonPipeRead() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean supportsDirectNamedPipe() {
+        // TODO Auto-generated method stub
+        return false;
     }
 }

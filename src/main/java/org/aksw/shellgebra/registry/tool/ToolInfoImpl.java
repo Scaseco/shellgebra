@@ -46,7 +46,7 @@ public class ToolInfoImpl
         return absenceInDockerImages.stream();
     }
 
-v    @Override
+    @Override
     public boolean isAbsentInDockerImage(String dockerImage) {
         return absenceInDockerImages.contains(dockerImage);
     }
@@ -68,7 +68,7 @@ v    @Override
     @Override
     public CommandTargetInfoImpl findCommandByImage(String imageName) {
         CommandTargetInfoImpl result = commandMap.values().stream()
-            .filter(cpi -> cpi.getDockerImages().filter(img -> img.equals(imageName)))
+            .filter(cpi -> cpi.getDockerImages().anyMatch(img -> img.equals(imageName)))
             .findFirst().orElse(null);
         return result;
     }

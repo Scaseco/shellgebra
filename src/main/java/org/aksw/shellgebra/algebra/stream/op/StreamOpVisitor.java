@@ -12,5 +12,5 @@ public interface StreamOpVisitor<T>
     T visit(StreamOpCommand op);
     T visit(StreamOpVar op);
 
-    T visit(StreamOpResolution op);
+    // T visit(StreamOpResolution op);
 }

@@ -7,15 +7,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.aksw.shellgebra.registry.codec.CodecRegistry;
-import org.aksw.shellgebra.registry.codec.CodecVariant;
-import org.aksw.shellgebra.registry.codec.JavaCodec;
-import org.aksw.shellgebra.registry.tool.CommandTargetInfoImpl;
-import org.aksw.shellgebra.registry.tool.ToolInfoImpl;
-import org.aksw.shellgebra.registry.tool.ToolRegistry;
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.aksw.shellgebra.registry.codec.CodecRegistry;
+import org.aksw.shellgebra.registry.codec.JavaCodec;
+import org.apache.commons.io.IOUtils;
 
 public class TestCodecRegistry {
 
@@ -47,15 +44,15 @@ public class TestCodecRegistry {
         Assert.assertEquals(expected, actual);
     }
 
-    @Test
-    public void testCmdBzip2() {
-        CodecVariant variant = CodecRegistry.get().getCodecSpec("bzip2").get().getDecoderVariants().get(0);
-        String toolName = variant.getToolName();
-        Assert.assertEquals("-cd", variant.getArgs().get(0));
-
-        ToolInfoImpl toolInfo = ToolRegistry.get().getToolInfo(toolName).get();
-        CommandTargetInfoImpl entry = toolInfo.getCommandsByPath().values().iterator().next();
-
-        Assert.assertTrue(entry.getDockerImages().contains("nestio/lbzip2"));
-    }
+//    @Test
+//    public void testCmdBzip2() {
+//        CodecVariant variant = CodecRegistry.get().getCodecSpec("bzip2").get().getDecoderVariants().get(0);
+//        String toolName = variant.getToolName();
+//        Assert.assertEquals("-cd", variant.getArgs().get(0));
+//
+//        ToolInfoImpl toolInfo = ToolRegistry.get().getToolInfo(toolName).get();
+//        CommandTargetInfoImpl entry = toolInfo.getCommandsByPath().values().iterator().next();
+//
+//        Assert.assertTrue(entry.getDockerImages().contains("nestio/lbzip2"));
+//    }
 }

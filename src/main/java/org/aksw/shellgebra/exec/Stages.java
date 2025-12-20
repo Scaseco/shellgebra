@@ -11,6 +11,8 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.unused.algebra.plan.InputStreamTransform;
 import org.aksw.shellgebra.unused.algebra.plan.OutputStreamTransform;
 import org.aksw.vshell.registry.CmdOpVisitorExecJvm;
+import org.aksw.vshell.registry.CommandRegistry;
+import org.aksw.vshell.registry.ExecSiteResolver;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 
 public class Stages {
@@ -26,14 +28,20 @@ public class Stages {
         return new StageHost(cmdOp);
     }
 
+    public static Stage docker(String imageRef, CmdOp cmdOp, FileMapper fileMapper) {
+        return docker(imageRef, cmdOp, fileMapper);
+    }
+
     public static Stage docker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, Function<CmdOpVar, Stage> varResolver) {
         ContainerPathResolver containerPathResolver = ContainerPathResolver.create();
         return new StageDocker(imageRef, cmdOp, fileMapper, containerPathResolver, varResolver);
     }
 
     public static Stage jvm(JvmCommandRegistry jvmCmdRegistry, CmdOp cmdOp) {
+        CommandRegistry cmdAvailability = new CommandRegistry();
+        ExecSiteResolver execSiteResolver = ExecSiteResolver.of(cmdAvailability, jvmCmdRegistry);
         // Resolve the cmdOp against the registry.
-        CmdOpVisitorExecJvm execVisitor = new CmdOpVisitorExecJvm(jvmCmdRegistry);
+        CmdOpVisitorExecJvm execVisitor = new CmdOpVisitorExecJvm(execSiteResolver, null);
         Stage result = cmdOp.accept(execVisitor);
         return result;
     }

@@ -77,6 +77,11 @@ public class ProcessBuilderDocker
         return false;
     }
 
+    @Override
+    public boolean supportsDirectNamedPipe() {
+        return true;
+    }
+
     public static ProcessBuilderDocker of(String ... command) {
         return new ProcessBuilderDocker().command(command);
     }

@@ -147,12 +147,17 @@ public class ProcessBuilderFinalPlacement
 
     @Override
     public boolean supportsAnonPipeRead() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean supportsAnonPipeWrite() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean supportsDirectNamedPipe() {
+        return true;
     }
 }
 

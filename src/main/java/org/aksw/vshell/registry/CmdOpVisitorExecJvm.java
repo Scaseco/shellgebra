@@ -15,7 +15,6 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.StagePipeline;
 import org.aksw.shellgebra.exec.io.StageGroup;
-import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
 public class CmdOpVisitorExecJvm
@@ -55,7 +54,8 @@ public class CmdOpVisitorExecJvm
         List<String> strs = CmdArgVisitorRenderAsBashString.render(args.args());
         // jvmCmdRegistry.require(cmdName)
         String[] strArr = strs.toArray(String[]::new);
-        Stage result = jvmCmdRegistry.newStage(resolvedCmdName, strArr);
+        // Stage result = jvmCmdRegistry.newStage(resolvedCmdName, strArr);
+        Stage result = null;
         return result;
     }
 

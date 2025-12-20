@@ -131,4 +131,9 @@ public class SysRuntimeImpl
     public void close() {
         throw new RuntimeException("This runtime must not be closed. Wrap this with a close shield.");
     }
+
+    @Override
+    public boolean exists(String cmdName) throws IOException, InterruptedException {
+        throw new RuntimeException("not implemented yet.");
+    }
 }

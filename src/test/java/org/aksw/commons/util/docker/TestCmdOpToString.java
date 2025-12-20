@@ -1,22 +1,23 @@
 package org.aksw.commons.util.docker;
 
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgPath;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
-import org.junit.Assert;
-import org.junit.Test;
 
 public class TestCmdOpToString {
     @Test
     public void testBashPipe() {
-        CmdOp cmdOp = new CmdOpPipeline(
-            new CmdOpExec("/my/tool.sh", new CmdArgLiteral("-f"), new CmdArgPath("/foo/bar.dat")),
-            new CmdOpExec("/my/conv.sh", new CmdArgLiteral("-convert")));
+        CmdOp cmdOp = CmdOpPipeline.of(
+            CmdOpExec.of("/my/tool.sh", new CmdArgLiteral("-f"), CmdArg.ofPathString("/foo/bar.dat")),
+            CmdOpExec.of("/my/conv.sh", new CmdArgLiteral("-convert")));
 
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
         CmdString cmdString = runtime.compileString(cmdOp);

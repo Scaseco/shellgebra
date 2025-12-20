@@ -30,8 +30,17 @@ public class ProcessBuilderDockerExec
 
     @Override
     public boolean supportsAnonPipeWrite() {
-        // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public boolean supportsDirectNamedPipe() {
+        return true;
+    }
+
+    @Override
+    protected ProcessBuilderDockerExec cloneActual() {
+        return new ProcessBuilderDockerExec(container);
     }
 
     @Override

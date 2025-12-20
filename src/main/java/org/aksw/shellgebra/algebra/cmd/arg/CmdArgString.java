@@ -11,7 +11,7 @@ public record CmdArgString(String str)
 
     @Override
     public <T> T accept(CmdArgVisitor<T> visitor) {
-        T result = visitor.visit(this);
+        T result = null; //visitor.visit(this);
         return result;
     }
 }

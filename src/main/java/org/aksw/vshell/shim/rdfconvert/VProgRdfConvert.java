@@ -4,8 +4,6 @@ package org.aksw.vshell.shim.rdfconvert;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.aksw.shellgebra.algebra.stream.op.Resolution1;
-
 public class VProgRdfConvert {
     public static void main(String[] args) {
         Args bzip2DecodeModel = GenericCodecArgs.parse(new String[]{"-d"});
@@ -30,8 +28,6 @@ public class VProgRdfConvert {
          argsParsers.put(BZIP2, ArgsParserPicocli.of(GenericCodecArgs::new));
 
          // CmdOpExec now requires tool name and ArgumentList...
-
-         Resolution1 x;
 
          // Resolution: Virtual commands can be resolved to
          // - java implementation of the command

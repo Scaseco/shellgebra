@@ -2,89 +2,60 @@ package org.aksw.shellgebra.exec.graph;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
-import java.util.Objects;
+
+import org.aksw.vshell.registry.Input;
+import org.aksw.vshell.registry.InputBase;
+import org.aksw.vshell.registry.Output;
+import org.aksw.vshell.registry.OutputBase;
 
 public abstract class PipeBase {
-    private PrintStream printer;
-    private BufferedWriter writer;
-    private Charset writerCharset;
-
-    private BufferedReader reader;
-    private Charset readerCharset;
-
     protected abstract OutputStream getOutputStream();
     protected abstract InputStream getInputStream();
+
+    private Input input = new InputBase(null) {
+        @Override
+        protected InputStream openInputStream() throws IOException {
+            return PipeBase.this.getInputStream();
+        }
+    };
+
+    private Output output = new OutputBase(null) {
+        @Override
+        protected OutputStream openOutputStream() throws IOException {
+            return PipeBase.this.getOutputStream();
+        }
+    };
 
     /*
      * Convenience methods below, inspired by ProcessBuilder from Java 17+.
      */
 
     public final PrintStream printer() {
-        return printer(Charset.defaultCharset());
+        return output.printStream();
     }
 
     public final PrintStream printer(Charset charset) {
-        Objects.requireNonNull(charset, "charset");
-        synchronized (this) {
-            if (printer == null) {
-                if (writer != null) {
-                    throw new IllegalStateException("Cannot create PrintStream because a BufferedWriter was already created with charset: " + writerCharset);
-                }
-
-                writerCharset = charset;
-                printer = new PrintStream(getOutputStream(), true, charset);
-            } else {
-                if (!writerCharset.equals(charset)) {
-                    throw new IllegalStateException("BufferedWriter was created with charset: " + writerCharset);
-                }
-            }
-            return printer;
-        }
+        return output.printStream(charset);
     }
 
     public final BufferedWriter writer() {
-        return writer(Charset.defaultCharset());
+        return output.writer();
     }
 
     public final BufferedWriter writer(Charset charset) {
-        Objects.requireNonNull(charset, "charset");
-        synchronized (this) {
-            if (writer == null) {
-                if (printer != null) {
-                    throw new IllegalStateException("Cannot create BufferedWriter because a PrintStream was already created with charset: " + writerCharset);
-                }
-
-                writerCharset = charset;
-                writer = new BufferedWriter(new OutputStreamWriter(getOutputStream(), charset));
-            } else {
-                if (!writerCharset.equals(charset))
-                    throw new IllegalStateException("BufferedWriter was created with charset: " + writerCharset);
-            }
-            return writer;
-        }
+        return output.writer(charset);
     }
 
     public final BufferedReader reader() {
-        return reader(Charset.defaultCharset());
+        return input.reader();
     }
 
     public final BufferedReader reader(Charset charset) {
-        Objects.requireNonNull(charset, "charset");
-        synchronized (this) {
-            if (reader == null) {
-                readerCharset = charset;
-                reader = new BufferedReader(new InputStreamReader(getInputStream(), charset));
-            } else {
-                if (!readerCharset.equals(charset))
-                    throw new IllegalStateException("BufferedReader was created with charset: " + readerCharset);
-            }
-            return reader;
-        }
+        return input.reader(charset);
     }
 }

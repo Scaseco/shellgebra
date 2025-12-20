@@ -36,9 +36,6 @@ import org.testcontainers.containers.GenericContainer;
 public class ImageIntrospectorImpl
     implements ImageIntrospector
 {
-
-
-
     // record CmdAvailability(String command, Entrypoint entrypoint, Boolean);
 
     private static final Logger logger = LoggerFactory.getLogger(ImageIntrospectorImpl.class);
@@ -53,6 +50,10 @@ public class ImageIntrospectorImpl
     // Not ideal having this class here because it uses ExecSite and is more high level.
     // Also, we should track metadata for (imageRef, command): the used entry point and commandOption for the availability.
     protected ExecSiteProbeResults cmdAvailability;
+
+    public static ImageIntrospector of(Model osreoModel) {
+        return of(osreoModel, ExecSiteProbeResults.get());
+    }
 
     public static ImageIntrospector of(Model osreoModel, ExecSiteProbeResults cmdAvailability) {
         List<Shell> shells = OsreoUtils.listShells(osreoModel);

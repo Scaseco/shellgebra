@@ -53,4 +53,15 @@ public interface IProcessBuilderCore<X extends IProcessBuilderCore<X>>
      * For pipelines, this is the value of the last process builder.
      */
     boolean supportsAnonPipeWrite();
+
+
+    /**
+     * Whether a named pipe can be used with the process builder without risking blocking
+     * due to multiple connections being made to it.
+     * So this method must only return true if only a single connection to that pipe will be openend.
+     *
+     * A process builder for host or docker may return true.
+     * But a group with two or more 'true-returning' members will return false.
+     */
+    boolean supportsDirectNamedPipe();
 }

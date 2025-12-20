@@ -2,39 +2,24 @@ package org.aksw.vshell.registry;
 
 import java.util.List;
 
-import org.aksw.commons.util.docker.Argv;
-import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.vshell.shim.rdfconvert.ArgsModular;
+import org.aksw.vshell.shim.rdfconvert.JvmCommandBase;
+import org.apache.commons.exec.ExecuteException;
 
 public class JvmCommandWhich
-    implements JvmCommand
+    extends JvmCommandBase<ArgsWhich>
 {
     @Override
-    public ArgsWhich parseArgs(String... args) {
-        ArgsWhich model = ArgsWhich.parse(args).model();
-        return model;
+    public ArgsModular<ArgsWhich> parseArgs(String... args) {
+        ArgsModular<ArgsWhich> result = ArgsWhich.parse(args);
+        return result;
     }
 
     @Override
-    public Stage newStage(String... args) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int run(ProcessRunner cxt, Argv argv) {
-        ArgsWhich model;
-
+    public void runActual(JvmExecCxt cxt, ArgsWhich model) throws ExecuteException {
+        List<String> pathEntries = PathResolutionUtils.getPathItems(cxt.env(), "PATH", ":");
+        JvmCommandRegistry reg = cxt.getExecutor().getJvmCmdRegistry(); // cxt.getJvmCmdRegistry();
         int exitValue = 0;
-        try {
-            model = parseArgs(argv.argsToArray());
-        } catch (Exception e) {
-            e.printStackTrace(cxt.internalPrintErr());
-            exitValue = 2;
-            return exitValue;
-        }
-
-        List<String> pathEntries = PathResolutionUtils.getPathItems(cxt.environment(), "PATH", ":");
-        JvmCommandRegistry reg = cxt.getJvmCmdRegistry();
         for (String name : model.getFileNames()) {
             long limit = model.isAll() ? Long.MAX_VALUE : 1;
             List<String> res = resolve(reg, pathEntries, name, limit);
@@ -44,11 +29,13 @@ public class JvmCommandWhich
             }
 
             for (String str : res) {
-                cxt.internalPrintOut().println(str);
+                cxt.out().printStream().println(str);
             }
         }
 
-        return exitValue;
+        if (exitValue != 0) {
+            throw new ExecuteException("Failed to resolve file", exitValue);
+        }
     }
 
 //    public static List<String> resolve(JvmExecCxt cxt, String name, long max) {

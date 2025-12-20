@@ -118,4 +118,14 @@ public class ProcessBuilderNative
     public boolean supportsAnonPipeRead() {
         return true;
     }
+
+    @Override
+    public boolean supportsAnonPipeWrite() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsDirectNamedPipe() {
+        return true;
+    }
 }

@@ -7,7 +7,6 @@ import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpResolution;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
 import org.aksw.shellgebra.algebra.stream.op.StreamOpVar;
 
@@ -44,10 +43,5 @@ public class StreamOpTransformBase
     @Override
     public StreamOp transform(StreamOpVar op) {
         return op;
-    }
-
-    @Override
-    public StreamOp transform(StreamOpResolution op, StreamOp subOp) {
-        return new StreamOpResolution(op.getResolution(), subOp);
     }
 }

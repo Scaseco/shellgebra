@@ -1,13 +1,12 @@
 package org.aksw.shellgebra.exec.io;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.io.ByteSource;
 
 import org.aksw.shellgebra.exec.BoundStage;
 import org.aksw.shellgebra.exec.FileWriterTask;
 import org.aksw.shellgebra.exec.Stage;
-
-import com.google.common.io.ByteSource;
 
 /**
  * input | { x1 ; xi ; xn }
@@ -27,16 +26,17 @@ public class StageGroup
 
     @Override
     public BoundStage from(ByteSource input) {
-        BoundStage result = null;
-        List<ByteSource> byteSources = new ArrayList<>(stages.size());
-        boolean isFirst = true;
-        for (Stage f : stages) {
-            BoundStage boundStage = isFirst
-                ? f.from(input)
-                : f.fromNull();
-        }
-        ByteSource.concat(null)
-        return result;
+        throw new RuntimeException("unsupported");
+//        BoundStage result = null;
+//        List<ByteSource> byteSources = new ArrayList<>(stages.size());
+//        boolean isFirst = true;
+//        for (Stage f : stages) {
+//            BoundStage boundStage = isFirst
+//                ? f.from(input)
+//                : f.fromNull();
+//        }
+//        ByteSource.concat(null)
+//        return result;
     }
 
     @Override
