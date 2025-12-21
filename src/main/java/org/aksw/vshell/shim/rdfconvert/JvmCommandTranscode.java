@@ -33,20 +33,6 @@ public class JvmCommandTranscode
         ArgsModular<GenericCodecArgs> result = GenericCodecArgs.parse(args);
         return result;
     }
-//
-//    @Override
-//    public Stage newStage(String... args) {
-//        GenericCodecArgs model = parseArgs(args).model();
-//        Stage result;
-//        if (model.isDecode()) {
-//            Objects.requireNonNull(inTransform, "No decoding for " + codecName);
-//            result = Stages.javaIn(inTransform);
-//        } else {
-//            Objects.requireNonNull(inTransform, "No encoding for " + codecName);
-//            result = Stages.javaOut(outTransform);
-//        }
-//        return result;
-//    }
 
     @Override
     protected void runActual(JvmExecCxt cxt, GenericCodecArgs model) throws IOException {
@@ -83,4 +69,19 @@ public class JvmCommandTranscode
 
         return new JvmCommandTranscode(codecName, inTransform, outTransform);
     }
+
+    //
+//  @Override
+//  public Stage newStage(String... args) {
+//      GenericCodecArgs model = parseArgs(args).model();
+//      Stage result;
+//      if (model.isDecode()) {
+//          Objects.requireNonNull(inTransform, "No decoding for " + codecName);
+//          result = Stages.javaIn(inTransform);
+//      } else {
+//          Objects.requireNonNull(inTransform, "No encoding for " + codecName);
+//          result = Stages.javaOut(outTransform);
+//      }
+//      return result;
+//  }
 }

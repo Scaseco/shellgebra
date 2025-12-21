@@ -29,7 +29,7 @@ public class Stages {
     }
 
     public static Stage docker(String imageRef, CmdOp cmdOp, FileMapper fileMapper) {
-        return docker(imageRef, cmdOp, fileMapper);
+        return docker(imageRef, cmdOp, fileMapper, null);
     }
 
     public static Stage docker(String imageRef, CmdOp cmdOp, FileMapper fileMapper, Function<CmdOpVar, Stage> varResolver) {

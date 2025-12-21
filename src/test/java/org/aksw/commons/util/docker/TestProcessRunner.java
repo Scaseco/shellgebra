@@ -81,7 +81,7 @@ public class TestProcessRunner {
                 ProcessBuilderJvm.of("/bin/head", "-n10"),
                 // ProcessBuilderNative.of("/bin/head", "-n10"),
                 ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
-                    // .interactive(true)
+                    .interactive(true)
                     .imageRef("nestio/lbzip2").fileMapper(fileMapper), // .entrypoint("bash")
                 ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
                 // ProcessBuilderJvm.of("/bin/cat"))

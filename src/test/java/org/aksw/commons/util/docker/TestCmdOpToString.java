@@ -16,8 +16,8 @@ public class TestCmdOpToString {
     @Test
     public void testBashPipe() {
         CmdOp cmdOp = CmdOpPipeline.of(
-            CmdOpExec.of("/my/tool.sh", new CmdArgLiteral("-f"), CmdArg.ofPathString("/foo/bar.dat")),
-            CmdOpExec.of("/my/conv.sh", new CmdArgLiteral("-convert")));
+            CmdOpExec.of("/my/tool.sh", CmdArg.ofLiteral("-f"), CmdArg.ofPathString("/foo/bar.dat")),
+            CmdOpExec.of("/my/conv.sh", CmdArg.ofLiteral("-convert")));
 
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
         CmdString cmdString = runtime.compileString(cmdOp);

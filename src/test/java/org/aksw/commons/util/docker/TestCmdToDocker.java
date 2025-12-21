@@ -40,7 +40,7 @@ public class TestCmdToDocker {
         CmdOp containerizedCmd = CmdOpRewriter.rewriteForContainer(cmdOp, fileMapper);
 
         // Assert generated string.
-        String expectedStr = "/usr/bin/cat /shared/bar.bz2 | /usr/bin/lbzip -dc > /shared/out";
+        String expectedStr = "/usr/bin/cat /shared/bar.bz2 | /usr/bin/lbzip -dc >/shared/out";
         String actualStr = SysRuntime.toString(containerizedCmd).scriptString();
         Assert.assertEquals(expectedStr, actualStr);
 

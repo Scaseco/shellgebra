@@ -77,64 +77,69 @@ public class ProcessBuilderPipeline
         for (int i = 0; i < n; ++i) {
             boolean isLast = i == n - 1;
             IProcessBuilderCore<?> currentBuilderPrototype = pbs.get(i);
-            IProcessBuilderCore<?> currentBuilder = currentBuilderPrototype.clone();
+            IProcessBuilderCore<?> current = currentBuilderPrototype.clone();
+
+            IProcessBuilderCore<?> next = isLast ? null : pbs.get(i + 1);
 
             // Set up redirect input.
             if (priorPath == null) {
                 // FIXME Life cycles are currently not managed correctly:
                 //   Redirect.INHERIT does NOT close the corresponding input stream whereas using a
                 //   redirect.FILE does close the pipe.
-                currentBuilder.redirectInput(new JRedirectJava(Redirect.INHERIT));
+                current.redirectInput(new JRedirectJava(Redirect.INHERIT));
             } else {
-                currentBuilder.redirectInput(new JRedirectJava(Redirect.from(priorPath.toFile())));
+                current.redirectInput(new JRedirectJava(Redirect.from(priorPath.toFile())));
             }
 
             // Set up redirect output.
             if (isLast) {
-                currentBuilder.redirectOutput(new JRedirectJava(Redirect.INHERIT));
+                current.redirectOutput(new JRedirectJava(Redirect.INHERIT));
             } else {
                 // Named pipes break (due to blocking semantics) when used more than once.
                 // So for groups where more than one member reads from the named pipe, we need to create an anon
                 // pipe, and each respective group member will do an extra cat from it.
 
                 // so is the flag "supportsDirectNamedPipe" - and a group returns false if more than 1 member returns true?
-                boolean useNamedPipe = (priorBuilder != null && priorBuilder.supportsDirectNamedPipe()) &&
-                    currentBuilder.supportsDirectNamedPipe() && !currentBuilder.supportsAnonPipeRead();
+                boolean thisSupportsNamedPipeOutput = current.supportsDirectNamedPipe();
+                @SuppressWarnings("null") // isLast == true implies nextBuilderPrototype == null
+                boolean nextRequiresNamedPipeInput = next.supportsDirectNamedPipe() && !next.supportsAnonPipeRead();
+
+                boolean thisRequiresNamedPipeOutput = current.supportsDirectNamedPipe() && !current.supportsAnonPipeWrite();
+                boolean nextSupportsNamedPipeInput = next.supportsDirectNamedPipe();
+
+                boolean useNamedPipe1 = thisRequiresNamedPipeOutput && nextSupportsNamedPipeInput;
+                boolean useNamedPipe2 = thisSupportsNamedPipeOutput && nextRequiresNamedPipeInput;
+                boolean useNamedPipe = useNamedPipe1 || useNamedPipe2;
 
                 PathResource thisPath;
                 if (useNamedPipe) {
                     Path namedPipePath = SysRuntime.newNamedPipePath();
                     thisPath = new PathResource(namedPipePath, namedPipeLifeCycle);
                     thisPath.open();
-                    currentBuilder.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
+                    current.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
                     priorPath = thisPath.getPath();
                 } else {
                     PosixPipe pipe = PosixPipe.open();
                     thisPath = new PathResource(pipe.getWriteEndProcPath(), PathLifeCycles.none());
-                    currentBuilder.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
+                    current.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
                     priorPath = pipe.getReadEndProcPath();
                 }
                 pipes.add(thisPath);
-                priorBuilder = currentBuilder;
+                priorBuilder = current;
             }
 
             // Set up redirect error.
-            currentBuilder.redirectError(new JRedirectJava(Redirect.INHERIT));
-            // tmp.redirectError(new JRedirectJava(Redirect.to(executor.errorPipe().toFile())));
+            current.redirectError(new JRedirectJava(Redirect.INHERIT));
 
-            // Start.
             // Note: If named pipes are involved, then a process cannot start before the target process has been connected.
-
             CompletableFuture<Process> processFuture = CompletableFuture.supplyAsync(() -> {
                 try {
-                    return currentBuilder.start(executor);
+                    return current.start(executor);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }, executorService);
             processFutures.add(processFuture);
-            // Process process = tmp.start(executor);
-            // processes.add(process);
         }
         List<Process> processes = CompletableFuture.allOf(processFutures.toArray(CompletableFuture[]::new)).thenApply(v -> {
             return processFutures.stream().map(CompletableFuture::join).toList();

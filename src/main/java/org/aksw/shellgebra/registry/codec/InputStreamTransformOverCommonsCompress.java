@@ -23,7 +23,7 @@ public class InputStreamTransformOverCommonsCompress
         try {
             return provider.createCompressorInputStream(name, t, true);
         } catch (CompressorException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to create compressor input stream for format: " + name, e);
         }
     }
 
