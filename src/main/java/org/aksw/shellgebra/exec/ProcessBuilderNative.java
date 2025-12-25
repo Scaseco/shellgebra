@@ -141,4 +141,9 @@ public class ProcessBuilderNative
         // TODO Auto-generated method stub
         return false;
     }
+
+    @Override
+    public boolean accessesStdIn() {
+        return true;
+    }
 }

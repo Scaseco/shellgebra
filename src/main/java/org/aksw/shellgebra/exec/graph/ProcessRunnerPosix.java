@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class ProcessRunnerPosix
     implements ProcessRunner
 {
-    private static final Logger logger = LoggerFactory.getLogger(ProcessRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProcessRunnerPosix.class);
 
     // Bridge to java commands.
     private JvmCommandRegistry jvmCmdRegistry;
@@ -78,6 +78,11 @@ public class ProcessRunnerPosix
         this.pipeOut = pipeOut;
         this.pipeErr = pipeErr;
 
+//        // Make sure to init the internal-facing streams.
+//        pipeIn.getInputStream();
+//        pipeOut.getOutputStream();
+//        pipeErr.getOutputStream();
+
         this.jvmCmdRegistry = new JvmCommandRegistry();
     }
 
@@ -117,19 +122,16 @@ public class ProcessRunnerPosix
     @Override
     public FileInput internalIn() {
         return FileInput.of(pipeIn.getReadEndProcPath(), pipeIn.getInputStream());
-        // return pipeIn.getInputStream();
     }
 
     @Override
     public FileOutput internalOut() {
         return FileOutput.of(pipeOut.getWriteEndProcPath(), pipeOut.getOutputStream());
-        // return pipeOut.getOutputStream();
     }
 
     @Override
     public FileOutput internalErr() {
         return FileOutput.of(pipeErr.getWriteEndProcPath(), pipeErr.getOutputStream());
-        // return pipeErr.getOutputStream();
     }
 
     @Override
@@ -174,10 +176,12 @@ public class ProcessRunnerPosix
     @Override
     public Thread setInputGenerator(Consumer<OutputStream> inputSupplier) {
         Runnable runnable = () -> {
-            try (OutputStream out = getOutputStream()) {
+             try (OutputStream out = getOutputStream()) {
+//            try {
+//                OutputStream out = getOutputStream();
                 inputSupplier.accept(out);
                 out.flush();
-                logger.info("Closing: " + SysRuntime.getFdPath(((FileOutputStream)out).getFD()));
+                logger.info("Closing input generator file descriptor: " + SysRuntime.getFdPath(((FileOutputStream)out).getFD()));
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -244,11 +248,15 @@ public class ProcessRunnerPosix
     @Override
     public void shutdown() throws IOException {
         try {
-            internalIn().close();
+            getOutputStream().close();
+            // pipeIn.getOutputStream().close();
+            //internalIn().close();
         } finally {
             try {
+//                getInputStream().close();
                 internalOut().close();
             } finally {
+//                getErrorStream().close();
                 internalErr().close();
             }
         }

@@ -82,6 +82,43 @@ public class ProcessBuilderDocker
         return true;
     }
 
+    protected Optional<Args> tryParseArgs() {
+        Invocation inv = invocation();
+        if (inv == null) {
+            throw new IllegalStateException("No invocation set");
+        }
+
+        List<String> argv = inv.asArgv().argv();
+        List<String> args = argv.subList(1, argv.size());
+
+        CmdOp op;
+        boolean actualInteractive;
+        Optional<Boolean> baseInteractive = Optional.ofNullable(interactive);
+        Args ar = null;
+        if (commandParser != null) {
+            ar = commandParser.parseArgs(args.toArray(String[]::new));
+        }
+        return Optional.ofNullable(ar);
+    }
+
+    @Override
+    public boolean accessesStdIn() {
+        Args ar = tryParseArgs().orElse(null);
+        boolean result = deriveInteractive(ar);
+        return result;
+    }
+
+    protected boolean deriveInteractive(Args ar) {
+        boolean actualInteractive;
+        Optional<Boolean> baseInteractive = Optional.ofNullable(interactive);
+        if (commandParser != null) {
+            actualInteractive = baseInteractive.or(ar::readsStdin).orElse(true);
+        } else {
+            actualInteractive = baseInteractive.orElse(true);
+        }
+        return actualInteractive;
+    }
+
     public static ProcessBuilderDocker of(String ... command) {
         return new ProcessBuilderDocker().command(command);
     }
@@ -171,23 +208,6 @@ public class ProcessBuilderDocker
 
     @Override
     public Process start(ProcessRunner executor) throws IOException {
-        return execInternal(executor);
-    }
-
-    // TODO We need to set up a helper cat in-pipe-end > named-pipe
-    protected Process catProcess(Path source, Path target) throws IOException {
-        CmdOpExec cat = new CmdOpExec(List.of(), "cat", ArgumentList.of(
-            CmdArg.ofPathString(source.toString()),
-            CmdArg.redirect(CmdRedirect.out(target.toString()))));
-        String scriptString = toScriptString(cat);
-
-        ProcessBuilder pb = new ProcessBuilder("bash", "-c", scriptString);
-        Process process = pb.start();
-        return process;
-    }
-
-    // protected Process execToPathInternal(Path outPath, String outContainerPath, PathLifeCycle pathLifeCycle) {
-    protected Process execInternal(ProcessRunner executor) throws IOException {
         Objects.requireNonNull(imageRef, "image not set.");
 
         Invocation inv = invocation();
@@ -198,11 +218,9 @@ public class ProcessBuilderDocker
         // Closer closer = Closer.create();
         List<FileWriterTask> inputTasks = new ArrayList<>();
 
-        PathAndProcess inProcess = processInput(executor.inputPipe(), redirectInput());
         PathAndProcess outProcess = processOutput(executor.outputPipe(), redirectOutput());
         PathAndProcess errProcess = processOutput(executor.errorPipe(), redirectError());
 
-        Path hostMountableInputPath = inProcess.path();
         Path hostMountableOutputPath = outProcess.path();
         Path hostMountableErrorPath = errProcess.path();
 
@@ -232,22 +250,37 @@ public class ProcessBuilderDocker
 
         // CmdOp op = CmdOpExec.ofLiteralArgs(super.command().toArray(String[]::new));
 
-        List<String> argv = inv.asArgv().argv();
-        List<String> args = argv.subList(1, argv.size());
-
+        Args ar = tryParseArgs().orElse(null);
+        boolean actualInteractive = deriveInteractive(ar);
         CmdOp op;
-        boolean actualInteractive;
-        Optional<Boolean> baseInteractive = Optional.ofNullable(interactive);
-        if (commandParser != null) {
-            Args ar = commandParser.parseArgs(args.toArray(String[]::new));
-            op = new CmdOpExec(argv.get(0), ar.toArgList());
-            actualInteractive = baseInteractive.or(ar::readsStdin).orElse(true);
+        if (ar != null) {
+            op = new CmdOpExec(invocation().asArgv().argv().get(0), ar.toArgList());
         } else {
-            op = CmdOpExec.ofLiteralArgs(argv);
-            actualInteractive = baseInteractive.orElse(true);
+            op = CmdOpExec.ofLiteralArgs(invocation().asArgv().asArgv().argv());
         }
 
+//        List<String> argv = inv.asArgv().argv();
+//        List<String> args = argv.subList(1, argv.size());
+//
+//
+//
+//        CmdOp op;
+//        boolean actualInteractive;
+//        Optional<Boolean> baseInteractive = Optional.ofNullable(interactive);
+//        if (commandParser != null) {
+//            Args ar = commandParser.parseArgs(args.toArray(String[]::new));
+//            actualInteractive = baseInteractive.or(ar::readsStdin).orElse(true);
+//            op = new CmdOpExec(argv.get(0), ar.toArgList());
+//        } else {
+//            op = CmdOpExec.ofLiteralArgs(argv);
+//            actualInteractive = baseInteractive.orElse(true);
+//        }
+        System.out.println("Interactive: " + actualInteractive);
+
         if (actualInteractive) {
+            PathAndProcess inProcess = processInput(executor.inputPipe(), redirectInput());
+            Path hostMountableInputPath = inProcess.path();
+
             op = CmdOps.appendRedirects(op,
                 CmdRedirect.in(hostMountableInputPath.toString()));
         }
@@ -284,6 +317,21 @@ public class ProcessBuilderDocker
             throw new RuntimeException(e);
         }
     }
+
+    // TODO We need to set up a helper cat in-pipe-end > named-pipe
+    protected Process catProcess(Path source, Path target) throws IOException {
+        System.out.println("cat process being set up: " + source + " -> " + target);
+        CmdOpExec cat = new CmdOpExec(List.of(), "cat", ArgumentList.of(
+            CmdArg.ofPathString(source.toString()),
+            CmdArg.redirect(CmdRedirect.out(target.toString()))));
+        String scriptString = toScriptString(cat);
+
+        ProcessBuilder pb = new ProcessBuilder("bash", "-c", scriptString);
+        Process process = pb.start();
+        process.toHandle().onExit().thenRun(() -> System.out.println("cat process terminated: " + source + " -> " + target));
+        return process;
+    }
+
 //
 //    @Override
 //    public Process start(ProcessRunner executor) throws IOException {
@@ -495,12 +543,18 @@ public class ProcessBuilderDocker
 
     protected void applySettings(ProcessBuilderDocker target) {
         target.imageRef(imageRef());
+
+        // target.entrypoint(entrypoint());
+
         // target.entrypoint(entrypoint());
         target.workingDirectory(workingDirectory());
         target.interactive(interactive());
 
         target.containerPathResolver(containerPathResolver());
         target.fileMapper(fileMapper());
+
+        target.compiler(compiler());
+        target.commandParser(commandParser);
     }
 
     private static boolean isAnonymousProcPipe(Path p) throws IOException {

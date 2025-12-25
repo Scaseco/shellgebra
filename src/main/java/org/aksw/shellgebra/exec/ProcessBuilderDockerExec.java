@@ -39,6 +39,11 @@ public class ProcessBuilderDockerExec
     }
 
     @Override
+    public boolean accessesStdIn() {
+        return true;
+    }
+
+    @Override
     protected ProcessBuilderDockerExec cloneActual() {
         return new ProcessBuilderDockerExec(container);
     }

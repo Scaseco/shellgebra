@@ -159,6 +159,11 @@ public class ProcessBuilderFinalPlacement
     public boolean supportsDirectNamedPipe() {
         return true;
     }
+
+    @Override
+    public boolean accessesStdIn() {
+        return true;
+    }
 }
 
 class Dispatcher
@@ -485,10 +490,10 @@ class CmdOpVisitorToPbDocker
         // unambiguously give the actual command.
 
         IProcessBuilderCore<?> result = ProcessBuilderDocker.of(newArgs)
-                .commandParser(parser)
-                .imageRef(imageRef)
-                .fileMapper(fileMapper)
-                ;
+            .commandParser(parser)
+            .imageRef(imageRef)
+            .fileMapper(fileMapper)
+            ;
 
         return result;
     }

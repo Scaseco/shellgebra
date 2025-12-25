@@ -14,6 +14,5 @@ public interface Input
     BufferedReader reader();
     BufferedReader reader(Charset charset);
     Charset getReaderCharset();
-
     void transferTo(Output output) throws IOException;
 }

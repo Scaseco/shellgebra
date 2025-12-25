@@ -74,4 +74,9 @@ public class InvokableProcessBuilderHost
     public boolean supportsDirectNamedPipe() {
         return true;
     }
+
+    @Override
+    public boolean accessesStdIn() {
+        return true;
+    }
 }

@@ -22,6 +22,10 @@ public class ProcessBuilderGroup
         return new ProcessBuilderGroup().processBuilders(processBuilders);
     }
 
+    public ProcessBuilderGroup() {
+        super();
+    }
+
     @Override
     protected ProcessBuilderGroup cloneActual() {
         return new ProcessBuilderGroup();
@@ -34,14 +38,17 @@ public class ProcessBuilderGroup
         return new ProcessOverCompletableFuture(future);
     }
 
-    private static int run(ProcessRunner runner, Collection<? extends IProcessBuilderCore<?>> processBuilders) {
-//        ExecutorService executor = Executors.newCachedThreadPool();
+    private int run(ProcessRunner runner, Collection<? extends IProcessBuilderCore<?>> processBuilders) {
         Set<Process> runningProcesses = Collections.synchronizedSet(new LinkedHashSet<>(processBuilders.size()));
-
         int result = 0;
         for (IProcessBuilderCore<?> pb : processBuilders) {
+            pb.redirectInput(redirectInput());
+            pb.redirectOutput(redirectOutput());
+            pb.redirectError(redirectError());
+
             Process process;
             try {
+                System.out.println("Process started from: " + pb);
                 process = pb.start(runner);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -50,6 +57,7 @@ public class ProcessBuilderGroup
             int exitValue;
             try {
                 exitValue = process.waitFor();
+                System.out.println("Process finished from: " + pb);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -75,6 +83,12 @@ public class ProcessBuilderGroup
     @Override
     public boolean supportsDirectNamedPipe() {
         boolean result = processBuilders().stream().filter(IProcessBuilderCore::supportsDirectNamedPipe).count() <= 1;
+        return result;
+    }
+
+    @Override
+    public boolean accessesStdIn() {
+        boolean result = processBuilders().stream().anyMatch(IProcessBuilderCore::accessesStdIn);
         return result;
     }
 }

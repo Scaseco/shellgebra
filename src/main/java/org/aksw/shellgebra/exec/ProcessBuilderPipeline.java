@@ -1,22 +1,30 @@
 package org.aksw.shellgebra.exec;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.PathResource;
 import org.aksw.shellgebra.exec.graph.PosixPipe;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProcessBuilderPipeline
     extends ProcessBuilderCompound<ProcessBuilderPipeline>
 {
+    private static final Logger logger = LoggerFactory.getLogger(ProcessBuilderPipeline.class);
+
     public ProcessBuilderPipeline() {
         super();
     }
@@ -26,6 +34,14 @@ public class ProcessBuilderPipeline
         List<? extends IProcessBuilderCore<?>> pbs = processBuilders();
         IProcessBuilderCore<?> first = pbs.get(0);
         return first.supportsAnonPipeRead();
+    }
+
+
+    @Override
+    public boolean accessesStdIn() {
+        List<? extends IProcessBuilderCore<?>> pbs = processBuilders();
+        IProcessBuilderCore<?> first = pbs.get(0);
+        return first.accessesStdIn();
     }
 
     @Override
@@ -66,6 +82,9 @@ public class ProcessBuilderPipeline
 
         Path priorPath = null;
         IProcessBuilderCore<?> priorBuilder = null;
+        Callable<?> thisWriteEnd = null;
+        Callable<?> nextReadEnd = null;
+        Callable<?> prevReadEnd = null;
 
         List<CompletableFuture<Process>> processFutures = new ArrayList<>(n);
         List<PathResource> pipes = new ArrayList<>(n - 1);
@@ -78,7 +97,6 @@ public class ProcessBuilderPipeline
             boolean isLast = i == n - 1;
             IProcessBuilderCore<?> currentBuilderPrototype = pbs.get(i);
             IProcessBuilderCore<?> current = currentBuilderPrototype.clone();
-
             IProcessBuilderCore<?> next = isLast ? null : pbs.get(i + 1);
 
             // Set up redirect input.
@@ -118,11 +136,30 @@ public class ProcessBuilderPipeline
                     thisPath.open();
                     current.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
                     priorPath = thisPath.getPath();
+                    thisWriteEnd = () -> { thisPath.close(); return null; };
+
+                    boolean doesNotAccessStdIn = !(next != null && next.accessesStdIn());
+
+                    nextReadEnd = () -> {
+                        if (doesNotAccessStdIn) {
+                            try (InputStream unused = Files.newInputStream(namedPipePath)) {}
+                        }
+                        return null;
+                    };
                 } else {
                     PosixPipe pipe = PosixPipe.open();
                     thisPath = new PathResource(pipe.getWriteEndProcPath(), PathLifeCycles.none());
                     current.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
                     priorPath = pipe.getReadEndProcPath();
+                    thisWriteEnd = () -> {
+                        System.out.println("Closing write FD: " + pipe.getWriteFd());
+                        pipe.getOutputStream().close(); return null;
+                    };
+                    nextReadEnd = () -> {
+                        System.out.println("Closing read FD: " + pipe.getReadFd());
+                        pipe.getInputStream().close(); return null;
+                    };
+                    logger.info("Created anonymous pipe, ReadFD=" + pipe.getReadFd() + " WriteFD=" + pipe.getWriteFd());
                 }
                 pipes.add(thisPath);
                 priorBuilder = current;
@@ -130,22 +167,49 @@ public class ProcessBuilderPipeline
 
             // Set up redirect error.
             current.redirectError(new JRedirectJava(Redirect.INHERIT));
+            Callable<?> thisWriteEndCloser = thisWriteEnd;
+            Callable<?> thisReadEndCloser = prevReadEnd;
+
+            // Callable<?> nextc = nextReadEnd;
 
             // Note: If named pipes are involved, then a process cannot start before the target process has been connected.
-            CompletableFuture<Process> processFuture = CompletableFuture.supplyAsync(() -> {
+            Supplier<Process> processSupplier = () -> {
                 try {
-                    return current.start(executor);
-                } catch (IOException e) {
+                    Process r = current.start(executor);
+                    r.waitFor();
+                    return r;
+                } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
+                } finally {
+                    try {
+                        if (thisReadEndCloser != null) {
+                            try {
+                                thisReadEndCloser.call();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    } finally {
+                        if (thisWriteEndCloser != null) {
+                            try {
+                                thisWriteEndCloser.call();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
                 }
-            }, executorService);
+            };
+            CompletableFuture<Process> processFuture = CompletableFuture.supplyAsync(processSupplier, executorService);
             processFutures.add(processFuture);
+            prevReadEnd = nextReadEnd;
         }
+
         List<Process> processes = CompletableFuture.allOf(processFutures.toArray(CompletableFuture[]::new)).thenApply(v -> {
             return processFutures.stream().map(CompletableFuture::join).toList();
         }).join();
         executorService.shutdown();
 
-        return new ProcessPipeline(processes, pipes);
+        return new ProcessPipeline(processes, pipes); // List.of()
     }
 }

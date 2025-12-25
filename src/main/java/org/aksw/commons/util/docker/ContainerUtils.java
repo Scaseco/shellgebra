@@ -16,14 +16,17 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Container;
 
 import org.aksw.jenax.engine.qlever.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
@@ -326,14 +329,9 @@ public class ContainerUtils {
             finalCmd = parts.toArray(String[]::new);
         }
 
-//        try (SysRuntimeDocker sys = SysRuntimeFactoryDocker.create().create(imageName)) {
-//        	sys.
-//        }
-
         try (GenericContainer<?> container = new GenericContainer<>(imageName)
                 .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint(entrypoint))
                 .withCommand(finalCmd)) {
-
             container.start();
             int exitCode = container.getCurrentContainerInfo().getState().getExitCodeLong().intValue();
             return exitCode;
@@ -398,5 +396,46 @@ public class ContainerUtils {
         };
 
         return result;
+    }
+
+    /**
+     * Check if a path exists in the filesystem of the given image,
+     * without starting a container. Relies on opening an input stream to the
+     * targe file via copyArchiveFromContainerCmd.
+     */
+    public boolean fileExistsInImage(String imageName, String pathInContainer) {
+        DockerClient dockerClient = DockerClientFactory.instance().client();
+
+        // Make sure the image is present (pull if needed, or rely on TC’s pull)
+        dockerClient.inspectImageCmd(imageName).exec(); // will throw if missing
+
+        // 1) Create, but do not start, a container from the image
+        CreateContainerResponse container =
+                dockerClient.createContainerCmd(imageName)
+                        .withCmd("true") // irrelevant, we never start it
+                        .exec();
+
+        String containerId = container.getId();
+        try {
+            // 2) Try to copy the path out of the container
+            try (InputStream ignored =
+                         dockerClient.copyArchiveFromContainerCmd(containerId, pathInContainer)
+                                     .exec()) {
+                // If we get here, Docker found something at that path
+                // (file or directory). We can just close the stream.
+                return true;
+            }
+        } catch (NotFoundException e) {
+            // Docker returns 404 if the path doesn’t exist in the container FS
+            return false;
+        } catch (IOException e) {
+            return false;
+        } finally {
+            // 3) Clean up the temporary container
+            dockerClient.removeContainerCmd(containerId)
+                        .withForce(true)
+                        .withRemoveVolumes(true)
+                        .exec();
+        }
     }
 }

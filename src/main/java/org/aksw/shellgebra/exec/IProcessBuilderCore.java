@@ -58,10 +58,18 @@ public interface IProcessBuilderCore<X extends IProcessBuilderCore<X>>
     /**
      * Whether a named pipe can be used with the process builder without risking blocking
      * due to multiple connections being made to it.
-     * So this method must only return true if only a single connection to that pipe will be openend.
+     * This method must only return true if only a single connection to that pipe will be openend.
      *
      * A process builder for host or docker may return true.
      * But a group with two or more 'true-returning' members will return false.
      */
     boolean supportsDirectNamedPipe();
+
+    /**
+     * Whether the configured command will read from stdin.
+     * Used to avoid generation of needless named or anon pipes such as in "echo foo | echo bar":
+     * where the second link does not read the data from the prior link.
+     *
+     */
+    boolean accessesStdIn();
 }

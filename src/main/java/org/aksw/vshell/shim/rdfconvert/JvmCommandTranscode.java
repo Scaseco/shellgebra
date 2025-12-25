@@ -36,16 +36,26 @@ public class JvmCommandTranscode
 
     @Override
     protected void runActual(JvmExecCxt cxt, GenericCodecArgs model) throws IOException {
-        // GenericCodecArgs model = args.model();
+        System.out.println("transcode called");
         if (model.isDecode()) {
             Objects.requireNonNull(inTransform, "No decoding for " + codecName);
-            InputStream in = cxt.in().inputStream();
-            InputStream out = inTransform.apply(in);
-            out.transferTo(cxt.out().outputStream());
+            InputStream encodedIn = cxt.in().inputStream();
+            InputStream decodedIn = inTransform.apply(encodedIn);
+            OutputStream os = cxt.out().outputStream();
+            System.out.println("transcode reading started.");
+            decodedIn.transferTo(os);
+            if (false) {
+                int c;
+                while ((c = decodedIn.read()) != -1) {
+                    System.out.println("Read byte: " + c);
+                }
+            }
+            System.out.println("transcode terminated");
         } else {
             Objects.requireNonNull(inTransform, "No encoding for " + codecName);
             InputStream in = cxt.in().inputStream();
-            OutputStream out = outTransform.apply(cxt.out().outputStream());
+            OutputStream rawOut = cxt.out().outputStream();
+            OutputStream out = outTransform.apply(rawOut);
             in.transferTo(out);
         }
     }

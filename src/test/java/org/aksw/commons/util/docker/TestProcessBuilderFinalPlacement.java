@@ -84,12 +84,19 @@ public class TestProcessBuilderFinalPlacement {
         } else {
             // ISSUE If in a pipeline there is a group then we MUST use anon pipes!
             CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
-            CmdOp cmdOp2 = CmdOpGroup.of(
-                CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),
-                CmdOpExec.ofLiterals("/virt/echo", "done.")
-            );
-            // TODO Do not use CmdOpExec.ofLiterals
-            // Instead: use a command registry with shim-parsers so that arguments are validated.
+            CmdOp cmdOp2;
+
+            if (false) {
+                cmdOp2 = CmdOpGroup.of(
+                    CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),
+                    CmdOpExec.ofLiterals("/virt/echo", "done.")
+                );
+            } else {
+                // TODO Do not use CmdOpExec.ofLiterals
+                // Instead: use a command registry with shim-parsers so that arguments are validated.
+//                cmdOp2 = CmdOpExec.ofLiterals("/virt/bzip2", "-dc");
+                cmdOp2 = CmdOpExec.ofLiterals("/virt/echo", "done.");
+            }
 
             cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
         }
@@ -116,7 +123,7 @@ public class TestProcessBuilderFinalPlacement {
 
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
         try (ProcessRunner context = ProcessRunnerPosix.create()) {
-            context.setOutputLineReaderUtf8(logger::info);
+            context.setOutputLineReaderUtf8(line -> logger.info("Got line: " + line));
             context.setErrorLineReaderUtf8(logger::info);
             context.setInputPrintStreamUtf8(out -> {
                 out.println("hello world");
@@ -127,13 +134,17 @@ public class TestProcessBuilderFinalPlacement {
 //                out.flush();
 //                logger.info("Data generation thread terminated.");
             });
-
             // FIXME Reuse existing jvmCmdRegistry!
             TestCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
             ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, resolver, unionCatalog);
             pb.command(inlined);
             Process p = pb.start(context);
+
+            // Thread.sleep(5000);
+
+            System.out.println("Shutting context down.");
             p.waitFor();
+            context.shutdown();
         }
     }
 }
