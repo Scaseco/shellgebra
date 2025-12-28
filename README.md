@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 
 ## Summary of Operators
@@ -43,3 +44,7 @@ public interface CmdOpVisitor<T> {
 }
 ```
 
+=======
+# Shellgebra
+ProcessBuilder on steroids: build shell-like pipelines in Java, then automatically resolve missing commands via containers or JVM implementations — keeping the  JVM out of the hot data path if possible.
+>>>>>>> 2128587 (Initial commit)
