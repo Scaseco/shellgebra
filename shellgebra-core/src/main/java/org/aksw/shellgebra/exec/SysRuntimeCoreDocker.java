@@ -17,6 +17,7 @@ public class SysRuntimeCoreDocker
     private Argv entrypoint;
     private CmdStrOps cmdStrOps;
 
+    // Issue: entrypoint may rather be the keep alive command.
     public SysRuntimeCoreDocker(GenericContainer<?> container, Argv entrypoint, CmdStrOps cmdStrOps) {
         super();
         this.container = container;

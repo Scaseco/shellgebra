@@ -3,17 +3,17 @@ package org.aksw.shellgebra.exec;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
 
 import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.commons.util.docker.HostNameUtils;
-import org.aksw.commons.util.docker.ImageIntrospector;
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
-import org.aksw.jenax.model.osreo.ImageIntrospection;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.RDFDataMgr;
+import org.aksw.shellgebra.model.osreo.ImageIntrospector;
+import org.aksw.shellgebra.model2.ShellCatalogEntry;
+import org.aksw.shellgebra.model2.ShellProbeResult;
 import org.testcontainers.containers.GenericContainer;
-
-import com.github.dockerjava.api.command.WaitContainerResultCallback;
 
 import jenax.engine.qlever.docker.QleverConstants;
 
@@ -23,13 +23,16 @@ public class MainPlaygroundShellgebra {
 //       String imageName = "nestio/lbzip2";
         String imageName = QleverConstants.DOCKER_IMAGE_NAME + ":" + QleverConstants.DOCKER_IMAGE_TAG;
 
-        Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
-        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(model);
-        ImageIntrospection inspection = imageIntrospector.inspect(imageName, true);
+        SysRuntimeFactoryDocker factory = SysRuntimeFactoryDocker.create();
+        ImageIntrospector introspector = ImageIntrospectorImpl.of();
+        try (SysRuntimeCoreDocker runtimeCore = factory.createCore(imageName)) {
+            List<ShellCatalogEntry> entries = ImageIntrospectorImpl.getShellSubCatalog(ImageIntrospectorImpl.getShellCatalog(), "bash");
+            for (ShellCatalogEntry entry : entries) {
+                ShellProbeResult probeResult = introspector.findShell(runtimeCore, entry);
+            }
 
+        }
 
-
-        System.out.println(inspection);
 
         if (true) {
             return;

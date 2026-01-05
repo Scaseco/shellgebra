@@ -10,9 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.aksw.commons.util.docker.ContainerUtils;
-import org.aksw.commons.util.docker.ImageIntrospector;
-import org.aksw.jenax.model.osreo.ImageIntrospection;
-import org.aksw.jenax.model.osreo.ShellSupport;
+//import org.aksw.jenax.model.osreo.ImageIntrospection;
+//import org.aksw.jenax.model.osreo.ShellSupport;
 import org.aksw.shellgebra.exec.SysRuntimeCore;
 import org.aksw.shellgebra.exec.SysRuntimeCoreExecSiteFactoryPool;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
@@ -21,6 +20,7 @@ import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
+import org.aksw.shellgebra.model.osreo.ImageIntrospector;
 import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
 

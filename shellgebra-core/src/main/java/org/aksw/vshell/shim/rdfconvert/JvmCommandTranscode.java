@@ -7,8 +7,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
-import org.aksw.commons.io.util.InputStreamTransform;
-import org.aksw.commons.io.util.OutputStreamTransform;
+import org.aksw.commons.io.util.stream.InputStreamTransform;
+import org.aksw.commons.io.util.stream.OutputStreamTransform;
 import org.aksw.shellgebra.registry.codec.InputStreamTransformOverCommonsCompress;
 import org.aksw.shellgebra.registry.codec.OutputStreamTransformOverCommonsCompress;
 import org.aksw.vshell.registry.JvmExecCxt;

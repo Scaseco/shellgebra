@@ -10,18 +10,18 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.aksw.commons.util.docker.ContainerUtils;
-import org.aksw.commons.util.docker.ImageIntrospector;
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
-import org.aksw.jenax.model.osreo.ImageIntrospection;
-import org.aksw.jenax.model.osreo.ShellSupport;
+import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.RDFDataMgr;
+import org.aksw.shellgebra.model.osreo.ImageIntrospection;
+import org.aksw.shellgebra.model.osreo.ImageIntrospector;
+import org.aksw.shellgebra.model.osreo.ShellSupport;
+import org.aksw.shellgebra.model2.ShellProbeResult;
 import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
 
@@ -42,8 +42,8 @@ public class ExecSiteResolver {
     }
 
     public static ExecSiteResolver of(CommandCatalog commandCatalog, JvmCommandRegistry jvmCmdRegistry) {
-        Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
-        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(model);
+        // Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
+        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of();
         return new ExecSiteResolver(commandCatalog, jvmCmdRegistry, ExecSiteProbeResults.get(), imageIntrospector);
     }
 
@@ -88,9 +88,11 @@ public class ExecSiteResolver {
         return execSite.accept(new ExecSiteVisitor<Boolean>() {
             @Override
             public Boolean visit(ExecSiteDockerImage execSite) {
-                ImageIntrospection insp = dockerImageIntrospector.inspect(execSite.imageRef(),true);
-                ShellSupport bash = insp.getShellStatus().get("bash");
-                return bash != null;
+//                ImageIntrospection insp = dockerImageIntrospector.findShell(execSite.imageRef(), true);
+//                ShellSupport bash = insp.getShellStatus().get("bash");
+//                return bash != null;
+                ShellProbeResult probeResult = SysRuntimeFactoryDocker.get().findShell(execSite.imageRef(), true, "bash");
+                return probeResult != null;
             }
 
             @Override
@@ -122,11 +124,13 @@ public class ExecSiteResolver {
                 if (r == null) {
                     // TODO: We should also check whether the command works without a shell
                     // e.g. if the default entry point already is a shell.
-                    ImageIntrospection ii = dockerImageIntrospector.inspect(imageRef, true);
-                    ShellSupport ss = ii.getShellStatus().get("bash");
-                    if (ss != null) {
-                        entrypoint = ss.getCommandPath();
-                        commandPrefix = Optional.ofNullable(ss.getCommandOption())
+//                    ImageIntrospection ii = dockerImageIntrospector.findShell(imageRef, true);
+//                    ShellSupport ss = ii.getShellStatus().get("bash");
+                    ShellProbeResult probeResult = SysRuntimeFactoryDocker.get().findShell(execSite.imageRef(), true, "bash");
+
+                    if (probeResult != null) {
+                        entrypoint = probeResult.location();
+                        commandPrefix = Optional.ofNullable(probeResult.commandOption())
                             .map(List::of).orElse(List.of());
                     }
 

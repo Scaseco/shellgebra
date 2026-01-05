@@ -1,6 +1,9 @@
 package org.aksw.commons.util.docker;
 
-import org.aksw.jenax.model.osreo.ImageIntrospection;
+import org.aksw.shellgebra.exec.SysRuntimeCoreDocker;
+import org.aksw.shellgebra.model.osreo.ImageIntrospector;
+import org.aksw.shellgebra.model2.ShellCatalogEntry;
+import org.aksw.shellgebra.model2.ShellProbeResult;
 
 public class ImageIntrospectorWrapper
     implements ImageIntrospector
@@ -17,7 +20,7 @@ public class ImageIntrospectorWrapper
     }
 
     @Override
-    public ImageIntrospection inspect(String image, boolean pullIfAbsent) {
-        return getDelegate().inspect(image, pullIfAbsent);
+    public ShellProbeResult findShell(SysRuntimeCoreDocker runtime, ShellCatalogEntry shell) {
+        return getDelegate().findShell(runtime, shell);
     }
 }

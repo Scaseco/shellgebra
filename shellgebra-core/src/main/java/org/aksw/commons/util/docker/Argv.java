@@ -34,8 +34,13 @@ public record Argv(List<String> argv) {
         return new Argv(argv);
     }
 
+    public boolean isEmpty() {
+        return argv.isEmpty();
+    }
+
+    /** Return the command, or null if this argv instance is empty. */
     public String command() {
-        return argv.get(0);
+        return argv.isEmpty() ? null : argv.get(0);
     }
 
     public List<String> args() {

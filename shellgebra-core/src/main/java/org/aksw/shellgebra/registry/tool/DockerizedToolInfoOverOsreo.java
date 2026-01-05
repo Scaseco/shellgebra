@@ -1,6 +1,6 @@
 package org.aksw.shellgebra.registry.tool;
 
-import org.aksw.jenax.model.osreo.OsreoTool;
+// import org.aksw.jenax.model.osreo.OsreoTool;
 
 //public class DockerizedToolInfoOverOsreo
 //    implements DockerizedToolInfo

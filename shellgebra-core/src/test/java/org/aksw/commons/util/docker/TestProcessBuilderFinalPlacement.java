@@ -19,6 +19,7 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
+import org.aksw.shellgebra.model.osreo.ImageIntrospector;
 import org.aksw.vshell.registry.CandidatePlacement;
 import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
 import org.aksw.vshell.registry.CommandCatalog;
@@ -60,8 +61,8 @@ public class TestProcessBuilderFinalPlacement {
         // Need an adapter or cmdAvailability.asDockerImageMap().
 
         Model shellModel = RDFDataMgr.loadModel("shell-ontology.ttl");
-        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(shellModel, probeResults);
-        imageIntrospector = new ImageIntrospectorCaching(imageIntrospector);
+        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(); // shellModel, probeResults);
+        // imageIntrospector = new ImageIntrospectorCaching(imageIntrospector);
 
         ExecSiteResolver resolver = new ExecSiteResolver(candidates, jvmCmdRegistry, probeResults, imageIntrospector);
 
