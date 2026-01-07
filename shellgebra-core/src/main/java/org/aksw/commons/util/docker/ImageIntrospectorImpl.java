@@ -316,7 +316,8 @@ public class ImageIntrospectorImpl
                 c = c.withCommand(actualCmd);
 
                 c.start();
-                Argv actualEntryPointArgv = Argv.of(actualCmd);
+                // Argv actualEntryPointArgv = Argv.of(actualCmd);
+                Argv actualEntryPointArgv = Argv.of(actualEntryPoint);
                 result = new SysRuntimeCoreDocker(c, actualEntryPointArgv, CmdStrOpsBash.get());
                 probeResults.put(keepAliveArgv, execSite, true);
                 break;

@@ -56,9 +56,11 @@ public class SysRuntimeFactoryDocker {
     }
 
     public SysRuntimeCoreDocker createCore(String imageRef, boolean pullIfAbsent) {
-        List<ShellCatalogEntry> shellCatalog = ImageIntrospectorImpl.getShellCatalog();
-        List<ShellCatalogEntry> bashCatalog = ImageIntrospectorImpl.getShellSubCatalog(shellCatalog, "bash");
-        SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, pullIfAbsent, bashCatalog, imageToEntrypoints, probeResults);
+//        List<ShellCatalogEntry> shellCatalog = ImageIntrospectorImpl.getShellCatalog();
+//        List<ShellCatalogEntry> bashCatalog = ImageIntrospectorImpl.getShellSubCatalog(shellCatalog, "bash");
+        // SysRuntimeCoreDocker core = ImageIntrospectorImpl.findKeepAlive(imageRef, pullIfAbsent, bashCatalog, imageToEntrypoints, probeResults);
+        List<Argv> keepAliveCmdCatalog = ImageIntrospectorImpl.getKeepAliveCatalog();
+        SysRuntimeCoreDocker core = ImageIntrospectorImpl.startKeptAlive(imageRef, keepAliveCmdCatalog, probeResults);
         return core;
     }
 
