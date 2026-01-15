@@ -58,23 +58,6 @@ public interface SysRuntime
     @Override
     public void close();
 
-    public static Path newNamedPipePath() throws IOException {
-        String baseDir = System.getProperty("java.io.tmpdir");
-        String fileName = "named-pipe-" + System.nanoTime();
-        Path result = Path.of(baseDir).resolve(fileName);
-        return result;
-    }
-
-    public static Path newNamedPipe() throws IOException {
-        Path result = newNamedPipePath();
-        newNamedPipe(result);
-        return result;
-    }
-
-    public static void newNamedPipe(Path path) throws IOException {
-        SysRuntimeImpl.forCurrentOs().createNamedPipe(path);
-    }
-
     /** Returns a path such as /proc/process_id/fd/123 */
     public static Path getFdPath(FileDescriptor fd) {
         int fdVal;

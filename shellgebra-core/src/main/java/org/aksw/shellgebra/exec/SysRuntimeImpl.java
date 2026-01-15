@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.jenax.engine.qlever.SystemUtils;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
@@ -122,9 +123,10 @@ public class SysRuntimeImpl
 
     @Override
     public void createNamedPipe(Path path) throws IOException {
-        String absPathStr = path.toAbsolutePath().toString();
-        String resolvedCmd = which("mkfifo");
-        SystemUtils.runAndWait(logger::info, resolvedCmd, absPathStr);
+        NamedPipe.create(path);
+//        String absPathStr = path.toAbsolutePath().toString();
+//        String resolvedCmd = which("mkfifo");
+//        SystemUtils.runAndWait(logger::info, resolvedCmd, absPathStr);
     }
 
     @Override

@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
+import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.PathResource;
 import org.aksw.shellgebra.exec.graph.PosixPipe;
@@ -35,7 +36,6 @@ public class ProcessBuilderPipeline
         IProcessBuilderCore<?> first = pbs.get(0);
         return first.supportsAnonPipeRead();
     }
-
 
     @Override
     public boolean accessesStdIn() {
@@ -131,7 +131,7 @@ public class ProcessBuilderPipeline
 
                 PathResource thisPath;
                 if (useNamedPipe) {
-                    Path namedPipePath = SysRuntime.newNamedPipePath();
+                    Path namedPipePath = NamedPipe.newNamedPipePath();
                     thisPath = new PathResource(namedPipePath, namedPipeLifeCycle);
                     thisPath.open();
                     current.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
@@ -212,4 +212,17 @@ public class ProcessBuilderPipeline
 
         return new ProcessPipeline(processes, pipes); // List.of()
     }
+
+    @Override
+    public String toString() {
+        return "ProcessBuilderPipeline [processBuilders()=" + processBuilders() + ", environment()=" + environment()
+                + ", directory()=" + directory()
+                // + ", redirectErrorStream()=" + redirectErrorStream()
+                // + ", redirectInput()=" + redirectInput()
+                // + ", redirectOutput()=" + redirectOutput()
+                // + ", redirectError()=" + redirectError()
+                + "]";
+    }
+
+
 }

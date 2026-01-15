@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.Test;
 
-import org.aksw.shellgebra.exec.SysRuntime;
+import org.aksw.jenax.engine.qlever.NamedPipe;
 
 public class TestPipes {
     // FIXME This is more an experiment rather than a test.
@@ -29,7 +29,7 @@ public class TestPipes {
     // @Test
     public void test01() throws IOException, InterruptedException {
         Path path = Path.of("my-pipe-" + System.nanoTime());
-        SysRuntime.newNamedPipe(path);
+        NamedPipe.create(path);
         Set<Integer> collector = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
         int n = 100000;
@@ -76,7 +76,7 @@ public class TestPipes {
     @Test
     public void testHeldReader() throws IOException, InterruptedException {
         Path path = Path.of("my-pipe-" + System.nanoTime());
-        SysRuntime.newNamedPipe(path);
+        NamedPipe.create(path);
         Set<Integer> collector = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
         InputStream[] noReadReaderTmp = {null};

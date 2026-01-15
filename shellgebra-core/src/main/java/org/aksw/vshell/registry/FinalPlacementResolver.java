@@ -17,6 +17,9 @@ import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 
+/**
+ * Rewrites a final placement such that the virtual command name is resolved to the physical one.
+ */
 public class FinalPlacementResolver {
     public static FinalPlacement resolve(FinalPlacement inPlacement, ExecSiteResolver resolver, CommandCatalog inferredCatalog) {
         PlacedCmd root = inPlacement.cmdOp();
@@ -37,6 +40,8 @@ public class FinalPlacementResolver {
             @Override
             public CmdOp transform(CmdOpExec op, List<CmdArg> subOps) {
                 String inName = op.name();
+                // The reason why doResolve is false here: The command shim is attached to the virtual command name
+                //   If we resolve the virtual command here to the physical one, then we lose the link to the shim.
                 boolean doResolve = false;
                 String outName;
                 if (doResolve) {

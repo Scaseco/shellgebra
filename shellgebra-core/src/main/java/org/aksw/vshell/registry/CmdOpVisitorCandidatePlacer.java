@@ -34,20 +34,20 @@ public class CmdOpVisitorCandidatePlacer
     implements CmdOpVisitor<PlacedCommand>
 {
     /** ExecSiteResolver can test exec sites for whether they provide a command. */
-    // private CommandReg
     private CommandCatalog cmdRegistry;
     private ExecSiteResolver execSiteResolver;
     private Set<ExecSite> preferredExecSites;
     private Map<CmdOp, Set<ExecSite>> opToSites = new IdentityHashMap<>();
     private Map<CmdOpVar, PlacedCommand> varToPlacement = new HashMap<>();
 
-    private CommandRegistry inferredCatalog;
+    /** Catalog of verified command locations (virtCmdName, execSite) -&gt; cmdLocation */
+    private CommandRegistry probeResultsCatalog;
     private int nextVar = 0;
 
-    public CmdOpVisitorCandidatePlacer(CommandCatalog cmdRegistry, CommandRegistry inferredCatalog, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
+    public CmdOpVisitorCandidatePlacer(CommandCatalog cmdRegistry, CommandRegistry probeResultsCatalog, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
         super();
         this.cmdRegistry = cmdRegistry;
-        this.inferredCatalog = inferredCatalog;
+        this.probeResultsCatalog = probeResultsCatalog;
         this.execSiteResolver = execSiteResolver;
         this.preferredExecSites = preferredExecSites;
     }
@@ -103,7 +103,7 @@ public class CmdOpVisitorCandidatePlacer
 
                 if (isCmdPresent) {
                     execSites.add(execSite);
-                    inferredCatalog.put(virtCmdName, execSite, cmdLocation);
+                    probeResultsCatalog.put(virtCmdName, execSite, cmdLocation);
                 }
             }
         }

@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.newsclub.net.unix.FileDescriptorCast;
@@ -155,5 +156,18 @@ public final class PosixPipe
         if (first != null) {
             throw first;
         }
+    }
+
+    public static boolean isAnonymousProcPipe(Path p) throws IOException {
+        // Only meaningful on Linux procfs /proc/<pid>/fd/N
+
+        // if (p.startsWith("/proc") && p.toString().contains("/fd/")) return false;
+        if (!p.startsWith("/proc")) return false;
+        if (!Files.isSymbolicLink(p)) return false;
+
+        Path target = Files.readSymbolicLink(p);
+        String s = target.toString();
+        // return s.startsWith("pipe:[") || s.startsWith("socket:[") || s.startsWith("anon_inode:[");
+        return s.matches("^(pipe|socket|anon_inode):\\[.*\\]$");
     }
 }

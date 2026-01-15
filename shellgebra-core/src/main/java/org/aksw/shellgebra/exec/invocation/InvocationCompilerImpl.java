@@ -2,6 +2,7 @@ package org.aksw.shellgebra.exec.invocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.aksw.shellgebra.exec.invocation.Invocation.Script;
 import org.slf4j.Logger;
@@ -58,6 +59,11 @@ public class InvocationCompilerImpl
             try {
                 if (provider.supports(mediaType)) {
                     result = provider.compile(content, mediaType, ctx);
+                    // Sanity NPE check.
+                    Objects.requireNonNull(result, "Null invocation despite supported media type " + mediaType);
+                    if (result != null) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 logger.warn("Exception raised by provider", e);

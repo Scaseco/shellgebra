@@ -13,6 +13,7 @@ import com.github.dockerjava.api.model.Bind;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.commons.util.docker.ContainerUtils;
+import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
 import org.aksw.shellgebra.algebra.cmd.arg.Token;
@@ -25,6 +26,7 @@ import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.exec.graph.PosixPipe;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.invocation.CompileContext;
 import org.aksw.shellgebra.exec.invocation.ExecutableInvocation;
@@ -221,6 +223,9 @@ public class ProcessBuilderDocker
         PathAndProcess outProcess = processOutput(executor.outputPipe(), redirectOutput());
         PathAndProcess errProcess = processOutput(executor.errorPipe(), redirectError());
 
+        // FIXME/TODO The attached processes are not explicitly linked to the created processes.
+        //            Terminating the process should enforce explicitly killing the pump processes.
+
         Path hostMountableOutputPath = outProcess.path();
         Path hostMountableErrorPath = errProcess.path();
 
@@ -311,7 +316,7 @@ public class ProcessBuilderDocker
             // so that a final termination callback can be reliably called.
             runnable.run();
 
-            // TODOD In general exec.close() must be called!
+            // TODO In general exec.close() must be called!
             return new ProcessOverDockerContainer(container);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -319,7 +324,7 @@ public class ProcessBuilderDocker
     }
 
     // TODO We need to set up a helper cat in-pipe-end > named-pipe
-    protected Process catProcess(Path source, Path target) throws IOException {
+    protected static Process catProcess(Path source, Path target) throws IOException {
         System.out.println("cat process being set up: " + source + " -> " + target);
         CmdOpExec cat = new CmdOpExec(List.of(), "cat", ArgumentList.of(
             CmdArg.ofPathString(source.toString()),
@@ -371,9 +376,6 @@ public class ProcessBuilderDocker
 //        return p;
 //    }
 
-    // Perhaps use FileWriter abstraction?
-    private record PathAndProcess(Path path, Process process) {}
-
     private PathAndProcess processInput(Path inputPipePath, JRedirect redirect) throws IOException {
         // Extract effective raw input path
         Path rawInputPath = null;
@@ -399,7 +401,7 @@ public class ProcessBuilderDocker
         if (isRawInputPathMountable) {
             hostMountableInputPath = rawInputPath;
         } else {
-            Path namedPipePath = SysRuntime.newNamedPipe();
+            Path namedPipePath = NamedPipe.create();
             hostMountableInputPath = namedPipePath;
             pumpProcess = catProcess(rawInputPath, hostMountableInputPath);
             // TODO Link pump process life cycle to the returned process.
@@ -432,7 +434,7 @@ public class ProcessBuilderDocker
         if (isRawPathMountable) {
             hostMountablePath = rawPath;
         } else {
-            Path namedPipePath = SysRuntime.newNamedPipe();
+            Path namedPipePath = NamedPipe.create();
             hostMountablePath = namedPipePath;
             pumpProcess = catProcess(hostMountablePath, rawPath);
         }
@@ -557,43 +559,22 @@ public class ProcessBuilderDocker
         target.commandParser(commandParser);
     }
 
-    private static boolean isAnonymousProcPipe(Path p) throws IOException {
-        // Only meaningful on Linux procfs /proc/<pid>/fd/N
-
-        // if (p.startsWith("/proc") && p.toString().contains("/fd/")) return false;
-        if (!p.startsWith("/proc")) return false;
-        if (!Files.isSymbolicLink(p)) return false;
-
-        Path target = Files.readSymbolicLink(p);
-        String s = target.toString();
-        // return s.startsWith("pipe:[") || s.startsWith("socket:[") || s.startsWith("anon_inode:[");
-        return s.matches("^(pipe|socket|anon_inode):\\[.*\\]$");
-    }
-
     /**
      * Return true if the given path can be bind mounted into a docker container.
      * Specifically, any path starting with /proc is considered to be NOT bind mountable.
      */
     private static boolean isProbablyDockerBindSource(Path p) throws IOException {
         if (!Files.exists(p)) return false;
-        return !isAnonymousProcPipe(p);
+        return !PosixPipe.isAnonymousProcPipe(p);
+    }
+
+    @Override
+    public String toString() {
+        return "ProcessBuilderDocker [imageRef=" + imageRef + ", invocation=" + invocation() + ", entrypoint=" + entrypoint + ", workingDirectory="
+                + workingDirectory
+                + ", interactive=" + interactive + "]";
+        // Excluded attributes:
+        //  + ", containerPathResolver=" + containerPathResolver + ", fileMapper=" + fileMapper
+        //  + ", compiler=" + compiler + ", commandParser=" + commandParser
     }
 }
-
-//// String[] entrypoint = new String[]{"bash"};
-//String[] cmdParts;
-//if (true) { // cmdString.isScriptString()) {
-//  cmdParts = new String[] {
-//      "-c",
-//      // List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
-//      scriptString
-//  };
-//} else {
-////  CmdStrOps strOps = runtime.getStrOps();
-////  cmdParts = cmdString.cmd(); // XXX Must ensure that the command is resolvable!
-//}
-//
-//
-//
-//InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
-//ExecutableInvocation exec = finalCompiler.compile(inv, cxt);

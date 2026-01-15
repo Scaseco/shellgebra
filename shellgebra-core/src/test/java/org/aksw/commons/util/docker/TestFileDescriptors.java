@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.junit.Test;
 
-import org.aksw.shellgebra.exec.SysRuntime;
+import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.shellgebra.exec.graph.PosixPipe;
 
 
@@ -64,7 +64,7 @@ public class TestFileDescriptors {
     // @Test
     public void testWorkingHackWithAnonymousPipeOverNamedPipe() throws IOException, InterruptedException {
         Path path = Path.of("my-pipe-" + System.nanoTime());
-        SysRuntime.newNamedPipe(path); // Calls mkfifo path
+        NamedPipe.create(path); // Calls mkfifo path
         File file = path.toFile();
 
         CompletableFuture.runAsync(() -> {

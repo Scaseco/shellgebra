@@ -118,7 +118,7 @@
 		<!-- <jetty.jsp.version>9.2.22.v20170606</jetty.jsp.version> -->
 		<javaee-api.version>6.0</javaee-api.version>
 		<!-- Project Settings -->
-		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.release>21</maven.compiler.release>
 		<!-- <maven.compiler.target>17</maven.compiler.target> -->
 		<!--
 		<java.version.javadoc>http://java.sun.com/javase/9/docs/api/</java.version.javadoc> -->
