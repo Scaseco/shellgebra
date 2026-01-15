@@ -186,6 +186,8 @@ public class TestCmdArgRewrite {
             }
 
             cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
+            // cmdOp = cmdOp1;
+            // cmdOp = cmdOp2;
         }
         return cmdOp;
     }

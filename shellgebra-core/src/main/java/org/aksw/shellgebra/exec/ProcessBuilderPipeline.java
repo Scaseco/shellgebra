@@ -111,7 +111,8 @@ public class ProcessBuilderPipeline
 
             // Set up redirect output.
             if (isLast) {
-                current.redirectOutput(new JRedirectJava(Redirect.INHERIT));
+                current.redirectOutput(redirectOutput());
+                // current.redirectOutput(new JRedirectJava(Redirect.INHERIT));
             } else {
                 // Named pipes break (due to blocking semantics) when used more than once.
                 // So for groups where more than one member reads from the named pipe, we need to create an anon
@@ -121,6 +122,8 @@ public class ProcessBuilderPipeline
                 boolean thisSupportsNamedPipeOutput = current.supportsDirectNamedPipe();
                 @SuppressWarnings("null") // isLast == true implies nextBuilderPrototype == null
                 boolean nextRequiresNamedPipeInput = next.supportsDirectNamedPipe() && !next.supportsAnonPipeRead();
+
+                boolean nextAccessesStdin = next.accessesStdIn();
 
                 boolean thisRequiresNamedPipeOutput = current.supportsDirectNamedPipe() && !current.supportsAnonPipeWrite();
                 boolean nextSupportsNamedPipeInput = next.supportsDirectNamedPipe();
