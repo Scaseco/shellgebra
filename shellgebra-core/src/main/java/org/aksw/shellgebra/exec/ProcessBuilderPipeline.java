@@ -169,7 +169,8 @@ public class ProcessBuilderPipeline
             }
 
             // Set up redirect error.
-            current.redirectError(new JRedirectJava(Redirect.INHERIT));
+            current.redirectError(redirectError());
+            // current.redirectError(new JRedirectJava(Redirect.INHERIT));
             Callable<?> thisWriteEndCloser = thisWriteEnd;
             Callable<?> thisReadEndCloser = prevReadEnd;
 
