@@ -1,10 +1,9 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.processbuilder;
 
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,7 +12,6 @@ import com.github.dockerjava.api.model.Bind;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.commons.util.docker.ContainerUtils;
-import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgWord;
 import org.aksw.shellgebra.algebra.cmd.arg.Token;
@@ -24,9 +22,13 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.CmdOpRewriter;
+import org.aksw.shellgebra.exec.SysRuntime;
+import org.aksw.shellgebra.exec.SysRuntimeCoreLazy;
+import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
+import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.exec.graph.PosixPipe;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.invocation.CompileContext;
 import org.aksw.shellgebra.exec.invocation.ExecutableInvocation;
@@ -35,6 +37,8 @@ import org.aksw.shellgebra.exec.invocation.InvocationCompiler;
 import org.aksw.shellgebra.exec.invocation.InvocationCompilerImpl;
 import org.aksw.shellgebra.exec.invocation.InvokableProcessBuilderBase;
 import org.aksw.shellgebra.exec.invocation.ScriptContent;
+import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.pipe.PosixPipe;
 import org.aksw.vshell.registry.JvmCommandParser;
 import org.aksw.vshell.shim.rdfconvert.Args;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
@@ -218,7 +222,7 @@ public class ProcessBuilderDocker
         }
 
         // Closer closer = Closer.create();
-        List<FileWriterTask> inputTasks = new ArrayList<>();
+        // List<FileWriterTask> inputTasks = new ArrayList<>();
 
         PathAndProcess outProcess = processOutput(executor.outputPipe(), redirectOutput());
         PathAndProcess errProcess = processOutput(executor.errorPipe(), redirectError());

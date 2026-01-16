@@ -2,6 +2,8 @@ package org.aksw.shellgebra.exec;
 
 import java.util.List;
 
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
+
 // XXX Perhaps the String[] command should be moved to a sub-interface
 public interface IProcessBuilder<X extends IProcessBuilder<X>>
     extends IProcessBuilderCore<X>

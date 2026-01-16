@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.processbuilder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -1,6 +1,8 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.processbuilder;
 
 import java.util.List;
+
+import org.aksw.shellgebra.exec.IProcessBuilder;
 
 public abstract class ProcessBuilderBase<X extends ProcessBuilderBase<X>>
     extends ProcessBuilderCore<X>

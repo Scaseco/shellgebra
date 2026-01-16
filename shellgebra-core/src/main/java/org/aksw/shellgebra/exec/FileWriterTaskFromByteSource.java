@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.aksw.shellgebra.exec.TransformedByteSource.ByteSourceSplit;
+import org.aksw.shellgebra.util.PathLifeCycle;
 
 import com.google.common.io.ByteSource;
 

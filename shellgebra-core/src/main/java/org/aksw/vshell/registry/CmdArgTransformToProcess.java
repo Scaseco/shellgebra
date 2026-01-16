@@ -5,7 +5,6 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
@@ -25,8 +24,9 @@ import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetFile;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetProcessSubstitution;
 import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTargetVisitor;
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
 
 /**
  * Resolve process substitution and redirects.

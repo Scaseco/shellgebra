@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.aksw.commons.util.docker.Argv;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderDockerExec;
 import org.aksw.vshell.registry.JvmExecUtils;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;

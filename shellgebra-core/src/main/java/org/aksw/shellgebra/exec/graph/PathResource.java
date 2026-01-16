@@ -3,7 +3,7 @@ package org.aksw.shellgebra.exec.graph;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.aksw.shellgebra.exec.PathLifeCycle;
+import org.aksw.shellgebra.util.PathLifeCycle;
 
 public class PathResource
     // implements AutoCloseable

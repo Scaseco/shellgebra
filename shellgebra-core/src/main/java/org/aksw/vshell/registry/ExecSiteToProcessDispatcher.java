@@ -9,13 +9,13 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedCmd;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
 
 /**
  * A visitor of exec sites that returns corresponding CmdOpVisitors for producing process builders.

@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
-import org.aksw.shellgebra.exec.graph.PosixPipe;
+import org.aksw.shellgebra.pipe.PosixPipe;
 import org.apache.commons.io.output.ProxyOutputStream;
 
 

@@ -7,12 +7,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.aksw.jenax.engine.qlever.NamedPipe;
-import org.aksw.jenax.engine.qlever.SystemUtils;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
+import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.util.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

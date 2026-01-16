@@ -2,8 +2,8 @@ package org.aksw.vshell.registry;
 
 import java.io.IOException;
 
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
 
 public class ProcessOverThread
     extends ProcessBase

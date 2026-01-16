@@ -1,4 +1,4 @@
-package org.aksw.jenax.engine.qlever;
+package org.aksw.shellgebra.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

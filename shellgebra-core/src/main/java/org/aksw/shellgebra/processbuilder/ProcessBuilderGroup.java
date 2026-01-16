@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.processbuilder;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.exec.graph.PosixPipe;
+import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.pipe.PosixPipe;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.registry.ProcessOverCompletableFuture;
 

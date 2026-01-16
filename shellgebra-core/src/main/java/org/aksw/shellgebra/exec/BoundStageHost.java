@@ -11,6 +11,8 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.util.PathLifeCycle;
+import org.aksw.shellgebra.util.PathLifeCycles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

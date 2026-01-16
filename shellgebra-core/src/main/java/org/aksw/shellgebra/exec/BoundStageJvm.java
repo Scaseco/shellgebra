@@ -7,6 +7,8 @@ import com.google.common.io.ByteSource;
 
 import org.aksw.commons.io.util.stream.InputStreamTransform;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.util.PathLifeCycle;
+import org.aksw.shellgebra.util.PathLifeCycles;
 
 public class BoundStageJvm
     implements BoundStage

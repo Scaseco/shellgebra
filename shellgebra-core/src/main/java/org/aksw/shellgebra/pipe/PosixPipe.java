@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec.graph;
+package org.aksw.shellgebra.pipe;
 
 import java.io.Closeable;
 import java.io.File;
@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.aksw.shellgebra.exec.graph.PipeBase;
 import org.newsclub.net.unix.FileDescriptorCast;
 
 import jnr.posix.POSIX;

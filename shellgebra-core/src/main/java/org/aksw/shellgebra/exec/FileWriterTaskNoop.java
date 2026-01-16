@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
+import org.aksw.shellgebra.util.PathLifeCycle;
+import org.aksw.shellgebra.util.PathLifeCycles;
+
 /**
  * A no-op file writer task that just serves an existing file.
  */

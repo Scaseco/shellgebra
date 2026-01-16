@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.processbuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,11 +13,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
-import org.aksw.jenax.engine.qlever.NamedPipe;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.PathResource;
-import org.aksw.shellgebra.exec.graph.PosixPipe;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.pipe.PosixPipe;
+import org.aksw.shellgebra.util.PathLifeCycle;
+import org.aksw.shellgebra.util.PathLifeCycles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

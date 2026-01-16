@@ -8,6 +8,7 @@ import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.util.PathLifeCycles;
 
 import com.github.dockerjava.api.model.AccessMode;
 import com.google.common.io.ByteSource;

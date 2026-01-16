@@ -10,11 +10,11 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.ProcessBuilderDocker;
-import org.aksw.shellgebra.exec.ProcessBuilderGroup;
-import org.aksw.shellgebra.exec.ProcessBuilderPipeline;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderGroup;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderPipeline;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
 import org.aksw.vshell.registry.ProcessBuilderNative;
 import org.aksw.vshell.shim.rdfconvert.ArgsModular;

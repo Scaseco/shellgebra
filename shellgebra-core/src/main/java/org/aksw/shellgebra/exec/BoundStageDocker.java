@@ -27,7 +27,6 @@ import com.google.common.io.ByteSource;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.commons.util.docker.ContainerUtils;
-import org.aksw.jenax.engine.qlever.SystemUtils;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
@@ -39,6 +38,10 @@ import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
+import org.aksw.shellgebra.util.PathLifeCycle;
+import org.aksw.shellgebra.util.PathLifeCycles;
+import org.aksw.shellgebra.util.SystemUtils;
 import org.aksw.vshell.shim.rdfconvert.ArgumentList;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.riot.Lang;

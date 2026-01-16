@@ -2,7 +2,7 @@ package org.aksw.shellgebra.exec.invocation;
 
 import java.util.List;
 
-import org.aksw.shellgebra.exec.ProcessBuilderCore;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderCore;
 
 public abstract class InvokableProcessBuilderBase<X extends InvokableProcessBuilderBase<X>>
     extends ProcessBuilderCore<X>

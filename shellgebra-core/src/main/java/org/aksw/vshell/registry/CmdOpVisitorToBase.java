@@ -13,10 +13,10 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransform;
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
 import org.aksw.shellgebra.exec.ListBuilder;
-import org.aksw.shellgebra.exec.ProcessBuilderGroup;
-import org.aksw.shellgebra.exec.ProcessBuilderPipeline;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderGroup;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderPipeline;
 
 public abstract class CmdOpVisitorToBase
     implements CmdOpVisitor<IProcessBuilderCore<?>>

@@ -6,6 +6,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.aksw.shellgebra.util.PathLifeCycle;
+
 public abstract class FileWriterTaskBase
     implements FileWriterTask
 {

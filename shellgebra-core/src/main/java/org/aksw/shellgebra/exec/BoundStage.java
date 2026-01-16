@@ -4,6 +4,8 @@ import java.nio.file.Path;
 
 import com.google.common.io.ByteSource;
 
+import org.aksw.shellgebra.util.PathLifeCycle;
+
 public interface BoundStage
 {
     ByteSource toByteSource();

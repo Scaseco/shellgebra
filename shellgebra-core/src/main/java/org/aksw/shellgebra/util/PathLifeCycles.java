@@ -1,8 +1,10 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.util;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import org.aksw.shellgebra.exec.SysRuntimeImpl;
 
 /**
  * Utils to handle creation and deletion of files. For use with FileWriterTask.

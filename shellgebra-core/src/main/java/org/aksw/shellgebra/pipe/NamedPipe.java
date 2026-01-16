@@ -1,4 +1,4 @@
-package org.aksw.jenax.engine.qlever;
+package org.aksw.shellgebra.pipe;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,7 +6,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Map;
 
-import org.aksw.shellgebra.exec.graph.PosixPipe;
+import org.aksw.shellgebra.util.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -9,12 +9,12 @@ import java.util.concurrent.Executors;
 
 import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedCmd;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
-import org.aksw.shellgebra.exec.ProcessBuilderCore;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.invocation.InvokableProcessBuilderHost;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderCore;
 
 /**
  *

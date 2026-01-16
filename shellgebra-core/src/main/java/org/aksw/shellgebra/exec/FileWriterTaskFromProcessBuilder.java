@@ -10,6 +10,7 @@ import java.util.Optional;
 import com.google.common.io.ByteSource;
 
 import org.aksw.commons.io.util.stream.OutputStreamTransform;
+import org.aksw.shellgebra.util.PathLifeCycle;
 import org.apache.commons.exec.ExecuteException;
 
 /** Writer task based on a system process created from a system call. */

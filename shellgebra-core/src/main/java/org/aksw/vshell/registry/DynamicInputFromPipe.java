@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-import org.aksw.shellgebra.exec.graph.PosixPipe;
+import org.aksw.shellgebra.pipe.PosixPipe;
 
 public class DynamicInputFromPipe
     extends InputBase

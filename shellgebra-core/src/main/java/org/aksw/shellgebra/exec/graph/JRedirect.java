@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
 
 // Low-level java redirect - PBF redirects have been resolved to plain input stream.
 // However, the input stream to a process may be set directly.

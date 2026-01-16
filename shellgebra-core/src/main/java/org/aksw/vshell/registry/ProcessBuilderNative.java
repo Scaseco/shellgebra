@@ -6,10 +6,10 @@ import java.lang.ProcessBuilder.Redirect.Type;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
-import org.aksw.shellgebra.exec.ProcessBuilderBase;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderBase;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
 public class ProcessBuilderNative

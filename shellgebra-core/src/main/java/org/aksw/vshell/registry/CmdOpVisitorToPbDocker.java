@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.IProcessBuilderCore;
-import org.aksw.shellgebra.exec.ProcessBuilderDocker;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSites;
+import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
 
 public class CmdOpVisitorToPbDocker
     extends CmdOpVisitorToBase {

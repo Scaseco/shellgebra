@@ -8,6 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.aksw.shellgebra.util.PathLifeCycle;
+
 public abstract class FileWriterTaskViaExecutor
     extends FileWriterTaskBase
 {
