@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.aksw.commons.util.docker.Argv;
+import org.aksw.shellgebra.shim.core.JvmCommand;
 import org.aksw.vshell.registry.DynamicInputFromStream;
 import org.aksw.vshell.registry.DynamicOutputFromStream;
-import org.aksw.vshell.registry.JvmCommand;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.JvmExecCxt;
 

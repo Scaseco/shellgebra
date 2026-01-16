@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 public class CmdArgTransformer {
 

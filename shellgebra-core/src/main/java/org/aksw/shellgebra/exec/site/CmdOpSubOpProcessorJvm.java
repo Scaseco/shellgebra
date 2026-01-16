@@ -10,7 +10,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
 
 /**
  * Sub processor for executing commands on the jvm.

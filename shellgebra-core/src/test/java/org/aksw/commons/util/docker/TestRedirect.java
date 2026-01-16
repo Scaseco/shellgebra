@@ -18,7 +18,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.exec.CmdStrOpsBash;

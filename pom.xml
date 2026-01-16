@@ -13,7 +13,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Command polyfill system</name>
-	<description>Build data pipelines across host, java and docker processes while keeping the JVM out of the data path when possible.</description>
+	<description>Build data pipelines across host, java and docker processes
+		while keeping the JVM out of the data path when possible.</description>
 	<url>https://github.com/Scaseco/shellgebra</url>
 	<issueManagement>
 		<url>https://github.com/Scaseco/shellgebra/issues</url>
@@ -42,6 +43,7 @@
 	</developers>
 	<modules>
 		<module>shellgebra-core</module>
+		<module>shellgebra-extra</module>
 	</modules>
 	<properties>
 		<slf4j.version>2.0.16</slf4j.version>
@@ -129,6 +131,18 @@
 	</properties>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>.org.aksw.shellgebra</groupId>
+				<artifactId>shellgebra-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>.org.aksw.shellgebra</groupId>
+				<artifactId>shellgebra-extra</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
 			<!-- Jetty -->
 			<dependency>
 				<groupId>org.eclipse.jetty</groupId>
@@ -1003,7 +1017,8 @@
 				<artifactId>classgraph</artifactId>
 				<version>4.8.129</version>
 				<!-- <version>4.8.181</version>-->
-				<!-- Double-asterisks glob pattern such as in "foo/**/*.rq" seems broken in at least 4.8.181 -->
+				<!-- Double-asterisks glob pattern such as in "foo/**/*.rq"
+				seems broken in at least 4.8.181 -->
 			</dependency>
 
 			<!-- <dependency> <groupId>org.eclipse.jetty</groupId>

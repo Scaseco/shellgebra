@@ -9,7 +9,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 public interface CmdOpTransformBase
     extends CmdOpTransform

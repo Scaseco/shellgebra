@@ -1,9 +1,9 @@
 package org.aksw.shellgebra.algebra.cmd.transform;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetFile;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetProcessSubstitution;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTargetVisitor;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTargetVisitor;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTarget.RedirectTargetFile;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTarget.RedirectTargetProcessSubstitution;
 import org.aksw.shellgebra.exec.CmdStrOps;
 
 public class RedirectTargetVisitorToString

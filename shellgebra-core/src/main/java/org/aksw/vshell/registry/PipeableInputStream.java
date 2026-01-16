@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-import org.aksw.shellgebra.pipe.PosixPipe;
+import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.apache.commons.io.input.ProxyInputStream;
 
 /**

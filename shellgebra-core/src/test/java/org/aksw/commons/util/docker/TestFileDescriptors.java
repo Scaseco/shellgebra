@@ -13,8 +13,8 @@ import java.util.concurrent.CompletableFuture;
 
 import org.junit.Test;
 
-import org.aksw.shellgebra.pipe.NamedPipe;
-import org.aksw.shellgebra.pipe.PosixPipe;
+import org.aksw.shellgebra.io.pipe.NamedPipe;
+import org.aksw.shellgebra.io.pipe.PosixPipe;
 
 
 //class PipeReader {

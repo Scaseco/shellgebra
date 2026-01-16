@@ -11,7 +11,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdOpVisitorToCmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
-import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.io.pipe.NamedPipe;
 import org.aksw.shellgebra.util.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

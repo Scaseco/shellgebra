@@ -4,21 +4,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpCommand;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpConcat;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpContentConvert;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpFile;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpTranscode;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpVar;
-import org.aksw.shellgebra.algebra.stream.op.StreamOpVisitor;
-import org.aksw.shellgebra.exec.FileWriterTask;
-import org.aksw.shellgebra.registry.codec.CodecRegistry;
-
 import com.github.dockerjava.api.model.Bind;
 
-import jenax.engine.qlever.docker.ContainerDef;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
+import org.aksw.shellgebra.docker.adapter.cli.ContainerDef;
+import org.aksw.shellgebra.exec.FileWriterTask;
 
 // Use ContainerDef or use a custom class?
 //class DockerInvocation {

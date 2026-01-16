@@ -10,11 +10,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdPrefix;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 // TODO Should only contain AST ctors.
 public class CmdOps {

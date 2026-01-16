@@ -5,7 +5,7 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenLiteral;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
 
 /**
  * Argument to a CmdOpExec.

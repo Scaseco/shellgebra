@@ -2,7 +2,7 @@ package org.aksw.shellgebra.algebra.cmd.arg;
 
 import java.util.Objects;
 
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
 
 /**
  * CmdArgRedirect should probably be avoided in favor of explicit redirects

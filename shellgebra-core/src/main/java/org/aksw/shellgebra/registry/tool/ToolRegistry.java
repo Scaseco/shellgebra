@@ -1,12 +1,5 @@
 package org.aksw.shellgebra.registry.tool;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.aksw.shellgebra.registry.codec.CodecRegistry;
-import org.aksw.shellgebra.registry.tool.model.ToolInfoProvider;
-
 /**
  * Registry to resolve tools to commands.
  * Commands may be executable on the host or using docker containers.

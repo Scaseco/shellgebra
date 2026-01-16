@@ -14,8 +14,8 @@ import java.util.concurrent.CompletableFuture;
 
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.pipe.NamedPipe;
-import org.aksw.shellgebra.pipe.PosixPipe;
+import org.aksw.shellgebra.io.pipe.NamedPipe;
+import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.vshell.registry.ProcessOverCompletableFuture;
 

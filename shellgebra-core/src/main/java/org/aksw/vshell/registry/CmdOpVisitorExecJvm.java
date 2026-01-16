@@ -15,7 +15,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.StagePipeline;
 import org.aksw.shellgebra.exec.io.StageGroup;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 public class CmdOpVisitorExecJvm
     implements CmdOpVisitor<Stage>

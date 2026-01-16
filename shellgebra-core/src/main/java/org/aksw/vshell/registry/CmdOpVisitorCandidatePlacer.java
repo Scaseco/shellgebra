@@ -25,7 +25,7 @@ import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformer;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;

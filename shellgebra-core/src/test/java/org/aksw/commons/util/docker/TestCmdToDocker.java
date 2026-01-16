@@ -14,13 +14,13 @@ import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.CmdOpRewriter;
 import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.Stages;
 import org.aksw.shellgebra.exec.SysRuntime;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 /**
  * Test rewrite of command expressions to be run in containers.

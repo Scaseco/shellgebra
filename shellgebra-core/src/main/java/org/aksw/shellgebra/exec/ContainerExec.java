@@ -6,8 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
-
-import jenax.engine.qlever.docker.ContainerDef;
+import org.aksw.shellgebra.docker.adapter.cli.ContainerDef;
 
 public class ContainerExec {
 

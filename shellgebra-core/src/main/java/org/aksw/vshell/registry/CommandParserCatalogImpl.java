@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.aksw.shellgebra.exec.model.ExecSites;
+import org.aksw.shellgebra.shim.core.JvmCommandParser;
 
 public class CommandParserCatalogImpl
     implements CommandParserCatalog

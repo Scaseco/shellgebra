@@ -7,8 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 public interface CmdOp {
     <T> T accept(CmdOpVisitor<T> visitor);

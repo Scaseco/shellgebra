@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.pipe.PosixPipe;
+import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.vshell.registry.FileInput;
 import org.aksw.vshell.registry.FileOutput;
 import org.aksw.vshell.registry.JvmCommandRegistry;

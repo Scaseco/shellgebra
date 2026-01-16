@@ -22,6 +22,7 @@ import org.aksw.shellgebra.model.osreo.ImageIntrospection;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
 import org.aksw.shellgebra.model.osreo.ShellSupport;
 import org.aksw.shellgebra.model2.ShellProbeResult;
+import org.aksw.shellgebra.shim.core.JvmCommand;
 import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
 

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.Test;
 
-import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.io.pipe.NamedPipe;
 
 public class TestPipes {
     // FIXME This is more an experiment rather than a test.

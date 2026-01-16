@@ -1,25 +1,31 @@
 package org.aksw.commons.util.docker;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Argument vector class. Wraps an list of strings.
+ */
 public record Argv(List<String> argv) {
     public Argv {
-        if (argv.isEmpty()) {
-            throw new IllegalArgumentException("At least one element (the command name) expected.");
-        }
+        requireNonEmpty(argv);
         argv = List.copyOf(Objects.requireNonNull(argv));
     }
 
+    private static void requireNonEmpty(Collection<?> list) {
+        Objects.requireNonNull(list);
+        if (list.isEmpty()) {
+            throw new IllegalArgumentException("At least on item expected.");
+        }
+    }
+
     public static Argv of(List<String> argv) {
-        return ofArgs(argv.get(0), argv.subList(1, argv.size()));
+        return new Argv(argv);
     }
 
     public static Argv of(String... argv) {
-        if (argv.length == 0) {
-            throw new IllegalArgumentException("At least on item expected.");
-        }
         return new Argv(List.of(argv));
     }
 

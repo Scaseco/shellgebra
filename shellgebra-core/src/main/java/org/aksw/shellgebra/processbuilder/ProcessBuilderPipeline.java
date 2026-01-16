@@ -14,10 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.io.pipe.NamedPipe;
+import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.shellgebra.exec.graph.PathResource;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
-import org.aksw.shellgebra.pipe.NamedPipe;
-import org.aksw.shellgebra.pipe.PosixPipe;
 import org.aksw.shellgebra.util.PathLifeCycle;
 import org.aksw.shellgebra.util.PathLifeCycles;
 import org.slf4j.Logger;

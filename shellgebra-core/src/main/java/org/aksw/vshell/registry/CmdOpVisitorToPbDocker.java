@@ -10,6 +10,7 @@ import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
+import org.aksw.shellgebra.shim.core.JvmCommandParser;
 
 public class CmdOpVisitorToPbDocker
     extends CmdOpVisitorToBase {

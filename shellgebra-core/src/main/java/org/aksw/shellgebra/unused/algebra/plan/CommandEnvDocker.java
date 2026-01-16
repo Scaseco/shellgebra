@@ -1,6 +1,6 @@
 package org.aksw.shellgebra.unused.algebra.plan;
 
-import jenax.engine.qlever.docker.ContainerDef;
+import org.aksw.shellgebra.docker.adapter.cli.ContainerDef;
 
 /**
  * Execution of a command using a docker container.

@@ -19,13 +19,13 @@ import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenVisitor;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetFile;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetProcessSubstitution;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTargetVisitor;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTarget;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTargetVisitor;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTarget.RedirectTargetFile;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTarget.RedirectTargetProcessSubstitution;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.pipe.NamedPipe;
+import org.aksw.shellgebra.io.pipe.NamedPipe;
 import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
 
 /**

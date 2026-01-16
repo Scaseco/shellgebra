@@ -5,6 +5,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.aksw.shellgebra.shim.core.JvmCommand;
+
 public class JvmCommandRegistry {
     private Map<String, JvmCommand> map = new ConcurrentHashMap<>();
 

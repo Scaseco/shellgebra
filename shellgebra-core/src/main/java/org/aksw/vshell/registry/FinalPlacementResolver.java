@@ -15,7 +15,7 @@ import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransform;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.exec.model.ExecSite;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 /**
  * Rewrites a final placement such that the virtual command name is resolved to the physical one.

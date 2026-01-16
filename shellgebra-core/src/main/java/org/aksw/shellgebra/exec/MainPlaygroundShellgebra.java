@@ -15,13 +15,11 @@ import org.aksw.shellgebra.model2.ShellCatalogEntry;
 import org.aksw.shellgebra.model2.ShellProbeResult;
 import org.testcontainers.containers.GenericContainer;
 
-import jenax.engine.qlever.docker.QleverConstants;
-
 public class MainPlaygroundShellgebra {
     public static void main(String[] args) throws IOException, InterruptedException {
 //       String imageName = "ubuntu:latest";
 //       String imageName = "nestio/lbzip2";
-        String imageName = QleverConstants.DOCKER_IMAGE_NAME + ":" + QleverConstants.DOCKER_IMAGE_TAG;
+        String imageName = "adfreiburg/qlever:commit-a307781";
 
         SysRuntimeFactoryDocker factory = SysRuntimeFactoryDocker.create();
         ImageIntrospector introspector = ImageIntrospectorImpl.of();

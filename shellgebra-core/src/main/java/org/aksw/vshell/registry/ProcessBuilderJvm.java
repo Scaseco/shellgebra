@@ -9,6 +9,7 @@ import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderBase;
+import org.aksw.shellgebra.shim.core.JvmCommand;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
 public class ProcessBuilderJvm

@@ -3,8 +3,6 @@ package org.aksw.shellgebra.algebra.cmd.op;
 import java.util.List;
 import java.util.Objects;
 
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-
 /**
  * Command group - brace group (not a sub-shell).
  *

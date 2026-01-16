@@ -19,8 +19,8 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTargetVisitor;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTargetVisitor;
 import org.aksw.shellgebra.exec.CmdStrOps;
 
 // Note: CmdString does not ensure that the string is actually a command -

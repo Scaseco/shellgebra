@@ -3,12 +3,11 @@ package org.aksw.shellgebra.exec.invocation;
 import java.util.List;
 
 /**
- * Argv with resources.
- * e.g., delete temp files on close.
+ * Argument vector (argv) with resources, such as for deleting temporary files on close.
+ * Temporary files may e.g. be created as part of process substitution.
  */
 public interface ExecutableInvocation
     extends AutoCloseable
 {
-    // Argv argv();
     List<String> argv();
 }

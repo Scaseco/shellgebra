@@ -7,10 +7,10 @@ import com.github.dockerjava.api.model.AccessMode;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.redirect.CmdRedirect.OpenMode;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget;
-import org.aksw.shellgebra.algebra.cmd.redirect.RedirectTarget.RedirectTargetFile;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTarget;
+import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect.OpenMode;
+import org.aksw.shellgebra.algebra.cmd.op.RedirectTarget.RedirectTargetFile;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
 
 /**

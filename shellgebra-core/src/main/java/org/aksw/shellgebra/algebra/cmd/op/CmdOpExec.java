@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.op.prefix.CmdPrefix;
-import org.aksw.vshell.shim.rdfconvert.ArgumentList;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdPrefix;
+import org.aksw.shellgebra.shim.core.ArgumentList;
 
 // XXX Add a background flag
 public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args) // , List<Redirect> redirects)
