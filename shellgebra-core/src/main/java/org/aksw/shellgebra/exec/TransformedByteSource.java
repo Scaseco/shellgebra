@@ -11,6 +11,7 @@ import com.google.common.io.ByteSource;
 import org.aksw.commons.io.util.stream.InputStreamTransform;
 import org.aksw.commons.io.util.stream.OutputStreamTransform;
 import org.aksw.commons.io.util.stream.OutputStreamTransformList;
+import org.aksw.shellgebra.exec.stage.ByteSourceWrapper;
 
 public class TransformedByteSource
     extends ByteSourceWrapper

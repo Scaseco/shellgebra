@@ -1,5 +1,7 @@
 package org.aksw.commons.util.docker;
 
+import org.junit.jupiter.api.Test;
+
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.Token;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
@@ -9,7 +11,6 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.algebra.cmd.transformer.TokenTransform;
 import org.aksw.shellgebra.algebra.cmd.transformer.TokenTransformBase;
-import org.junit.Test;
 
 public class TestCmdOpTransform {
     @Test

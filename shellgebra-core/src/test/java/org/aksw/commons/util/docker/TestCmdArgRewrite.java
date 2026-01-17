@@ -9,7 +9,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitor;
@@ -48,8 +48,6 @@ import org.aksw.vshell.registry.FinalPlacer;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.ProcessBuilderFinalPlacement;
 import org.apache.commons.io.IOUtils;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.RDFDataMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +71,7 @@ public class TestCmdArgRewrite {
         // TODO Have image introspector write into cmdAvailability without having to know about exec sites.
         // Need an adapter or cmdAvailability.asDockerImageMap().
 
-        Model shellModel = RDFDataMgr.loadModel("shell-ontology.ttl");
+        // Model shellModel = RDFDataMgr.loadModel("shell-ontology.ttl");
         ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(); // shellModel, probeResults);
         // imageIntrospector = new ImageIntrospectorCaching(imageIntrospector);
 

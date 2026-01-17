@@ -12,9 +12,9 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVisitor;
-import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.StagePipeline;
 import org.aksw.shellgebra.exec.io.StageGroup;
+import org.aksw.shellgebra.exec.stage.Stage;
+import org.aksw.shellgebra.exec.stage.StagePipeline;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 
 public class CmdOpVisitorExecJvm

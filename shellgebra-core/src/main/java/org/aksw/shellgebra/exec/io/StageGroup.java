@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.google.common.io.ByteSource;
 
-import org.aksw.shellgebra.exec.BoundStage;
-import org.aksw.shellgebra.exec.FileWriterTask;
-import org.aksw.shellgebra.exec.Stage;
+import org.aksw.shellgebra.exec.stage.BoundStage;
+import org.aksw.shellgebra.exec.stage.FileWriterTask;
+import org.aksw.shellgebra.exec.stage.Stage;
 
 /**
  * input | { x1 ; xi ; xn }

@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.exec.stage;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,10 +6,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.google.common.io.ByteSource;
+
+import org.aksw.shellgebra.exec.TransformedByteSource;
 import org.aksw.shellgebra.exec.TransformedByteSource.ByteSourceSplit;
 import org.aksw.shellgebra.util.PathLifeCycle;
-
-import com.google.common.io.ByteSource;
 
 public class FileWriterTaskFromByteSource
     extends FileWriterTaskViaExecutor

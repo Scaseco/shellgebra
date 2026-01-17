@@ -1,9 +1,9 @@
 package org.aksw.shellgebra.exec.virtual;
 
-import org.aksw.shellgebra.exec.BoundStage;
-import org.aksw.shellgebra.exec.FileWriterTask;
-
 import com.google.common.io.ByteSource;
+
+import org.aksw.shellgebra.exec.stage.BoundStage;
+import org.aksw.shellgebra.exec.stage.FileWriterTask;
 
 public interface InputHolder {
     public enum Type {

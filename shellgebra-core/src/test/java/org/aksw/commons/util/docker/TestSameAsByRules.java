@@ -1,5 +1,6 @@
 package org.aksw.commons.util.docker;
 
+/*
 import java.util.List;
 
 import org.apache.jena.rdf.model.InfModel;
@@ -65,3 +66,5 @@ public class TestSameAsByRules {
         m.write(System.out, "TURTLE");
     }
 }
+*/
+

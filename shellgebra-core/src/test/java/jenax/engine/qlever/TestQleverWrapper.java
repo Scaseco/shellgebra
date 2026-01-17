@@ -4,15 +4,13 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
 
 import org.aksw.shellgebra.util.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
-
-import com.github.dockerjava.api.command.WaitContainerResultCallback;
 
 public class TestQleverWrapper {
     private static final Logger logger = LoggerFactory.getLogger(TestQleverWrapper.class);

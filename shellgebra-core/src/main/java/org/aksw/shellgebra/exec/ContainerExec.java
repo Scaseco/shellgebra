@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.docker.adapter.cli.ContainerDef;
+import org.aksw.shellgebra.exec.stage.FileWriterTask;
 
 public class ContainerExec {
 

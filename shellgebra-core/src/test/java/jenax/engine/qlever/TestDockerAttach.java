@@ -7,8 +7,13 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import com.github.dockerjava.api.command.AttachContainerCmd;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.model.Frame;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -16,15 +21,11 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.shaded.com.github.dockerjava.core.command.AttachContainerResultCallback;
 import org.testcontainers.utility.DockerImageName;
 
-import com.github.dockerjava.api.command.AttachContainerCmd;
-import com.github.dockerjava.api.command.WaitContainerResultCallback;
-import com.github.dockerjava.api.model.Frame;
-
 public class TestDockerAttach {
     Logger log = LoggerFactory.getLogger("MyLogger");
 
     @Test
-    @Ignore
+    @Disabled
     public void test() throws IOException, InterruptedException {
         GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("ubuntu:24.04"))
             .withCommand("gzip", "-cd")

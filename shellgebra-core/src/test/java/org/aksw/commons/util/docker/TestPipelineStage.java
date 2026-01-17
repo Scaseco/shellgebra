@@ -1,17 +1,19 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import com.google.common.io.ByteSource;
+
+import org.junit.jupiter.api.Test;
+
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.Stages;
+import org.aksw.shellgebra.exec.stage.Stage;
+import org.aksw.shellgebra.exec.stage.Stages;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.google.common.io.ByteSource;
 
 public class TestPipelineStage {
     /**
@@ -36,7 +38,7 @@ public class TestPipelineStage {
         ByteSource bs = pipelineStage.from(inputStage.fromNull()).toByteSource();
 
         String actual = bs.asCharSource(StandardCharsets.UTF_8).read();
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
 
         // System.out.println("Base value: " + base.forNullInput().toByteSource().asCharSource(StandardCharsets.UTF_8).read());
     }

@@ -1,6 +1,6 @@
 package org.aksw.commons.util.docker;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.vshell.registry.CommandRegistry;

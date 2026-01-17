@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.exec.stage;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;

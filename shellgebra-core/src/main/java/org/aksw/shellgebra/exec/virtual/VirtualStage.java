@@ -1,6 +1,6 @@
 package org.aksw.shellgebra.exec.virtual;
 
-import org.aksw.shellgebra.exec.Stage;
+import org.aksw.shellgebra.exec.stage.Stage;
 
 /**
  * Marker interface for stages that are not concrete.

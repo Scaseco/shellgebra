@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.exec.stage;
 
 /** Writer task based on a system process created from a system call. */
 //public class FileWriterTaskFromBoundStages extends FileWriterTaskViaExecutor {

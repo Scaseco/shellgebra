@@ -8,12 +8,12 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
 import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedCmd;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
-import org.aksw.shellgebra.exec.Stage;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
+import org.aksw.shellgebra.exec.stage.Stage;
 import org.aksw.vshell.registry.FinalPlacement;
 
 // superInput | { x | { y ; VAR } }

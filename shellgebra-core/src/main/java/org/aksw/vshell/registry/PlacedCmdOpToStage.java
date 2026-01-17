@@ -25,13 +25,13 @@ import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdArgTransformBase;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
-import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.Stages;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
+import org.aksw.shellgebra.exec.stage.Stage;
+import org.aksw.shellgebra.exec.stage.Stages;
 
 import com.google.common.io.ByteSource;
 

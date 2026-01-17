@@ -2,11 +2,12 @@ package org.aksw.commons.util.docker;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.Test;
+
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.exec.SysRuntimeWrapperShellEnv;
 import org.aksw.shellgebra.exec.shell.ShellEnv;
-import org.junit.Test;
 
 public class TestSysRuntimeHost {
     @Test

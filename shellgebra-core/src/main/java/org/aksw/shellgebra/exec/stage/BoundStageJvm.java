@@ -1,27 +1,31 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.exec.stage;
 
 import java.nio.file.Path;
 import java.util.Objects;
 
+import com.google.common.io.ByteSource;
+
+import org.aksw.commons.io.util.stream.InputStreamTransform;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.TransformedByteSource;
 import org.aksw.shellgebra.util.PathLifeCycle;
 import org.aksw.shellgebra.util.PathLifeCycles;
 
-import com.google.common.io.ByteSource;
-
-public class BoundStageByteSource
+public class BoundStageJvm
     implements BoundStage
 {
     private ByteSource byteSource;
+    private InputStreamTransform transform;
 
-    public BoundStageByteSource(ByteSource byteSource) {
+    public BoundStageJvm(ByteSource byteSource, InputStreamTransform transform) {
         super();
         this.byteSource = Objects.requireNonNull(byteSource);
+        this.transform = Objects.requireNonNull(transform);
     }
 
     @Override
     public ByteSource toByteSource() {
-        return byteSource;
+        return TransformedByteSource.transform(byteSource, transform);
     }
 
     @Override

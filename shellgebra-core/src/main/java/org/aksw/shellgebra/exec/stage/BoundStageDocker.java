@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.exec.stage;
 
 import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
@@ -38,13 +38,15 @@ import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformer;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
+import org.aksw.shellgebra.exec.CmdStrOps;
+import org.aksw.shellgebra.exec.SysRuntime;
+import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.shellgebra.util.PathLifeCycle;
 import org.aksw.shellgebra.util.PathLifeCycles;
 import org.aksw.shellgebra.util.SystemUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jena.riot.Lang;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -317,7 +319,7 @@ public class BoundStageDocker
     }
 
     // For an input stream, pipe it to a named pipe and supply it via bash
-    protected void runContainerWithInputStream(ByteSource byteSource, Lang lang) throws InterruptedException, IOException {
+    protected void runContainerWithInputStream(ByteSource byteSource, String lang) throws InterruptedException, IOException {
 
         logger.info("Attempting to launch container with a JVM-based input stream.");
         org.testcontainers.containers.GenericContainer<?> container = setupContainer(null)

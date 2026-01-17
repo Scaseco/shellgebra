@@ -1,5 +1,7 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
+
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
@@ -26,9 +30,6 @@ import org.aksw.shellgebra.exec.SysRuntimeCore;
 import org.aksw.shellgebra.exec.SysRuntimeCoreHost;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-
-import junit.framework.Assert;
 
 public class TestRedirect {
 
@@ -147,7 +148,7 @@ public class TestRedirect {
             thread.join();
             System.out.println("Thread stopped.");
 
-            Assert.assertEquals(expectedStr, actualStr);
+            assertEquals(expectedStr, actualStr);
 
             Files.deleteIfExists(fifoPath);
         }

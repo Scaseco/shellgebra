@@ -1,5 +1,7 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,9 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.Test;
+
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 
 public class TestContainerUtils {
@@ -33,7 +35,7 @@ public class TestContainerUtils {
                 .withCommand("sh", "-c", "echo \"" + arg + "\""))) {
             actual = IOUtils.toString(in, StandardCharsets.UTF_8);
         }
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     /** Access a container's output via an input stream. */
@@ -46,6 +48,6 @@ public class TestContainerUtils {
                 .withCommand("bash", "-c", "for i in {1..100}; do echo $i; done")), StandardCharsets.UTF_8))) {
             actual = br.lines().limit(9).toList();
         }
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 }

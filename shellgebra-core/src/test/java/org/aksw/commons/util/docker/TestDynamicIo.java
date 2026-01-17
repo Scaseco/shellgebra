@@ -1,17 +1,17 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.vshell.registry.DynamicInput;
 import org.aksw.vshell.registry.DynamicInputFromStream;
 import org.aksw.vshell.registry.DynamicOutput;
 import org.aksw.vshell.registry.DynamicOutputFromStream;
-
-import junit.framework.Assert;
 
 public class TestDynamicIo {
     @Test
@@ -35,7 +35,7 @@ public class TestDynamicIo {
 
             byte[] actualBytes = out.toByteArray();
             String actualString = new String(actualBytes);
-            Assert.assertEquals(expectedString, actualString);
+            assertEquals(expectedString, actualString);
         }
     }
 }

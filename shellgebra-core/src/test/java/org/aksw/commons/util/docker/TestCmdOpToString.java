@@ -1,10 +1,10 @@
 package org.aksw.commons.util.docker;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
-import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
@@ -24,7 +24,7 @@ public class TestCmdOpToString {
         String actualScriptString = cmdString.scriptString();
 
         String expectedScriptString = "/my/tool.sh -f /foo/bar.dat | /my/conv.sh -convert";
-        Assert.assertEquals(expectedScriptString, actualScriptString);
+        assertEquals(expectedScriptString, actualScriptString);
 
 //        List<String> expected = List.of("/usr/bin/bash", "-c", "/my/tool.sh -f /foo/bar.dat | /my/conv.sh -convert");
 //        List<String> actual = List.of(SysRuntimeImpl.forCurrentOs().compileCommand(cmdOp));

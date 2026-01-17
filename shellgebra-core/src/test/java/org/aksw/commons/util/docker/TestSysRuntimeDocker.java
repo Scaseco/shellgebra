@@ -1,13 +1,15 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
-import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
-
-import junit.framework.Assert;
 
 
 public class TestSysRuntimeDocker {
@@ -33,7 +35,7 @@ public class TestSysRuntimeDocker {
             str = sys.which("cat");
             // System.out.println(sys.exists("/foo/bar"));
         }
-        Assert.assertEquals("/usr/bin/cat", str);
+        assertEquals("/usr/bin/cat", str);
     }
 
     @Test
@@ -43,6 +45,6 @@ public class TestSysRuntimeDocker {
         try (SysRuntime sys = f.create("ubuntu:24.04")) {
             b = sys.exists("/usr/bin/cat");
         }
-        Assert.assertTrue(b);
+        assertTrue(b);
     }
 }

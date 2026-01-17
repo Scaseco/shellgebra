@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.io.pipe.NamedPipe;
 import org.aksw.shellgebra.io.pipe.PosixPipe;

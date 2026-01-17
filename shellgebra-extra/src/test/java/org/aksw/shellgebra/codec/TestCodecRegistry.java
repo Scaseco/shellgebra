@@ -1,5 +1,7 @@
 package org.aksw.shellgebra.codec;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,8 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.aksw.shellgebra.shim.cmd.JavaCodec;
@@ -41,7 +42,7 @@ public class TestCodecRegistry {
             }
         }
 
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
 //    @Test

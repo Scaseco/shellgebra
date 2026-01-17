@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.exec;
+package org.aksw.shellgebra.exec.stage;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -10,6 +10,7 @@ import java.util.Objects;
 import com.google.common.io.ByteSource;
 
 import org.aksw.commons.io.util.stream.InputStreamTransform;
+import org.aksw.shellgebra.exec.TransformedByteSource;
 
 public class StageJvm
     implements Stage

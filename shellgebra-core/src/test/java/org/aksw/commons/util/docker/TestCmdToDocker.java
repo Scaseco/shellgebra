@@ -1,5 +1,7 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -7,8 +9,7 @@ import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
@@ -17,9 +18,9 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.CmdOpRewriter;
-import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.Stages;
 import org.aksw.shellgebra.exec.SysRuntime;
+import org.aksw.shellgebra.exec.stage.Stage;
+import org.aksw.shellgebra.exec.stage.Stages;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 
 /**
@@ -42,14 +43,14 @@ public class TestCmdToDocker {
         // Assert generated string.
         String expectedStr = "/usr/bin/cat /shared/bar.bz2 | /usr/bin/lbzip -dc >/shared/out";
         String actualStr = SysRuntime.toString(containerizedCmd).scriptString();
-        Assert.assertEquals(expectedStr, actualStr);
+        assertEquals(expectedStr, actualStr);
 
         // Assert binds.
         List<Bind> expectedBinds = List.of(
             new Bind("/host/bar.bz2", new Volume("/shared/bar.bz2"), AccessMode.ro),
             new Bind("/host/out", new Volume("/shared/out"), AccessMode.rw));
         List<Bind> actualBinds = fileMapper.getBinds();
-        Assert.assertEquals(expectedBinds, actualBinds);
+        assertEquals(expectedBinds, actualBinds);
     }
 
     @Test
@@ -59,6 +60,6 @@ public class TestCmdToDocker {
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
         Stage stage = Stages.docker("ubuntu:24.04", cmdOp, fileMapper);
         String actual = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 }

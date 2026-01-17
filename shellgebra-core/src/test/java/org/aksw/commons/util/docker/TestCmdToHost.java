@@ -1,14 +1,16 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.nio.charset.StandardCharsets;
 
-import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
-import org.aksw.shellgebra.exec.Stage;
-import org.aksw.shellgebra.exec.Stages;
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.google.common.io.ByteSource;
+
+import org.junit.jupiter.api.Test;
+
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.exec.stage.Stage;
+import org.aksw.shellgebra.exec.stage.Stages;
 
 
 /**
@@ -22,7 +24,7 @@ public class TestCmdToHost {
         CmdOpExec cmdOp = CmdOpExec.ofLiterals("/usr/bin/printf", "'" + expected + "'");
         Stage stage = Stages.host(cmdOp);
         String actual = stage.fromNull().toByteSource().asCharSource(StandardCharsets.UTF_8).read();
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -33,6 +35,6 @@ public class TestCmdToHost {
         Stage stage = Stages.host(cmdOp);
         String actual = stage.from(byteSource)
                 .toByteSource().asCharSource(StandardCharsets.UTF_8).read();
-        Assert.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 }

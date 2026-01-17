@@ -1,5 +1,7 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
@@ -7,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
@@ -24,8 +26,6 @@ import org.apache.commons.io.IOUtils;
 import org.newsclub.net.unix.FileDescriptorCast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import junit.framework.Assert;
 
 public class TestProcessRunner {
     private static final Logger logger = LoggerFactory.getLogger(TestProcessRunner.class);
@@ -257,7 +257,7 @@ public class TestProcessRunner {
                 runner.shutdown();
 
                 String actualStr = IOUtils.toString(runner.getInputStream(), StandardCharsets.UTF_8);
-                Assert.assertEquals(expectedStr, actualStr);
+                assertEquals(expectedStr, actualStr);
             }
         } finally {
             Files.deleteIfExists(in);

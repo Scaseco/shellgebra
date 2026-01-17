@@ -6,7 +6,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpVar;
-import org.aksw.shellgebra.exec.BoundStage;
+import org.aksw.shellgebra.exec.stage.BoundStage;
 
 // So the resulting expression replaces vars with "cat named-pipe"
 // The difficulty is, that if there is a variable in a group, then a named pipe needs to be created for the whole

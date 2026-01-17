@@ -1,8 +1,10 @@
 package org.aksw.commons.util.docker;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.exec.SysRuntimeCore;
 import org.aksw.shellgebra.exec.SysRuntimeCoreExecSiteFactory;
@@ -18,8 +20,6 @@ import org.aksw.shellgebra.shim.core.JvmCommand;
 import org.aksw.vshell.registry.CommandRegistry;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
-
-import junit.framework.Assert;
 
 public class TestCommandRegistry {
 //    @Test
@@ -125,7 +125,7 @@ public class TestCommandRegistry {
                 actualStr = r.execCmd("echo", expectedStr);
             }
         }
-        Assert.assertEquals(expectedStr,actualStr);
+        assertEquals(expectedStr,actualStr);
     }
 
 //    @Test
