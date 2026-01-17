@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.model2;
+package org.aksw.shellgebra.introspect;
 
 import java.util.Collection;
 

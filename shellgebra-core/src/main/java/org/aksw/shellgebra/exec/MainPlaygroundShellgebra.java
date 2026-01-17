@@ -10,9 +10,9 @@ import com.github.dockerjava.api.command.WaitContainerResultCallback;
 import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.commons.util.docker.HostNameUtils;
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
+import org.aksw.shellgebra.introspect.ShellCatalogEntry;
+import org.aksw.shellgebra.introspect.ShellProbeResult;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
-import org.aksw.shellgebra.model2.ShellCatalogEntry;
-import org.aksw.shellgebra.model2.ShellProbeResult;
 import org.testcontainers.containers.GenericContainer;
 
 public class MainPlaygroundShellgebra {

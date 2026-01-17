@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.model2;
+package org.aksw.shellgebra.introspect;
 
 public interface ShellIntrospector {
     ShellProbeResult introspect(String imageName);

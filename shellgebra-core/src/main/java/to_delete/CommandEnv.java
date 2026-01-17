@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.unused.algebra.plan;
+package to_delete;
 
 public class CommandEnv {
     // protected CommandLine commandLine;

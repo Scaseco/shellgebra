@@ -7,9 +7,9 @@ import com.google.common.collect.Table;
 
 import org.aksw.commons.util.docker.Argv;
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
+import org.aksw.shellgebra.introspect.ShellCatalogEntry;
+import org.aksw.shellgebra.introspect.ShellProbeResult;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
-import org.aksw.shellgebra.model2.ShellCatalogEntry;
-import org.aksw.shellgebra.model2.ShellProbeResult;
 import org.aksw.vshell.registry.ExecSiteProbeResults;
 
 public class SysRuntimeFactoryDocker {

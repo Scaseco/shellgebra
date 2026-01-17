@@ -1,9 +1,9 @@
 package org.aksw.commons.util.docker;
 
 import org.aksw.shellgebra.exec.SysRuntimeCoreDocker;
+import org.aksw.shellgebra.introspect.ShellCatalogEntry;
+import org.aksw.shellgebra.introspect.ShellProbeResult;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
-import org.aksw.shellgebra.model2.ShellCatalogEntry;
-import org.aksw.shellgebra.model2.ShellProbeResult;
 
 public class ImageIntrospectorWrapper
     implements ImageIntrospector

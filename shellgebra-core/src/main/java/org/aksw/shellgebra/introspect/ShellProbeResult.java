@@ -1,10 +1,9 @@
-package org.aksw.shellgebra.model2;
+package org.aksw.shellgebra.introspect;
 
 public record ShellProbeResult(
     String name,
-    // List<String> probeLocations,
     String location,
-    String commandOption, // Alternative: scriptString- > args - Function<String, Args>
+    String commandOption, // Alternative: scriptString -> args - Function<String, Args>
     String locatorCommand
 )
 {

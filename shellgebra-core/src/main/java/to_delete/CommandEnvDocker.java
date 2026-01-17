@@ -1,4 +1,4 @@
-package org.aksw.shellgebra.unused.algebra.plan;
+package to_delete;
 
 import org.aksw.shellgebra.docker.adapter.cli.ContainerDef;
 

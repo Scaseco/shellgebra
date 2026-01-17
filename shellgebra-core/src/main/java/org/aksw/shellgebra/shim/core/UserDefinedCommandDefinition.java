@@ -16,6 +16,4 @@ public class UserDefinedCommandDefinition {
         this.expr = expr;
         this.argList = argList;
     }
-
-
 }

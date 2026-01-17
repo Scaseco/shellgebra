@@ -145,7 +145,6 @@ public class TestCmdArgRewrite {
 
     public CmdOp createCmdOpX() {
         // return CmdOpExec.ofLiterals("/virt/echo", "done.");
-
         return CmdOpGroup.of(
                 CmdOpExec.ofLiterals("/virt/echo", "line 1/2 done."),
                 CmdOpExec.ofLiterals("/virt/echo", "line 2/2 done."));
