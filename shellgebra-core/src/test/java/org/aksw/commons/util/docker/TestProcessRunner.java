@@ -45,12 +45,12 @@ public class TestProcessRunner {
                 logger.info("Data generation thread terminated.");
             });
 
-            System.out.println("Process 1");
-            ProcessBuilderNative.of("head", "-n 2").start(runner).waitFor();
-            Thread.sleep(1000);
-
-            System.out.println("Process 2");
-            ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
+//            System.out.println("Process 1");
+//            ProcessBuilderNative.of("head", "-n 2").start(runner).waitFor();
+//            Thread.sleep(1000);
+//
+//            System.out.println("Process 2");
+//            ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
 
             TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
@@ -78,10 +78,10 @@ public class TestProcessRunner {
 
             System.out.println("Process 6");
             ProcessBuilderPipeline.of(
-                ProcessBuilderJvm.of("/bin/head", "-n10"),
-                // ProcessBuilderNative.of("/bin/head", "-n10"),
+                // ProcessBuilderJvm.of("/bin/head", "-n10"),
+                ProcessBuilderNative.of("/bin/head", "-n10"),
                 ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
-                    .interactive(true)
+                    // .interactive(true)
                     .imageRef("nestio/lbzip2").fileMapper(fileMapper), // .entrypoint("bash")
                 ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
                 // ProcessBuilderJvm.of("/bin/cat"))

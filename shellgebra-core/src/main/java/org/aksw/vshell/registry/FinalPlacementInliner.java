@@ -47,6 +47,12 @@ public class FinalPlacementInliner {
             Map<CmdOpVar, CmdOp> substMap = new HashMap<>();
             for (CmdOpVar v : parentVars) {
                 PlacedCmd inChild = inMap.get(v);
+
+                // Sanity check
+                if (inChild == null) {
+                    throw new NullPointerException("No mapping for variable " + v);
+                }
+
                 CmdOp inChildCmdOp = inChild.cmdOp();
                 ExecSite inChildExecSite = inChild.execSite();
 

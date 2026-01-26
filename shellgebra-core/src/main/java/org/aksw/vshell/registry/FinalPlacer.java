@@ -11,6 +11,7 @@ import org.aksw.shellgebra.algebra.cmd.op.placed.PlacedCmdOp.PlacedCmd;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 
+// FIXME The FinalPlacerWorker does not do recursion - it seems something is broken or needs documentation here!
 public class FinalPlacer {
 
     public static FinalPlacement place(CandidatePlacement candPlacement) {

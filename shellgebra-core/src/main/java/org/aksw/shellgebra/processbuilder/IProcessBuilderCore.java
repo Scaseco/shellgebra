@@ -7,10 +7,18 @@ import java.util.Map;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
-/** Process builder for common settings without the command property. */
+/**
+ * Process builder for common settings without the 'command' property.
+ * Redirect configuration is fundamental because it is needed to form pipelines.
+ *
+ * Redirects are realized using pipes.
+ * This interface exposes information about which types of pipes are supported
+ * with the current configuration. Supported pipe types are 'anonymous' and 'named'.
+ */
 public interface IProcessBuilderCore<X extends IProcessBuilderCore<X>>
     extends Cloneable
 {
+    /** Returns an independent copy of this process builder. */
     X clone();
 
     Path directory();

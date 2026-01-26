@@ -15,7 +15,7 @@ public interface Args {
 
     /**
      * Whether this argument configuration would read from stdin.
-     * Used to automatically enable/disable interative mode when docker containers are involved.
+     * Used to automatically enable/disable interactive mode when docker containers are involved.
      */
     Optional<Boolean> readsStdin();
 }

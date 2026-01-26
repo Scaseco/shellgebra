@@ -7,6 +7,11 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 
 import com.google.common.collect.Multimap;
 
+
+// TODO: Instead of just the physical command name, we generally need an ArgumentChecker
+//       that can analyze the physical command and extract the supported arguments from it.
+//       in the simple case, the argument provider is a static model.
+//       in the complex case, we need to start an environment and probe the command in it.
 public interface CommandCatalog {
     /**
      * Return all known locations for a command.

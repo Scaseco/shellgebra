@@ -7,7 +7,9 @@ import java.util.Objects;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 
 /**
- * Fluent-style builder to build a plain list of strings.
+ * Fluent-style builder to build a list of CmdArgs.
+ *
+ * See {@link ArgsBuilder} for building lists of Strings.
  */
 public class ArgumentListBuilder {
     private final List<CmdArg> args = new ArrayList<>();

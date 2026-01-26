@@ -68,9 +68,11 @@ public class TestProcessBuilderFinalPlacement {
         // "echo 'test' | lbzip2 -c | bzip2 -cd | cat - <(echo done)"
         System.out.println(resolver.resolve("/virt/lbzip2"));
         CmdOp cmdOp;
-        if (false) {
+        if (true) {
             CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
             CmdOp cmdOp2 = CmdOpGroup.of(
+                // FIXME Adding this line causes an NPE!!!
+                // CmdOpExec.ofLiterals("/virt/echo", "FOOBAR"),
                 CmdOpExec.ofLiterals("/virt/bzip2", "-dc"),
                 new CmdOpExec(List.<CmdPrefix>of(), "/virt/cat", ArgumentList.of(
                     CmdArg.ofLiteral("-"),

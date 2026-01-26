@@ -36,9 +36,6 @@ public final class PosixPipe
     private final FileInputStream in;
     private final FileOutputStream out;
 
-//    private FileInputSource source;
-//    private FileOutputTarget target;
-
     private PosixPipe(POSIX posix,
                       int readFd,
                       int writeFd,
