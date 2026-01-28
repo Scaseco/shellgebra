@@ -5,11 +5,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.aksw.shellgebra.exec.model.ExecSite;
-
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+
+import org.aksw.shellgebra.exec.model.ExecSite;
+import org.aksw.shellgebra.shim.core.ArgsTransform;
 
 /**
  * Registry / cache for whether a command is available on a certain exec site.
@@ -20,16 +21,16 @@ public class CommandRegistry
     implements CommandCatalog
 {
     // value may be null to indicate absence of the command.
-    private Map<String, Multimap<ExecSite, String>> toolToSiteToCmd = new HashMap<>();// HashBasedTable.create();
+    private Map<String, Multimap<ExecSite, CommandBinding>> toolToSiteToCmd = new HashMap<>();// HashBasedTable.create();
 
     /** Return a snapshot of the set of exec sites where the command is
      *  known to be present.
      *  Return null if there is no entry for the command.
      *  Empty map if there is an entry with no known locations.
      */
-    public Optional<Multimap<ExecSite, String>> getKnownExecSites(String command) {
-        Multimap<ExecSite, String> tmp = toolToSiteToCmd.get(command);
-        Multimap<ExecSite, String> result;
+    public Optional<Multimap<ExecSite, CommandBinding>> getKnownExecSites(String command) {
+        Multimap<ExecSite, CommandBinding> tmp = toolToSiteToCmd.get(command);
+        Multimap<ExecSite, CommandBinding> result;
         if (tmp != null) {
             result = Multimaps.filterKeys(toolToSiteToCmd.get(command), k -> !tmp.get(k).isEmpty());
         } else {
@@ -49,22 +50,36 @@ public class CommandRegistry
 //            .collect(Collectors.toUnmodifiableSet()));
 //    }
 
-    public Optional<Set<String>> getAvailability(String command, ExecSite execSite) {
-        return Optional.ofNullable(toolToSiteToCmd.get(command)).map(mm -> (Set<String>)mm.get(execSite));
+    public Optional<Set<CommandBinding>> getAvailability(String command, ExecSite execSite) {
+        return Optional.ofNullable(toolToSiteToCmd.get(command)).map(mm -> (Set<CommandBinding>)mm.get(execSite));
     }
 
     public CommandRegistry put(String command, ExecSite execSite, String cmd) {
+        put(command, execSite, cmd, ArgsTransform.identity());
+        return this;
+    }
+
+    public CommandRegistry put(String command, ExecSite execSite, String cmd, ArgsTransform argsTransform) {
+        if (argsTransform == null) {
+            argsTransform = ArgsTransform.identity();
+        }
+        CommandBinding commandBinding = new CommandBinding(cmd, argsTransform);
+        put(command, execSite, commandBinding);
+        return this;
+    }
+
+    public CommandRegistry put(String command, ExecSite execSite, CommandBinding cmd) {
         toolToSiteToCmd.computeIfAbsent(command, c -> LinkedHashMultimap.create()).put(execSite, cmd);
         return this;
     }
 
-    public CommandRegistry putAll(String command, Multimap<ExecSite, String> cmdMap) {
+    public CommandRegistry putAll(String command, Multimap<ExecSite, CommandBinding> cmdMap) {
         toolToSiteToCmd.computeIfAbsent(command, c -> LinkedHashMultimap.create()).putAll(cmdMap);
         return this;
     }
 
     @Override
-    public Multimap<ExecSite, String> get(String virtualCommandName) {
+    public Multimap<ExecSite, CommandBinding> get(String virtualCommandName) {
         return getKnownExecSites(virtualCommandName).orElse(Multimaps.unmodifiableMultimap(LinkedHashMultimap.create()));
     }
 }

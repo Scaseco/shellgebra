@@ -1,10 +1,10 @@
 package org.aksw.vshell.registry;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.ListBuilder;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSites;
@@ -35,13 +35,14 @@ public class CmdOpVisitorToPbDocker
         // (1) Parser candidates are inferred from the jvm site
         // (2) The actual command is resolved against the docker exec site.
         JvmCommandParser parser = null;
-        Set<String> parserCands = commandCatalog.get(commandName, ExecSites.jvm()).orElse(null);
-        String parserCand = null;
+        Set<CommandBinding> parserCands = commandCatalog.get(commandName, ExecSites.jvm()).orElse(null);
+        CommandBinding parserCand = null;
         if (parserCands != null) {
-            for (String tmp : parserCands) {
-                parser = commandRegistry.get(tmp).orElse(null);
+            for (CommandBinding cmdBinding : parserCands) {
+                String cmdName = cmdBinding.commandName();
+                parser = commandRegistry.get(cmdName).orElse(null);
                 if (parser != null) {
-                    parserCand = tmp;
+                    parserCand = cmdBinding;
                     break;
                 }
             }
@@ -52,9 +53,10 @@ public class CmdOpVisitorToPbDocker
         }
 
         // FIXME The actual command should re-use the prior resolution - probably need to bass the resolver or "probe results" tracker here.
-        String actualCommandName = resolveOrFail(commandCatalog, commandName, execSite);
-        List<String> newArgs = new ArrayList<>(args);
-        newArgs.set(0, actualCommandName);
+        List<String> newArgv = resolveOrFail(commandCatalog, commandName, execSite, args);
+
+        // List<String> newArgs = new ArrayList<>(args);
+        // newArgs.set(0, actualCommandName);
 
 
 //        JvmCommandParser parser = parserCatalog.getParser(commandName)
@@ -73,7 +75,7 @@ public class CmdOpVisitorToPbDocker
         // Perhaps we can retain the original command - original command + exec site should
         // unambiguously give the actual command.
 
-        IProcessBuilderCore<?> result = ProcessBuilderDocker.of(newArgs)
+        IProcessBuilderCore<?> result = ProcessBuilderDocker.of(newArgv)
             .commandParser(parser)
             .imageRef(imageRef)
             .fileMapper(fileMapper)
@@ -82,14 +84,22 @@ public class CmdOpVisitorToPbDocker
         return result;
     }
 
-    public static String resolveOrFail(CommandCatalog commandCatalog, String commandName, ExecSite execSite) {
+    public static CommandBinding resolveOrFail(CommandCatalog commandCatalog, String commandName, ExecSite execSite) {
         // FIXME The actual command should re-use the prior resolution - probably need to bass the resolver or "probe results" tracker here.
-        Set<String> nameCands = commandCatalog.get(commandName, execSite)
+        Set<CommandBinding> nameCands = commandCatalog.get(commandName, execSite)
             .orElseThrow(() -> new RuntimeException("command " + commandName + " not found on exec site " + execSite));
         if (nameCands.isEmpty()) {
             throw new RuntimeException("Command " + commandName + " does not have resolutions on exec site " + execSite);
         }
-        String resolvedName = nameCands.iterator().next();
+        CommandBinding resolvedName = nameCands.iterator().next();
         return resolvedName;
+    }
+
+    // Return resolved argv based on the given commandName and args.
+    public static List<String> resolveOrFail(CommandCatalog commandCatalog, String commandName, ExecSite execSite, List<String> args) {
+        CommandBinding commandBinding = resolveOrFail(commandCatalog, commandName, execSite);
+        List<String> newArgs = commandBinding.argsTransform().map(args);
+        List<String> newArgv = ListBuilder.ofString().add(commandBinding.commandName()).addAll(newArgs).buildList();
+        return newArgv;
     }
 }

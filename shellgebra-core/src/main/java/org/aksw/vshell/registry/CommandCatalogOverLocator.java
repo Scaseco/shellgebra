@@ -1,12 +1,13 @@
 package org.aksw.vshell.registry;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-
-import org.aksw.shellgebra.exec.model.ExecSite;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+
+import org.aksw.shellgebra.exec.model.ExecSite;
 
 /**
  * Combine a locator with an exec-site instance.
@@ -16,18 +17,22 @@ public class CommandCatalogOverLocator
     implements CommandCatalog
 {
     private ExecSite execSite;
-    private CommandLocator locator;
+    private CommandBindingLocator locator;
 
     public CommandCatalogOverLocator(ExecSite execSite, CommandLocator locator) {
+        this(execSite, CommandBindingLocatorOverCommandLocator.of(locator));
+    }
+
+    public CommandCatalogOverLocator(ExecSite execSite, CommandBindingLocator locator) {
         super();
         this.execSite = execSite;
-        this.locator = locator;
+        this.locator = Objects.requireNonNull(locator);
     }
 
     @Override
-    public Multimap<ExecSite, String> get(String virtualCommandName) {
-        Optional<String> match = locator.locate(virtualCommandName);
-        Map<ExecSite, String> map = match.map(str -> Map.of(execSite, str)).orElse(Map.of());
+    public Multimap<ExecSite, CommandBinding> get(String virtualCommandName) {
+        Optional<CommandBinding> match = locator.locate(virtualCommandName);
+        Map<ExecSite, CommandBinding> map = match.map(str -> Map.of(execSite, str)).orElse(Map.of());
         return Multimaps.forMap(map);
     }
 }

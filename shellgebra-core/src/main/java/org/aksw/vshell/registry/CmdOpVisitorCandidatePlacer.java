@@ -12,6 +12,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
@@ -26,9 +29,6 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 import org.aksw.shellgebra.shim.core.ArgumentList;
-
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
 public class CmdOpVisitorCandidatePlacer
     implements CmdOpVisitor<PlacedCommand>
@@ -93,13 +93,14 @@ public class CmdOpVisitorCandidatePlacer
         // in the image.
         // TODO: In general a validator is needed to confirm that an existing command
         // is actually suitable.
-        Multimap<ExecSite, String> candResolutions = cmdRegistry.get(virtCmdName); // execSiteResolver.resolve(virtCmdName);
-        Set<String> candCmdLocations = new LinkedHashSet<>(candResolutions.values());
+        Multimap<ExecSite, CommandBinding> candResolutions = cmdRegistry.get(virtCmdName); // execSiteResolver.resolve(virtCmdName);
+        Set<CommandBinding> candCmdLocations = new LinkedHashSet<>(candResolutions.values());
 
         // Check all preferred exec sites for whether they provide the command.
         for (ExecSite execSite : preferredExecSites) {
-            for (String cmdLocation : candCmdLocations) {
-                boolean isCmdPresent = execSiteResolver.providesCommand(cmdLocation, execSite);
+            for (CommandBinding cmdLocation : candCmdLocations) {
+                String cmdName = cmdLocation.commandName();
+                boolean isCmdPresent = execSiteResolver.providesCommand(cmdName, execSite);
 
                 if (isCmdPresent) {
                     execSites.add(execSite);
@@ -117,10 +118,9 @@ public class CmdOpVisitorCandidatePlacer
         // NOTE The availability cache should still hit for double checks.
         // TODO Apply the cmd availability cache to the entry point lookup!
         if (execSites.isEmpty()) {
-            Map<ExecSite, String> resolutions = execSiteResolver.resolve(virtCmdName);
+            Map<ExecSite, CommandBinding> resolutions = execSiteResolver.resolve(virtCmdName);
             execSites.addAll(resolutions.keySet());
         }
-
 
         if (execSites.isEmpty()) {
             throw new RuntimeException("No exec sites found for: " + virtCmdName);

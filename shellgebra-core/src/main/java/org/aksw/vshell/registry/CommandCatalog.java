@@ -3,10 +3,9 @@ package org.aksw.vshell.registry;
 import java.util.Optional;
 import java.util.Set;
 
-import org.aksw.shellgebra.exec.model.ExecSite;
-
 import com.google.common.collect.Multimap;
 
+import org.aksw.shellgebra.exec.model.ExecSite;
 
 // TODO: Instead of just the physical command name, we generally need an ArgumentChecker
 //       that can analyze the physical command and extract the supported arguments from it.
@@ -18,11 +17,11 @@ public interface CommandCatalog {
      * Candidate locations where the command is unavailable
      * (e.g. on the host) must have been filtered out.
      */
-    Multimap<ExecSite, String> get(String virtualCommandName);
+    Multimap<ExecSite, CommandBinding> get(String virtualCommandName);
 
     /** Find the best matching command for the given exec site. */
-    default Optional<Set<String>> get(String virtualCommandName, ExecSite execSite) {
-        return Optional.ofNullable((Set<String>)get(virtualCommandName).asMap().get(execSite));
+    default Optional<Set<CommandBinding>> get(String virtualCommandName, ExecSite execSite) {
+        return Optional.ofNullable((Set<CommandBinding>)get(virtualCommandName).asMap().get(execSite));
     }
 
     /** Convenience method to get only a command's set of exec sites. */

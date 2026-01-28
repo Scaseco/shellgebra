@@ -17,6 +17,7 @@ public record Argv(List<String> argv) {
     private static void requireNonEmpty(Collection<?> list) {
         Objects.requireNonNull(list);
         if (list.isEmpty()) {
+            // XXX Perhaps allow null / empty list for "null command" (in shell this would be ':').
             throw new IllegalArgumentException("At least on item expected.");
         }
     }

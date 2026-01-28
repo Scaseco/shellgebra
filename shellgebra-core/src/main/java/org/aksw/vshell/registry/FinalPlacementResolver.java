@@ -45,13 +45,14 @@ public class FinalPlacementResolver {
                 boolean doResolve = false;
                 String outName;
                 if (doResolve) {
-                    outName = inferredCatalog.get(inName, execSite).map(s -> s.iterator().next()).orElse(null);
-                    if (outName == null) {
-                        outName = resolver.resolve(inName, execSite)
+                    CommandBinding outCmdBinding = inferredCatalog.get(inName, execSite).map(s -> s.iterator().next()).orElse(null);
+                    if (outCmdBinding == null) {
+                        outCmdBinding = resolver.resolve(inName, execSite)
                             .orElseThrow(() -> {
                                 return new RuntimeException("Should not happen - could not resolve: " + inName + " on site " + execSite);
                             });
                     }
+                    outName = outCmdBinding.commandName();
                 } else {
                     outName = inName;
                 }

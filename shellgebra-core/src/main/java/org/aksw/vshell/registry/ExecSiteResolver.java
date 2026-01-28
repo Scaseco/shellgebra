@@ -19,9 +19,7 @@ import org.aksw.shellgebra.exec.model.ExecSiteCurrentJvm;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
 import org.aksw.shellgebra.introspect.ShellProbeResult;
-import org.aksw.shellgebra.model.osreo.ImageIntrospection;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
-import org.aksw.shellgebra.model.osreo.ShellSupport;
 import org.aksw.shellgebra.shim.core.JvmCommand;
 import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
@@ -57,28 +55,30 @@ public class ExecSiteResolver {
         return jvmCmdRegistry;
     }
 
-    public Optional<String> resolve(String virtualCmd, ExecSite execSite) {
-        String result = null;
-        Set<String> candLocations = cmdCatalog.get(virtualCmd, execSite).orElse(Set.of());
-        for (String cmd : candLocations) {
-            boolean isPresent = providesCommand(cmd, execSite);
+    public Optional<CommandBinding> resolve(String virtualCmd, ExecSite execSite) {
+        CommandBinding result = null;
+        Set<CommandBinding> candLocations = cmdCatalog.get(virtualCmd, execSite).orElse(Set.of());
+        for (CommandBinding cmdBinding : candLocations) {
+            String cmdName = cmdBinding.commandName();
+            boolean isPresent = providesCommand(cmdName, execSite);
             if (isPresent) {
-                result = cmd;
+                result = cmdBinding;
                 break;
             }
         }
         return Optional.ofNullable(result);
     }
 
-    public Map<ExecSite, String> resolve(String virtualCmd) {
-        Map<ExecSite, String> result = new LinkedHashMap<>();
-        Map<ExecSite, Collection<String>> map = cmdCatalog.get(virtualCmd).asMap();
-        for (Entry<ExecSite, Collection<String>> e : map.entrySet()) {
+    public Map<ExecSite, CommandBinding> resolve(String virtualCmd) {
+        Map<ExecSite, CommandBinding> result = new LinkedHashMap<>();
+        Map<ExecSite, Collection<CommandBinding>> map = cmdCatalog.get(virtualCmd).asMap();
+        for (Entry<ExecSite, Collection<CommandBinding>> e : map.entrySet()) {
             ExecSite execSite = e.getKey();
-            for (String cmd : e.getValue()) {
-                boolean isPresent = providesCommand(cmd, execSite);
+            for (CommandBinding cmdBinding : e.getValue()) {
+                String cmdName = cmdBinding.commandName();
+                boolean isPresent = providesCommand(cmdName, execSite);
                 if (isPresent) {
-                    result.put(e.getKey(), cmd);
+                    result.put(e.getKey(), cmdBinding);
                 }
             }
         }

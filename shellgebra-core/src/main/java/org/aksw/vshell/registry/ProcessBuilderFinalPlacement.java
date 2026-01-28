@@ -1,7 +1,6 @@
 package org.aksw.vshell.registry;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -134,11 +133,13 @@ class CmdOpVisitorToPbJvm
         ExecSite execSite = ExecSites.jvm();
         String commandName = argv.get(0);
 
-        String actualCommandName = CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, commandName, execSite);
-        argv = new ArrayList<>(argv);
-        argv.set(0, actualCommandName);
+//        String actualCommandName = CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, commandName, execSite);
+//        argv = new ArrayList<>(argv);
+//        argv.set(0, actualCommandName);
+        List<String> args = argv.subList(1,  argv.size());
+        List<String> newArgv = CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, commandName, execSite, args);
 
-        IProcessBuilderCore<?> result = ProcessBuilderJvm.of(argv);
+        IProcessBuilderCore<?> result = ProcessBuilderJvm.of(newArgv);
         return result;
     }
 }
