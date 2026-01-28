@@ -17,6 +17,7 @@ import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderGroup;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderPipeline;
+import org.aksw.shellgebra.registry.init.InitCommandRegistry;
 import org.aksw.shellgebra.shim.cmd.GenericCodecArgs;
 import org.aksw.shellgebra.shim.core.ArgsModular;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
@@ -52,7 +53,7 @@ public class TestProcessRunner {
 //            System.out.println("Process 2");
 //            ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
 
-            TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+            InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
 //            System.out.println("Process 3");
 //            ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
@@ -107,7 +108,7 @@ public class TestProcessRunner {
                 logger.info("Data generation thread terminated.");
             });
 
-            TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+            InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
             ProcessBuilderGroup.of(
                 ProcessBuilderJvm.of("/bin/echo", "Process 1"),

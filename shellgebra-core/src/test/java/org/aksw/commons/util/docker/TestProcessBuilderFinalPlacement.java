@@ -20,6 +20,7 @@ import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
+import org.aksw.shellgebra.registry.init.InitCommandRegistry;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.vshell.registry.CandidatePlacement;
 import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
@@ -46,8 +47,8 @@ public class TestProcessBuilderFinalPlacement {
     public void test01() throws IOException, Exception {
         ContainerUtils.setGlobalRetryCountIfAbsent(1);
 
-        JvmCommandRegistry jvmCmdRegistry = TestCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
-        CommandRegistry candidates = TestCommandRegistry.initCmdCandRegistry(new CommandRegistry());
+        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
+        CommandRegistry candidates = InitCommandRegistry.initCmdCandRegistry(new CommandRegistry());
 
         CommandRegistry inferredCatalog = new CommandRegistry();
         CommandCatalog hostCatalog = new CommandCatalogOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
@@ -68,6 +69,7 @@ public class TestProcessBuilderFinalPlacement {
         // "echo 'test' | lbzip2 -c | bzip2 -cd | cat - <(echo done)"
         System.out.println(resolver.resolve("/virt/lbzip2"));
         CmdOp cmdOp;
+        // TODO Make this test case work reliably!
         if (true) {
             CmdOpExec cmdOp1 = CmdOpExec.ofLiterals("/virt/lbzip2", "-c");
             CmdOp cmdOp2 = CmdOpGroup.of(
@@ -136,7 +138,7 @@ public class TestProcessBuilderFinalPlacement {
 //                logger.info("Data generation thread terminated.");
             });
             // FIXME Reuse existing jvmCmdRegistry!
-            TestCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
+            InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
             ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, resolver, unionCatalog);
             pb.command(inlined);
             Process p = pb.start(context);

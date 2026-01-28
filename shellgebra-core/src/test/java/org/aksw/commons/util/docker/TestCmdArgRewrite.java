@@ -29,6 +29,7 @@ import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
+import org.aksw.shellgebra.registry.init.InitCommandRegistry;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.vshell.registry.CandidatePlacement;
 import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
@@ -59,8 +60,8 @@ public class TestCmdArgRewrite {
         ContainerUtils.setGlobalRetryCountIfAbsent(1);
 
         // This is the catalog of virtual-command to implementation - its both parser and executer.
-        JvmCommandRegistry jvmCmdRegistry = TestCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
-        CommandRegistry candidates = TestCommandRegistry.initCmdCandRegistry(new CommandRegistry());
+        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
+        CommandRegistry candidates = InitCommandRegistry.initCmdCandRegistry(new CommandRegistry());
 
         CommandRegistry probeResultsCatalog = new CommandRegistry();
         CommandCatalog hostCatalog = new CommandCatalogOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
@@ -118,7 +119,7 @@ public class TestCmdArgRewrite {
                 out.println("hello world");
             });
             // FIXME Reuse existing jvmCmdRegistry!
-            TestCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
+            InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
             ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, resolver, unionCatalog);
 
             ExecSiteToProcessDispatcher dispatcher = pb.newDispatcher(context);
