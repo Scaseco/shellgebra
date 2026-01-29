@@ -2,7 +2,6 @@ package org.aksw.commons.util.docker;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,26 +15,11 @@ import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.shellgebra.exec.model.ExecSite;
-import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSites;
-import org.aksw.shellgebra.exec.model.PlacedCommand;
-import org.aksw.shellgebra.model.osreo.ImageIntrospector;
 import org.aksw.shellgebra.registry.init.InitCommandRegistry;
 import org.aksw.shellgebra.shim.core.ArgumentList;
-import org.aksw.vshell.registry.CandidatePlacement;
-import org.aksw.vshell.registry.CmdOpVisitorCandidatePlacer;
-import org.aksw.vshell.registry.CommandCatalog;
-import org.aksw.vshell.registry.CommandCatalogOverLocator;
-import org.aksw.vshell.registry.CommandCatalogUnion;
-import org.aksw.vshell.registry.CommandLocatorHost;
-import org.aksw.vshell.registry.CommandLocatorJvmRegistry;
-import org.aksw.vshell.registry.CommandRegistry;
-import org.aksw.vshell.registry.ExecSiteProbeResults;
-import org.aksw.vshell.registry.ExecSiteResolver;
+import org.aksw.vshell.registry.CmdExecSystem;
 import org.aksw.vshell.registry.FinalPlacement;
-import org.aksw.vshell.registry.FinalPlacementInliner;
-import org.aksw.vshell.registry.FinalPlacer;
-import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.ProcessBuilderFinalPlacement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,27 +31,11 @@ public class TestProcessBuilderFinalPlacement {
     public void test01() throws IOException, Exception {
         ContainerUtils.setGlobalRetryCountIfAbsent(1);
 
-        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
-        CommandRegistry candidates = InitCommandRegistry.initCmdCandRegistry(new CommandRegistry());
-
-        CommandRegistry inferredCatalog = new CommandRegistry();
-        CommandCatalog hostCatalog = new CommandCatalogOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
-        CommandCatalog jvmCatalog = new CommandCatalogOverLocator(ExecSites.jvm(), new CommandLocatorJvmRegistry(jvmCmdRegistry));
-        CommandCatalog unionCatalog = new CommandCatalogUnion(List.of(candidates, hostCatalog, jvmCatalog, inferredCatalog));
-
-        ExecSiteProbeResults probeResults = new ExecSiteProbeResults();
-        // TODO Have image introspector write into cmdAvailability without having to know about exec sites.
-        // Need an adapter or cmdAvailability.asDockerImageMap().
-
-        // Model shellModel = RDFDataMgr.loadModel("shell-ontology.ttl");
-        ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(); // shellModel, probeResults);
-        // imageIntrospector = new ImageIntrospectorCaching(imageIntrospector);
-
-        ExecSiteResolver resolver = new ExecSiteResolver(candidates, jvmCmdRegistry, probeResults, imageIntrospector);
+        CmdExecSystem execSystem = new CmdExecSystem();
 
         // Some command expression.
         // "echo 'test' | lbzip2 -c | bzip2 -cd | cat - <(echo done)"
-        System.out.println(resolver.resolve("/virt/lbzip2"));
+        System.out.println(execSystem.getResolver().resolve("/virt/lbzip2"));
         CmdOp cmdOp;
         // TODO Make this test case work reliably!
         if (true) {
@@ -106,16 +74,9 @@ public class TestProcessBuilderFinalPlacement {
 
         // Try to resolve the command on a certain docker image.
         ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
+        FinalPlacement inlined = execSystem.rewrite(cmdOp, qleverExecSite);
 
-        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, inferredCatalog, resolver, Set.of(qleverExecSite));
-        PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
-        CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
-        System.out.println("Candidate Placement: " + candidatePlacement);
-
-        FinalPlacement placed = FinalPlacer.place(candidatePlacement);
-        System.out.println("Placed: " + placed);
-
-        FinalPlacement inlined = FinalPlacementInliner.inline(placed);
+        // FinalPlacement inlined = FinalPlacementInliner.inline(placed);
 
         // TODO Resolution at this point is bad because we lose the original command
         // and the original command parser.
@@ -139,7 +100,7 @@ public class TestProcessBuilderFinalPlacement {
             });
             // FIXME Reuse existing jvmCmdRegistry!
             InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
-            ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, resolver, unionCatalog);
+            ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, execSystem.getResolver(), execSystem.getUnionCatalog());
             pb.command(inlined);
             Process p = pb.start(context);
 

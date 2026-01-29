@@ -62,20 +62,21 @@ public class CmdExecSystem {
         resolver = new ExecSiteResolver(candidates, jvmCmdRegistry, probeResults, imageIntrospector);
     }
 
-    public FinalPlacement rewrite(CmdOp cmdOp) {
-         // Try to resolve the command on a certain docker image.
-        ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
+    public FinalPlacement rewrite(CmdOp cmdOp, ExecSite preferredExecSite) {
+        Set<ExecSite> preferredExecSites = Set.of(preferredExecSite);
+        FinalPlacement result = rewrite(cmdOp, preferredExecSites);
+        return result;
+    }
 
-        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, inferredCatalog, resolver, Set.of(qleverExecSite));
+    public FinalPlacement rewrite(CmdOp cmdOp, Set<ExecSite> preferredExecSites) {
+         // Try to resolve the command on a certain docker image.
+        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, inferredCatalog, resolver, preferredExecSites);
         PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
         CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
         System.out.println("Candidate Placement: " + candidatePlacement);
-
         FinalPlacement placed = FinalPlacer.place(candidatePlacement);
         System.out.println("Placed: " + placed);
-
         FinalPlacement inlined = FinalPlacementInliner.inline(placed);
-
         return inlined;
     }
 
