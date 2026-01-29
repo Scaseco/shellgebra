@@ -89,7 +89,7 @@ public class ProcessBuilderFinalPlacement
 
     public ExecSiteToProcessDispatcher newDispatcher(ProcessRunner context) {
         ExecutorService executorService = Executors.newCachedThreadPool();
-        ExecSiteToProcessDispatcher dispatcher = new ExecSiteToProcessDispatcher(placement, context, commandCatalog, fileMapper, executorService);
+        ExecSiteToProcessDispatcher dispatcher = new ExecSiteToProcessDispatcher(placement, context, commandCatalog, fileMapper, resolver, executorService);
         return dispatcher;
     }
 
@@ -119,6 +119,10 @@ public class ProcessBuilderFinalPlacement
     public boolean accessesStdIn() {
         return true;
     }
+//
+//    public ExecSiteResolver getResolver() {
+//        return resolver;
+//    }
 }
 
 class CmdOpVisitorToPbJvm
@@ -139,7 +143,8 @@ class CmdOpVisitorToPbJvm
         List<String> args = argv.subList(1,  argv.size());
         List<String> newArgv = CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, commandName, execSite, args);
 
-        IProcessBuilderCore<?> result = ProcessBuilderJvm.of(newArgv);
+        JvmCommandRegistry jvmCmdRegistry = getDispatcher().getJvmCmdRegistry();
+        IProcessBuilderCore<?> result = ProcessBuilderJvm.of(jvmCmdRegistry, newArgv);
         return result;
     }
 }

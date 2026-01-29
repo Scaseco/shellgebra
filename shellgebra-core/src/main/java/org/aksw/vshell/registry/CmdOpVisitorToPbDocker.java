@@ -29,7 +29,7 @@ public class CmdOpVisitorToPbDocker
         String commandName = args.get(0);
         // CommandParserCatalog parserCatalog = dispatcher.getParserCatalog();
         CommandCatalog commandCatalog = dispatcher.getCommandCatalog();
-        JvmCommandRegistry commandRegistry = dispatcher.getContext().getJvmCmdRegistry();
+        JvmCommandRegistry commandRegistry = dispatcher.getJvmCmdRegistry();
 
         // Important:
         // (1) Parser candidates are inferred from the jvm site

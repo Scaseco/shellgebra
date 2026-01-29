@@ -24,7 +24,6 @@ import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.vshell.registry.FileInput;
 import org.aksw.vshell.registry.FileOutput;
-import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,7 @@ public class ProcessRunnerPosix
     private static final Logger logger = LoggerFactory.getLogger(ProcessRunnerPosix.class);
 
     // Bridge to java commands.
-    private JvmCommandRegistry jvmCmdRegistry;
+    // private JvmCommandRegistry jvmCmdRegistry;
     private Map<String, String> environment;
     private Path directory; // Default working directory. Will be set if process builders don't specify their own.
 
@@ -84,13 +83,13 @@ public class ProcessRunnerPosix
 //        pipeOut.getOutputStream();
 //        pipeErr.getOutputStream();
 
-        this.jvmCmdRegistry = new JvmCommandRegistry();
+        // this.jvmCmdRegistry = new JvmCommandRegistry();
     }
 
-    @Override
-    public JvmCommandRegistry getJvmCmdRegistry() {
-        return jvmCmdRegistry;
-    }
+//    @Override
+//    public JvmCommandRegistry getJvmCmdRegistry() {
+//        return jvmCmdRegistry;
+//    }
 
     @Override
     public Map<String, String> environment() {

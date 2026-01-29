@@ -36,9 +36,11 @@ public class ExecSiteToProcessDispatcher
     private CmdOpVisitorToPbJvm jvmVisitor;
     private CmdOpVisitorToPbHost hostVisitor;
 
+    private ExecSiteResolver resolver;
+
     private Deque<Process> closeables = new ArrayDeque<>();
 
-    public ExecSiteToProcessDispatcher(FinalPlacement finalPlacement, ProcessRunner context, CommandCatalog commandCatalog, FileMapper fileMapper, ExecutorService executorService) {
+    public ExecSiteToProcessDispatcher(FinalPlacement finalPlacement, ProcessRunner context, CommandCatalog commandCatalog, FileMapper fileMapper, ExecSiteResolver resolver, ExecutorService executorService) {
         super();
         this.fileMapper = fileMapper;
         this.context = context;
@@ -48,8 +50,20 @@ public class ExecSiteToProcessDispatcher
         this.finalPlacement = finalPlacement;
         this.executorService = executorService;
 
+        this.resolver = resolver;
+
         this.jvmVisitor = new CmdOpVisitorToPbJvm(this);
         this.hostVisitor = new CmdOpVisitorToPbHost(this);
+    }
+
+    public ExecSiteResolver getResolver() {
+        return resolver;
+    }
+
+
+    // XXX Hides the intermediate getResolver() - Perhaps getResolver can be made private.
+    public JvmCommandRegistry getJvmCmdRegistry() {
+        return getResolver().getJvmCmdRegistry();
     }
 
     public void addProcess(Process closeable) {

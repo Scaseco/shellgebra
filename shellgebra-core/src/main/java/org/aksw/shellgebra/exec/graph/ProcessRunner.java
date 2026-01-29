@@ -15,12 +15,11 @@ import java.util.function.Consumer;
 import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.vshell.registry.FileInput;
 import org.aksw.vshell.registry.FileOutput;
-import org.aksw.vshell.registry.JvmCommandRegistry;
 
 public interface ProcessRunner
     extends AutoCloseable
 {
-    JvmCommandRegistry getJvmCmdRegistry();
+    // JvmCommandRegistry getJvmCmdRegistry();
     Map<String, String> environment();
     Path directory();
 

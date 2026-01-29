@@ -42,7 +42,9 @@ public class SysRuntimeCoreJvm
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         JvmExecCxt cxt = new JvmExecCxt(
-            null, Map.of(), Path.of(""),
+            null,
+            jvmCmdRegistry,
+            Map.of(), Path.of(""),
             DynamicInputFromStream.of(InputStream.nullInputStream()),
             DynamicOutputFromStream.of(out),
             DynamicOutputFromStream.of(err));

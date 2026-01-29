@@ -9,6 +9,7 @@ import org.aksw.shellgebra.exec.graph.ProcessRunner;
 public class JvmExecCxt {
     private ProcessRunner executor;
     // private JvmContext context; // Used executor + JvmCommandRegistry registry;
+    private JvmCommandRegistry jvmCmdRegistry;
 
     // Track the parent command or process (if exists)?
     //   Might requires wrapped context with additional info.
@@ -22,11 +23,13 @@ public class JvmExecCxt {
 
     public JvmExecCxt(
             ProcessRunner executor,
+            JvmCommandRegistry jvmCmdRegistry,
             Map<String, String> environment,
             Path directory,
             DynamicInput inputSource, DynamicOutput outputTarget, DynamicOutput errorTarget) {
         super();
         this.executor = executor;
+        this.jvmCmdRegistry = jvmCmdRegistry;
         this.environment = environment;
         this.directory = directory;
         this.inputSource = inputSource;
@@ -56,5 +59,9 @@ public class JvmExecCxt {
 
     public ProcessRunner getExecutor() {
         return executor;
+    }
+
+    public JvmCommandRegistry getJvmCmdRegistry() {
+        return jvmCmdRegistry;
     }
 }

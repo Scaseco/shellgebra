@@ -62,24 +62,6 @@ public class CmdExecSystem {
         resolver = new ExecSiteResolver(candidates, jvmCmdRegistry, probeResults, imageIntrospector);
     }
 
-    public FinalPlacement rewrite(CmdOp cmdOp, ExecSite preferredExecSite) {
-        Set<ExecSite> preferredExecSites = Set.of(preferredExecSite);
-        FinalPlacement result = rewrite(cmdOp, preferredExecSites);
-        return result;
-    }
-
-    public FinalPlacement rewrite(CmdOp cmdOp, Set<ExecSite> preferredExecSites) {
-         // Try to resolve the command on a certain docker image.
-        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, inferredCatalog, resolver, preferredExecSites);
-        PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
-        CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
-        System.out.println("Candidate Placement: " + candidatePlacement);
-        FinalPlacement placed = FinalPlacer.place(candidatePlacement);
-        System.out.println("Placed: " + placed);
-        FinalPlacement inlined = FinalPlacementInliner.inline(placed);
-        return inlined;
-    }
-
     public JvmCommandRegistry getJvmCmdRegistry() {
         return jvmCmdRegistry;
     }
@@ -107,4 +89,23 @@ public class CmdExecSystem {
     public ExecSiteResolver getResolver() {
         return resolver;
     }
+
+    public FinalPlacement rewrite(CmdOp cmdOp, ExecSite preferredExecSite) {
+        Set<ExecSite> preferredExecSites = Set.of(preferredExecSite);
+        FinalPlacement result = rewrite(cmdOp, preferredExecSites);
+        return result;
+    }
+
+    public FinalPlacement rewrite(CmdOp cmdOp, Set<ExecSite> preferredExecSites) {
+         // Try to resolve the command on a certain docker image.
+        CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(candidates, inferredCatalog, resolver, preferredExecSites);
+        PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
+        CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
+        System.out.println("Candidate Placement: " + candidatePlacement);
+        FinalPlacement placed = FinalPlacer.place(candidatePlacement);
+        System.out.println("Placed: " + placed);
+        FinalPlacement inlined = FinalPlacementInliner.inline(placed);
+        return inlined;
+    }
+
 }

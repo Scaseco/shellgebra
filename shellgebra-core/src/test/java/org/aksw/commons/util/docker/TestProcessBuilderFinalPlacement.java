@@ -16,7 +16,6 @@ import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
-import org.aksw.shellgebra.registry.init.InitCommandRegistry;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.vshell.registry.CmdExecSystem;
 import org.aksw.vshell.registry.FinalPlacement;
@@ -36,6 +35,51 @@ public class TestProcessBuilderFinalPlacement {
         // Some command expression.
         // "echo 'test' | lbzip2 -c | bzip2 -cd | cat - <(echo done)"
         System.out.println(execSystem.getResolver().resolve("/virt/lbzip2"));
+        CmdOp cmdOp = createCmdOp();
+
+        // Try to resolve the command on a certain docker image.
+        ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
+        FinalPlacement inlined = execSystem.rewrite(cmdOp, qleverExecSite);
+
+        // FinalPlacement inlined = FinalPlacementInliner.inline(placed);
+
+        // TODO Resolution at this point is bad because we lose the original command
+        // and the original command parser.
+        // FinalPlacement resolvedInlined = FinalPlacementResolver.resolve(inlined, resolver, unionCatalog);
+        // Resolve commands w.r.t. the final placement.
+        // System.out.println("Inlined: " + resolvedInlined);
+        // CommandParserCatalog parserCatalog = new CommandParserCatalogImpl(unionCatalog, jvmCmdRegistry);
+
+        FileMapper fileMapper = FileMapper.of("/tmp/shared");
+        try (ProcessRunner context = ProcessRunnerPosix.create()) {
+            context.setOutputLineReaderUtf8(line -> logger.info("Got line: " + line));
+            context.setErrorLineReaderUtf8(logger::info);
+            context.setInputPrintStreamUtf8(out -> {
+                out.println("hello world");
+//                logger.info("Data generation thread started.");
+//                for (int i = 0; i < 10000; ++i) {
+//                    out.println("" + i);
+//                }
+//                out.flush();
+//                logger.info("Data generation thread terminated.");
+            });
+            // FIXME Reuse existing jvmCmdRegistry!
+            // InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
+            // InitCommandRegistry.initJvmCmdRegistry(execSystem.getJvmCmdRegistry());
+
+            ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, execSystem.getResolver(), execSystem.getUnionCatalog());
+            pb.command(inlined);
+            Process p = pb.start(context);
+
+            // Thread.sleep(5000);
+
+            System.out.println("Shutting context down.");
+            p.waitFor();
+            context.shutdown();
+        }
+    }
+
+    private static CmdOp createCmdOp() {
         CmdOp cmdOp;
         // TODO Make this test case work reliably!
         if (true) {
@@ -71,44 +115,6 @@ public class TestProcessBuilderFinalPlacement {
 
             cmdOp = CmdOpPipeline.of(cmdOp1, cmdOp2);
         }
-
-        // Try to resolve the command on a certain docker image.
-        ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
-        FinalPlacement inlined = execSystem.rewrite(cmdOp, qleverExecSite);
-
-        // FinalPlacement inlined = FinalPlacementInliner.inline(placed);
-
-        // TODO Resolution at this point is bad because we lose the original command
-        // and the original command parser.
-        // FinalPlacement resolvedInlined = FinalPlacementResolver.resolve(inlined, resolver, unionCatalog);
-        // Resolve commands w.r.t. the final placement.
-        // System.out.println("Inlined: " + resolvedInlined);
-        // CommandParserCatalog parserCatalog = new CommandParserCatalogImpl(unionCatalog, jvmCmdRegistry);
-
-        FileMapper fileMapper = FileMapper.of("/tmp/shared");
-        try (ProcessRunner context = ProcessRunnerPosix.create()) {
-            context.setOutputLineReaderUtf8(line -> logger.info("Got line: " + line));
-            context.setErrorLineReaderUtf8(logger::info);
-            context.setInputPrintStreamUtf8(out -> {
-                out.println("hello world");
-//                logger.info("Data generation thread started.");
-//                for (int i = 0; i < 10000; ++i) {
-//                    out.println("" + i);
-//                }
-//                out.flush();
-//                logger.info("Data generation thread terminated.");
-            });
-            // FIXME Reuse existing jvmCmdRegistry!
-            InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
-            ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, execSystem.getResolver(), execSystem.getUnionCatalog());
-            pb.command(inlined);
-            Process p = pb.start(context);
-
-            // Thread.sleep(5000);
-
-            System.out.println("Shutting context down.");
-            p.waitFor();
-            context.shutdown();
-        }
+        return cmdOp;
     }
 }

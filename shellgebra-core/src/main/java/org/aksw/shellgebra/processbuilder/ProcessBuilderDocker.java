@@ -46,7 +46,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Process builder that starts a process in a docker container via docker run.
+ * Process builder that starts a process in a fresh docker container via docker run.
+ *
+ * Use {@link ProcessBuilderDockerExec} to start a process in an already running container.
  */
 public class ProcessBuilderDocker
     extends InvokableProcessBuilderBase<ProcessBuilderDocker>
@@ -123,6 +125,10 @@ public class ProcessBuilderDocker
             actualInteractive = baseInteractive.orElse(true);
         }
         return actualInteractive;
+    }
+
+    public static ProcessBuilderDocker of(String imageName, FileMapper fileMapper, String ... command) {
+        return new ProcessBuilderDocker().imageRef(imageName).fileMapper(fileMapper).command(command);
     }
 
     public static ProcessBuilderDocker of(String ... command) {
@@ -496,6 +502,8 @@ public class ProcessBuilderDocker
         String[] cmdParts = tmp.subList(1, tmp.size()).toArray(String[]::new);
 
         // String[] cmdParts = exec.argv().toArray(String[]::new);
+        logger.info("image: " + imageRef);
+        logger.info("entry point: " + actualEntrypoint);
         List.of(cmdParts).stream().forEach(p -> logger.info("Command part: [" + p + "]"));
         org.testcontainers.containers.GenericContainer<?> result = new org.testcontainers.containers.GenericContainer<>(imageRef)
             .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr).withEntrypoint(actualEntrypoint))

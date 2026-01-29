@@ -20,6 +20,7 @@ import org.aksw.shellgebra.processbuilder.ProcessBuilderPipeline;
 import org.aksw.shellgebra.registry.init.InitCommandRegistry;
 import org.aksw.shellgebra.shim.cmd.GenericCodecArgs;
 import org.aksw.shellgebra.shim.core.ArgsModular;
+import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.aksw.vshell.registry.ProcessBuilderJvm;
 import org.aksw.vshell.registry.ProcessBuilderNative;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
@@ -33,6 +34,8 @@ public class TestProcessRunner {
 
     @Test
     public void test01() throws Exception {
+        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
+
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
         try (ProcessRunner runner = ProcessRunnerPosix.create()) {
             runner.setOutputLineReaderUtf8(logger::info);
@@ -53,7 +56,7 @@ public class TestProcessRunner {
 //            System.out.println("Process 2");
 //            ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
 
-            InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+            // InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
 //            System.out.println("Process 3");
 //            ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
@@ -81,10 +84,8 @@ public class TestProcessRunner {
             ProcessBuilderPipeline.of(
                 // ProcessBuilderJvm.of("/bin/head", "-n10"),
                 ProcessBuilderNative.of("/bin/head", "-n10"),
-                ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
-                    // .interactive(true)
-                    .imageRef("nestio/lbzip2").fileMapper(fileMapper), // .entrypoint("bash")
-                ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
+                ProcessBuilderDocker.of("nestio/lbzip2", fileMapper, "/usr/bin/lbzip2", "-c"),
+                ProcessBuilderJvm.of(jvmCmdRegistry, "/jvm/bzip2", "-d"))
                 // ProcessBuilderJvm.of("/bin/cat"))
                 .start(runner)
                 .waitFor();
@@ -95,6 +96,8 @@ public class TestProcessRunner {
 
     @Test
     public void testGroup() throws Exception {
+        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
+
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
         try (ProcessRunner runner = ProcessRunnerPosix.create()) {
             runner.setOutputLineReaderUtf8(logger::info);
@@ -108,21 +111,20 @@ public class TestProcessRunner {
                 logger.info("Data generation thread terminated.");
             });
 
-            InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+            // InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
             ProcessBuilderGroup.of(
-                ProcessBuilderJvm.of("/bin/echo", "Process 1"),
+                ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 1"),
                 ProcessBuilderNative.of("head", "-n 2"),
 
-                ProcessBuilderJvm.of("/bin/echo", "Process 2"),
+                ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 2"),
                 ProcessBuilderNative.of("head", "-n 4"),
 
-                ProcessBuilderJvm.of("/bin/echo", "Process 3"),
+                ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 3"),
                 ProcessBuilderPipeline.of(
-                    ProcessBuilderJvm.of("/bin/head", "-n10"),
-                    ProcessBuilderDocker.of("/usr/bin/lbzip2", "-c")
-                        .imageRef("nestio/lbzip2").fileMapper(fileMapper), // entrypoint("bash")
-                    ProcessBuilderJvm.of("/jvm/bzip2", "-d"))
+                    ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/head", "-n10"),
+                    ProcessBuilderDocker.of("nestio/lbzip2", fileMapper, "/usr/bin/lbzip2", "-c"),
+                    ProcessBuilderJvm.of(jvmCmdRegistry, "/jvm/bzip2", "-d"))
             ).start(runner).waitFor();
         }
     }

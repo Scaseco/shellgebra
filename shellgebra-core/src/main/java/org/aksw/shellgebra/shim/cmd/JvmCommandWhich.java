@@ -20,7 +20,8 @@ public class JvmCommandWhich
     @Override
     public void runActual(JvmExecCxt cxt, ArgsWhich model) throws ExecuteException {
         List<String> pathEntries = PathResolutionUtils.getPathItems(cxt.env(), "PATH", ":");
-        JvmCommandRegistry reg = cxt.getExecutor().getJvmCmdRegistry(); // cxt.getJvmCmdRegistry();
+        JvmCommandRegistry reg = cxt.getJvmCmdRegistry();
+        // JvmCommandRegistry reg = cxt.getExecutor().getJvmCmdRegistry(); // cxt.getJvmCmdRegistry();
         int exitValue = 0;
         for (String name : model.getFileNames()) {
             long limit = model.isAll() ? Long.MAX_VALUE : 1;

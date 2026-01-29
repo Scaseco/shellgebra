@@ -4,27 +4,35 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
+import java.util.Objects;
 
 import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderBase;
 import org.aksw.shellgebra.shim.core.JvmCommand;
-import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
 public class ProcessBuilderJvm
     extends ProcessBuilderBase<ProcessBuilderJvm>
 {
+    protected JvmCommandRegistry jvmCmdRegistry;
+
     public ProcessBuilderJvm() {
         super();
     }
 
-    public static ProcessBuilderJvm of(String ...argv) {
-        return new ProcessBuilderJvm().command(argv);
+    public static ProcessBuilderJvm of(JvmCommandRegistry jvmCmdRegistry, String ...argv) {
+        return new ProcessBuilderJvm().setJvmCmdRegistry(jvmCmdRegistry).command(argv);
     }
 
-    public static ProcessBuilderJvm of(List<String> argv) {
-        return new ProcessBuilderJvm().command(argv);
+    public static ProcessBuilderJvm of(JvmCommandRegistry jvmCmdRegistry, List<String> argv) {
+        return new ProcessBuilderJvm().setJvmCmdRegistry(jvmCmdRegistry).command(argv);
+    }
+
+    public ProcessBuilderJvm setJvmCmdRegistry(JvmCommandRegistry jvmCmdRegistry) {
+        this.jvmCmdRegistry = jvmCmdRegistry;
+        return self();
     }
 
     @Override
@@ -89,16 +97,17 @@ public class ProcessBuilderJvm
 
     @Override
     public Process start(ProcessRunner executor) throws IOException {
+        Objects.requireNonNull(jvmCmdRegistry, "jvmCmdRegistry");
         List<String> argvList = command();
         Argv a = Argv.of(argvList);
         String c = a.command();
-        JvmCommand cmd = executor.getJvmCmdRegistry().get(c)
+        JvmCommand cmd = jvmCmdRegistry.get(c)
                 .orElseThrow(() -> new RuntimeException("Command not found: " + c));
-        Process process = ProcessOverCompletableFuture.of(() -> runCommand(executor, a, cmd));
+        Process process = ProcessOverCompletableFuture.of(() -> runCommand(executor, jvmCmdRegistry, a, cmd));
         return process;
     }
 
-    private Integer runCommand(ProcessRunner executor, Argv a, JvmCommand cmd) {
+    private Integer runCommand(ProcessRunner executor, JvmCommandRegistry jvmCmdRegistry, Argv a, JvmCommand cmd) {
         // XXX Is ClosePolicyWrapper sufficient or is reference counting needed?
         try(
             ClosePolicyWrapper<FileInput> in = resolveInputRedirect(executor.internalIn(), redirectInput());
@@ -107,6 +116,7 @@ public class ProcessBuilderJvm
 
             JvmExecCxt execCxt = new JvmExecCxt(
                 executor,
+                jvmCmdRegistry,
                 executor.environment(), executor.directory(), in.entity(), out.entity(), err.entity());
 
             int exitValue = cmd.run(execCxt, a);
@@ -118,6 +128,6 @@ public class ProcessBuilderJvm
 
     @Override
     protected ProcessBuilderJvm cloneActual() {
-        return new ProcessBuilderJvm();
+        return new ProcessBuilderJvm().setJvmCmdRegistry(jvmCmdRegistry);
     }
 }
