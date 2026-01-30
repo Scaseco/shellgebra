@@ -18,8 +18,6 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.vshell.registry.CmdExecSystem;
-import org.aksw.vshell.registry.FinalPlacement;
-import org.aksw.vshell.registry.ProcessBuilderFinalPlacement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,16 +28,12 @@ public class TestProcessBuilderFinalPlacement {
     public void test01() throws IOException, Exception {
         ContainerUtils.setGlobalRetryCountIfAbsent(1);
 
-        CmdExecSystem execSystem = new CmdExecSystem();
+        CmdExecSystem execSystem = CmdExecSystem.newBuilder().build();
 
         // Some command expression.
         // "echo 'test' | lbzip2 -c | bzip2 -cd | cat - <(echo done)"
         System.out.println(execSystem.getResolver().resolve("/virt/lbzip2"));
         CmdOp cmdOp = createCmdOp();
-
-        // Try to resolve the command on a certain docker image.
-        ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
-        FinalPlacement inlined = execSystem.rewrite(cmdOp, qleverExecSite);
 
         // FinalPlacement inlined = FinalPlacementInliner.inline(placed);
 
@@ -66,10 +60,13 @@ public class TestProcessBuilderFinalPlacement {
             // FIXME Reuse existing jvmCmdRegistry!
             // InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
             // InitCommandRegistry.initJvmCmdRegistry(execSystem.getJvmCmdRegistry());
-
-            ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, execSystem.getResolver(), execSystem.getUnionCatalog());
-            pb.command(inlined);
-            Process p = pb.start(context);
+            // Try to resolve the command on a certain docker image.
+            ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
+            Process p = execSystem.exec(context, fileMapper, cmdOp, qleverExecSite);
+//
+//            ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, execSystem.getResolver(), execSystem.getUnionCatalog());
+//            pb.command(inlined);
+//            Process p = pb.start(context);
 
             // Thread.sleep(5000);
 

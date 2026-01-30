@@ -8,6 +8,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import com.google.common.collect.Sets;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitorRenderAsBashString;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
@@ -29,10 +31,14 @@ import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 import org.aksw.shellgebra.shim.core.ArgumentList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CmdOpVisitorCandidatePlacer
     implements CmdOpVisitor<PlacedCommand>
 {
+    private static final Logger logger = LoggerFactory.getLogger(CmdOpVisitorCandidatePlacer.class);
+
     /** ExecSiteResolver can test exec sites for whether they provide a command. */
     private CommandCatalog cmdRegistry;
     private ExecSiteResolver execSiteResolver;
@@ -74,6 +80,7 @@ public class CmdOpVisitorCandidatePlacer
             }
         }, null, null);
 
+        List<String> effectiveArgs = CmdArgVisitorRenderAsBashString.render(newArgs.args());
         CmdOpExec op = new CmdOpExec(origOp.prefixes(), origOp.name(), newArgs);
 
 //    	List<CmdArg> outArgs = new ArrayList<>();
@@ -89,6 +96,8 @@ public class CmdOpVisitorCandidatePlacer
         Set<ExecSite> execSites = opToSites.computeIfAbsent(op, k -> new HashSet<>());
         String virtCmdName = op.getName();
 
+        CommandCatalog commandCatalog = execSiteResolver.getCommandCatalog();
+
         // Find the set of physical commands for the virtual one and see if it exists
         // in the image.
         // TODO: In general a validator is needed to confirm that an existing command
@@ -103,6 +112,12 @@ public class CmdOpVisitorCandidatePlacer
                 boolean isCmdPresent = execSiteResolver.providesCommand(cmdName, execSite);
 
                 if (isCmdPresent) {
+
+                    // If the command is present, check whether the arguments can be mapped.
+                    if (!validateArgs(commandCatalog, virtCmdName, execSite, effectiveArgs)) {
+                        continue;
+                    }
+
                     execSites.add(execSite);
                     probeResultsCatalog.put(virtCmdName, execSite, cmdLocation);
                 }
@@ -119,7 +134,20 @@ public class CmdOpVisitorCandidatePlacer
         // TODO Apply the cmd availability cache to the entry point lookup!
         if (execSites.isEmpty()) {
             Map<ExecSite, CommandBinding> resolutions = execSiteResolver.resolve(virtCmdName);
-            execSites.addAll(resolutions.keySet());
+
+            // Skip exec sites where the candidate supports the given arguments.
+            for (Entry<ExecSite, CommandBinding> e : resolutions.entrySet()) {
+                ExecSite execSite = e.getKey();
+                // CommandBinding cmdBinding = e.getValue();
+
+                // If the command is present, check whether the arguments can be mapped.
+                if (!validateArgs(commandCatalog, virtCmdName, execSite, effectiveArgs)) {
+                    continue;
+                }
+                execSites.add(execSite);
+            }
+
+            // execSites.addAll(resolutions.keySet());
         }
 
         if (execSites.isEmpty()) {
@@ -135,13 +163,24 @@ public class CmdOpVisitorCandidatePlacer
         return new PlacedCommand(op, execSites);
     }
 
+    protected boolean validateArgs(CommandCatalog commandCatalog, String cmdName, ExecSite execSite, List<String> args) {
+        boolean result = false;
+        // If the command is present, check whether the arguments can be mapped.
+        try {
+            CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, cmdName, execSite, args);
+            result = true;
+        } catch (Exception e) {
+            logger.info("Rejected command argument binding: " + cmdName + " on " + execSite + " " + args, e);
+        }
+        return result;
+    }
+
     @Override
     public PlacedCommand visit(CmdOpPipeline op) {
          List<CmdOp> subOps = op.subOps();
          PlacedCommand result = process(subOps, CmdOpPipeline::new);
          return result;
     }
-
 
     @Override
     public PlacedCommand visit(CmdOpGroup op) {
@@ -291,6 +330,8 @@ public class CmdOpVisitorCandidatePlacer
         if (candidateExecSites.isEmpty()) {
             throw new IllegalArgumentException("Candidate exec site set must not be empty.");
         }
+
+        // If the preferred execSite is not among the candidates then use any candidate.
         Set<ExecSite> effectiveExecSites = Sets.intersection(preferredExecSites, candidateExecSites);
         if (effectiveExecSites.isEmpty()) {
             effectiveExecSites = candidateExecSites;
@@ -299,7 +340,8 @@ public class CmdOpVisitorCandidatePlacer
         // ExecSite selectedExecSite = effectiveExecSites.iterator().next();
         List<CmdOp> placedSubOps = streak.stream().map(PlacedCommand::cmdOp).toList();
 
-        // <() / =()
+        // Handle streaming/materialized process substitution.
+        // Corresponding bash constructs are: `<()` and `=()`.
         CmdOp part = placedSubOps.size() == 1
             ? placedSubOps.get(0)
             :ctor.apply(placedSubOps);

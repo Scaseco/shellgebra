@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArgVisitorRenderAsBashString;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 
 public interface CmdOp {
@@ -23,6 +24,13 @@ public interface CmdOp {
     public static String toStrings(Collection<?> ...collections) {
         return Stream.of(collections).flatMap(Collection::stream).map(Object::toString).collect(Collectors.joining(" "));
     }
+//
+//    public static List<String> toStringList(ArgumentList argList) {
+//        List<String> result = argList.args().stream()
+//        	.map(arg -> CmdArgVisitorRenderAsBashString)
+//        	.map(Object::toString).toList();
+//        return result;
+//    }
 
     public abstract class CmdOpVisitorModifyRedirect
         implements CmdOpVisitor<CmdOp>

@@ -1,10 +1,13 @@
 package org.aksw.vshell.registry;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteCurrentHost;
 import org.aksw.shellgebra.exec.model.ExecSites;
@@ -37,7 +40,8 @@ public class CmdExecSystem {
 
     private ExecSiteResolver resolver;
 
-    public CmdExecSystem() {
+    /** Use {@link #newBuilder()} to create instances. */
+    CmdExecSystem() {
         super();
         init();
     }
@@ -108,4 +112,41 @@ public class CmdExecSystem {
         return inlined;
     }
 
+    public Process exec(ProcessRunner execCxt, FileMapper fileMapper, CmdOp cmdOp, ExecSite preferredExecSite) throws IOException {
+        FinalPlacement finalPlacement = rewrite(cmdOp, preferredExecSite);
+        ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, resolver, unionCatalog);
+        pb.command(finalPlacement);
+        Process p = pb.start(execCxt);
+        return p;
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+// TODO Make relevant aspects configurable.
+//        private JvmCommandRegistry jvmCmdRegistry;
+//        private CommandRegistry candidates;
+//
+//        private CommandRegistry inferredCatalog;
+//        private CommandCatalog hostCatalog;
+//        private CommandCatalog jvmCatalog;
+//        private CommandCatalog unionCatalog;
+//
+//        private ExecSiteProbeResults probeResults;
+//        // TODO Have image introspector write into cmdAvailability without having to know about exec sites.
+//        // Need an adapter or cmdAvailability.asDockerImageMap().
+//
+//        // Model shellModel = RDFDataMgr.loadModel("shell-ontology.ttl");
+//        private ImageIntrospector imageIntrospector; // shellModel, probeResults);
+//        // imageIntrospector = new ImageIntrospectorCaching(imageIntrospector);
+//
+//        private ExecSiteResolver resolver;
+
+
+        public CmdExecSystem build() {
+            return new CmdExecSystem();
+        }
+    }
 }

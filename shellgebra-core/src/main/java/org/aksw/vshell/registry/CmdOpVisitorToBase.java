@@ -40,7 +40,7 @@ public abstract class CmdOpVisitorToBase
         return cmdArgTransformer;
     }
 
-    protected abstract IProcessBuilderCore<?> toProcessBuilder(List<String> args);
+    protected abstract IProcessBuilderCore<?> toProcessBuilder(List<String> argv);
 
     @Override
     public IProcessBuilderCore<?> visit(CmdOpExec op) {
@@ -51,6 +51,7 @@ public abstract class CmdOpVisitorToBase
         List<String> resolvedArgStrs = CmdArgVisitorRenderAsBashString.render(resolvedArgs);
 
         List<String> argv = ListBuilder.ofString().add(op.getName()).addAll(resolvedArgStrs).buildList();
+
         IProcessBuilderCore<?> result = toProcessBuilder(argv);
         return result;
     }

@@ -60,8 +60,7 @@ public class TestCmdArgRewrite {
     public void test01() throws IOException, Exception {
         ContainerUtils.setGlobalRetryCountIfAbsent(1);
 
-        CmdExecSystem cmdExecSystem = new CmdExecSystem();
-
+        CmdExecSystem cmdExecSystem = CmdExecSystem.newBuilder().build();
 
         // This is the catalog of virtual-command to implementation - its both parser and executer.
         JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
