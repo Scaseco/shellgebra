@@ -214,23 +214,33 @@ public class ImageIntrospectorImpl implements ImageIntrospector {
         logger.info("Probing image [{}] for shell [{}]", imageName, shellName);
         Collection<String> shellProbeLocations = shell.probeLocations();
         ShellProbeResultBuilder builder = ShellProbeResult.newBuilder();
+        builder.setName(shellName);
+
         ShellProbeResult result = null;
         builder.setCommandOption(shell.commandOption());
         for (String shellLocation : shellProbeLocations) {
+
+            boolean hasCommand = hasCommand(runtime, shellLocation);
+            if (!hasCommand) {
+                continue;
+            }
+
             builder.setLocation(shellLocation);
+
 
             String builtInLocator = shell.builtInLocator();
             if (builtInLocator != null) {
                 builder.setLocatorCommand(builtInLocator); // TODO Verify?
             } else {
-                for (LocatorCommand2 locatorCommand : locatorCatalog) {
+                locatorProbe: for (LocatorCommand2 locatorCommand : locatorCatalog) {
                     for (String locatorLocation : locatorCommand.probeLocations()) {
-                        boolean hasCommand = hasCommand(runtime, locatorLocation);
+                        boolean hasLocatorCommand = hasCommand(runtime, locatorLocation);
 //                            logger.info("Probe locator [{}] for shell [{}] with option [{}] using locator [{}]: {}", imageName, shellLocation, commandOptions, locatorLocation,
 //                                    (canRunEntrypoint ? "" : "not ") + " found");
 
-                        if (hasCommand) {
+                        if (hasLocatorCommand) {
                             builder.setLocatorCommand(locatorLocation);
+                            break locatorProbe;
                         }
                     }
                 }
@@ -512,8 +522,10 @@ public class ImageIntrospectorImpl implements ImageIntrospector {
     }
 
     public static List<ShellCatalogEntry> getShellCatalog() {
-        List<ShellCatalogEntry> result = Arrays
-                .asList(new ShellCatalogEntry("bash", List.of("/bin/bash", "/usr/bin/bash"), "-c", null));
+        List<ShellCatalogEntry> result = List.of(
+            // new ShellCatalogEntry("bash", List.of("/bin/bash", "/usr/bin/bash"), "-c", null)
+            new ShellCatalogEntry("bash", List.of("/bin/bash", "/usr/bin/bash", "/bin/sh", "/usr/bin/sh"), "-c", null)
+        );
         return result;
     }
 

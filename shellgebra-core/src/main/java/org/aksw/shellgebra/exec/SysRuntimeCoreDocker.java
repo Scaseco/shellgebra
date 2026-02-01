@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderDockerExec;
 import org.aksw.vshell.registry.JvmExecUtils;
+import org.apache.commons.exec.ExecuteException;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 
@@ -46,6 +47,10 @@ public class SysRuntimeCoreDocker
     @Override
     public String execCmd(String... argv) throws IOException, InterruptedException {
         Container.ExecResult execResult = container.execInContainer(StandardCharsets.UTF_8, argv);
+        int exitCode = execResult.getExitCode();
+        if (exitCode != 0) {
+            throw new ExecuteException(execResult.getStderr(), exitCode);
+        }
         String result = execResult.getStdout();
         // Remove trailing newline
         result = JvmExecUtils.removeTrailingNewline(result);

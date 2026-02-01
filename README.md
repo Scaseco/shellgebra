@@ -6,6 +6,12 @@ The main featuers of this project are:
 * Redirects of stdin, stdout and stderr are set up automatically in such ways that they work across execution site boundaries.
 * File system abstraction: Write commands as if they were executed on the host system. If such a command gets scheduled to a docker container, then a combination of a command registry and a file mapper are used to transparently rewrite them: File name arguments are identified, bind mounts are set up and the original command is rewritten to make use of in-container paths.
 
+## Roadmap
+
+* Better "ExecSite to Config" handling for docker-based containers. Currently the system internally employs auto-detection of the commands for the entrypoint, keep-alive and locator (`which`). A new API will make this configurable on a per-image basis.
+
+## Overview 
+
 The system comprises the following levels of abstraction:
 
 * ProcessBuilder level: Core primitives to start processes on different execution sites.

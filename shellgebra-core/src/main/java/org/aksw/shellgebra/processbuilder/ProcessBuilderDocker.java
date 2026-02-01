@@ -490,6 +490,12 @@ public class ProcessBuilderDocker
                     String resolvedCommand = runtime.which(commandName);
                     return resolvedCommand;
                 } catch (IOException | InterruptedException e) {
+                    // FIXME Hack! the shell lookup for bash(-like) shells currently also returns /bin/sh
+                    //     However, trying to resolve 'bash' itself won't work if there is no bash available.
+                    if ("bash".equals(commandName)) {
+                        return "/bin/sh";
+                    }
+
                     throw new RuntimeException(e);
                 }
             });

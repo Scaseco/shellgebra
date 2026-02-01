@@ -35,7 +35,10 @@ public interface CmdArg {
         return new CmdArgWord(StringEscapeType.SINGLE_QUOTED, new TokenVar(varName));
     }
 
-    /** "foo$(echo bar)" -> foobar */
+    // XXX Missing: A plain sub expression that should become a string, such as:
+    // bash -c someCmdOpAsACorrectlyQuotedString
+
+    /** Command substition: "foo$(echo bar)" -> foobar */
     public static CmdArg ofCommandSubstitution(CmdOp cmdOp) {
         return new CmdArgWord(StringEscapeType.SINGLE_QUOTED, new TokenCmdOp(cmdOp));
     }

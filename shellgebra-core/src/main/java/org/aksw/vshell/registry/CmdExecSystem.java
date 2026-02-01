@@ -51,7 +51,8 @@ public class CmdExecSystem {
         candidates = InitCommandRegistry.initCmdCandRegistry(new CommandRegistry());
 
         inferredCatalog = new CommandRegistry();
-        hostCatalog = new CommandCatalogOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
+        // hostCatalog = new CommandCatalogOverLocator(ExecSiteCurrentHost.get(), new CommandLocatorHost());
+        hostCatalog = new CommandCatalogOverLocator(ExecSiteCurrentHost.get(), CommandLocatorNull.get());
         jvmCatalog = new CommandCatalogOverLocator(ExecSites.jvm(), new CommandLocatorJvmRegistry(jvmCmdRegistry));
         unionCatalog = new CommandCatalogUnion(List.of(candidates, hostCatalog, jvmCatalog, inferredCatalog));
 
@@ -116,6 +117,13 @@ public class CmdExecSystem {
         FinalPlacement finalPlacement = rewrite(cmdOp, preferredExecSite);
         ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, resolver, unionCatalog);
         pb.command(finalPlacement);
+        Process p = pb.start(execCxt);
+        return p;
+    }
+
+    public Process exec(ProcessRunner execCxt, FileMapper fileMapper, FinalPlacement placement) throws IOException {
+        ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, resolver, unionCatalog);
+        pb.command(placement);
         Process p = pb.start(execCxt);
         return p;
     }

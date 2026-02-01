@@ -23,6 +23,10 @@ import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Container;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
+import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.util.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -308,8 +312,20 @@ public class ContainerUtils {
         return exitCode != 127; // Command not found
     }
 
+    public static boolean hasCommand(String imageName, String entrypoint, String locator, List<String> commandPrefix, String command) {
+        // docker -rm --entrypoint bash some/image -c "which toolName"
+        // CmdArg cmdArg = CmdArg.ofCommandSubstitution(null) CmdOpExec.of(locator, List.of(CmdArg.ofLiteral(command)));
+        // String str = SysRuntimeImpl.forBash().compileString(cmdOp);
+        // TODO Go via CmdOp / CmdArg to correctly build the string
+        String str = locator + " " + command;
+
+        int exitCode = runCommand(imageName, entrypoint, commandPrefix, new String[]{str});
+        return exitCode != 127; // Command not found
+    }
+
     public static int runCommand(String imageName, String entrypoint, List<String> commandPrefix, String... command) {
-        return runCommand(imageName, entrypoint, commandPrefix, Arrays.asList(command));
+        List<String> argvList = Arrays.asList(command);
+        return runCommand(imageName, entrypoint, commandPrefix, argvList);
     }
 
     // "exit 0"

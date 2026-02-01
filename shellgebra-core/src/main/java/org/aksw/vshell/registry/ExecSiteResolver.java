@@ -122,6 +122,7 @@ public class ExecSiteResolver {
                 List<String> commandPrefix = null;
                 String entrypoint = null;
                 Boolean r = cmdAvailability.get(command, execSite);
+                String locatorCommand = null;
                 if (r == null) {
                     // TODO: We should also check whether the command works without a shell
                     // e.g. if the default entry point already is a shell.
@@ -133,10 +134,11 @@ public class ExecSiteResolver {
                         entrypoint = probeResult.location();
                         commandPrefix = Optional.ofNullable(probeResult.commandOption())
                             .map(List::of).orElse(List.of());
+                        locatorCommand = probeResult.locatorCommand();
                     }
 
                     try {
-                        r = ContainerUtils.hasCommand(imageRef, entrypoint, commandPrefix, command);
+                        r = ContainerUtils.hasCommand(imageRef, entrypoint, locatorCommand, commandPrefix, command);
                     } catch (ContainerFetchException | ContainerLaunchException e) {
                         r = false;
                     }

@@ -113,8 +113,8 @@ public class TestCommandRegistry {
 
         String expectedStr = "Hello world";
         String actualStr;
-        try (SysRuntimeCoreExecSiteFactory f = new SysRuntimeCoreExecSiteFactoryPool(jvmCmdRegistry, dockerFactory)) {
-            try (SysRuntimeCore r = f.getRuntime(ExecSites.docker("nestio/lbzip2"))) {
+        try (SysRuntimeCoreExecSiteFactory pool = new SysRuntimeCoreExecSiteFactoryPool(jvmCmdRegistry, dockerFactory)) {
+            try (SysRuntimeCore r = pool.getRuntime(ExecSites.docker("nestio/lbzip2"))) {
                 actualStr = r.execCmd("echo", expectedStr);
             }
         }
