@@ -60,7 +60,7 @@ Compoind process builders are:
             });
 
             // Register commands
-            TestCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+            InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
           
             // Set up a pipeline that runs
             // - Takes 10 lines using the system's `head` command
