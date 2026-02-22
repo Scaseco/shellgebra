@@ -1,5 +1,7 @@
 package org.aksw.shellgebra.algebra.cmd.arg;
 
+import java.util.List;
+
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenCmdOp;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenLiteral;
 import org.aksw.shellgebra.algebra.cmd.arg.Token.TokenPath;
@@ -46,5 +48,11 @@ public interface CmdArg {
     // Process substition such as <(cat /tmp/foo.txt).
     public static CmdArg ofProcessSubstution(CmdOp cmdOp) {
         return new CmdArgCmdOp(cmdOp);
+    }
+
+    public static List<String> toPlainArgs(List<CmdArg> args) {
+        CmdArgVisitor<String> renderer = CmdArgVisitorRenderPlainArgs.get();
+        List<String> result = args.stream().map(arg -> arg.accept(renderer)).toList();
+        return result;
     }
 }

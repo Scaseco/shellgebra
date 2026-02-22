@@ -24,5 +24,7 @@ public interface Input
     BufferedReader reader();
     BufferedReader reader(Charset charset);
     Charset getReaderCharset();
+
+    /** Transfer remaining data to output. Reuses a reader if present. */
     void transferTo(Output output) throws IOException;
 }

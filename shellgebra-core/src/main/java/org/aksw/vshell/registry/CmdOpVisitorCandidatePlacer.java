@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -40,7 +41,11 @@ public class CmdOpVisitorCandidatePlacer
     private static final Logger logger = LoggerFactory.getLogger(CmdOpVisitorCandidatePlacer.class);
 
     /** ExecSiteResolver can test exec sites for whether they provide a command. */
-    private CommandCatalog cmdRegistry;
+
+    /** Catalog for commands on unknown exec sites. */
+    private CommandCatalog cmdCatalog;
+
+    private CommandSiteCatalog cmdSiteRegistry;
     private ExecSiteResolver execSiteResolver;
     private Set<ExecSite> preferredExecSites;
     private Map<CmdOp, Set<ExecSite>> opToSites = new IdentityHashMap<>();
@@ -50,9 +55,10 @@ public class CmdOpVisitorCandidatePlacer
     private CommandRegistry probeResultsCatalog;
     private int nextVar = 0;
 
-    public CmdOpVisitorCandidatePlacer(CommandCatalog cmdRegistry, CommandRegistry probeResultsCatalog, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
+    public CmdOpVisitorCandidatePlacer(CommandCatalog cmdCatalog, CommandSiteCatalog cmdRegistry, CommandRegistry probeResultsCatalog, ExecSiteResolver execSiteResolver, Set<ExecSite> preferredExecSites) {
         super();
-        this.cmdRegistry = cmdRegistry;
+        this.cmdCatalog = cmdCatalog;
+        this.cmdSiteRegistry = cmdRegistry;
         this.probeResultsCatalog = probeResultsCatalog;
         this.execSiteResolver = execSiteResolver;
         this.preferredExecSites = preferredExecSites;
@@ -96,13 +102,13 @@ public class CmdOpVisitorCandidatePlacer
         Set<ExecSite> execSites = opToSites.computeIfAbsent(op, k -> new HashSet<>());
         String virtCmdName = op.getName();
 
-        CommandCatalog commandCatalog = execSiteResolver.getCommandCatalog();
+        CommandSiteCatalog commandCatalog = execSiteResolver.getCommandCatalog();
 
         // Find the set of physical commands for the virtual one and see if it exists
         // in the image.
         // TODO: In general a validator is needed to confirm that an existing command
         // is actually suitable.
-        Multimap<ExecSite, CommandBinding> candResolutions = cmdRegistry.get(virtCmdName); // execSiteResolver.resolve(virtCmdName);
+        Multimap<ExecSite, CommandBinding> candResolutions = cmdSiteRegistry.get(virtCmdName).orElse(ImmutableMultimap.of()) ; // execSiteResolver.resolve(virtCmdName);
         Set<CommandBinding> candCmdLocations = new LinkedHashSet<>(candResolutions.values());
 
         // Check all preferred exec sites for whether they provide the command.
@@ -163,11 +169,11 @@ public class CmdOpVisitorCandidatePlacer
         return new PlacedCommand(op, execSites);
     }
 
-    protected boolean validateArgs(CommandCatalog commandCatalog, String cmdName, ExecSite execSite, List<String> args) {
+    protected boolean validateArgs(CommandSiteCatalog commandCatalog, String cmdName, ExecSite execSite, List<String> args) {
         boolean result = false;
         // If the command is present, check whether the arguments can be mapped.
         try {
-            CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, cmdName, execSite, args);
+            CommandCatalogs.resolveOrFail(commandCatalog, cmdName, execSite, args);
             result = true;
         } catch (Exception e) {
             logger.info("Rejected command argument binding: " + cmdName + " on " + execSite + " " + args, e);

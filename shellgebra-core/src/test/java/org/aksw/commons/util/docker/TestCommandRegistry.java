@@ -109,11 +109,11 @@ public class TestCommandRegistry {
     @Test
     public void test02() throws IOException, InterruptedException {
         JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
-        SysRuntimeFactoryDocker dockerFactory = SysRuntimeFactoryDocker.create();
+        SysRuntimeFactoryDocker dockerFactory = SysRuntimeFactoryDocker.get();
 
         String expectedStr = "Hello world";
         String actualStr;
-        try (SysRuntimeCoreExecSiteFactory pool = new SysRuntimeCoreExecSiteFactoryPool(jvmCmdRegistry, dockerFactory)) {
+        try (SysRuntimeCoreExecSiteFactory pool = SysRuntimeCoreExecSiteFactoryPool.of(jvmCmdRegistry, dockerFactory)) {
             try (SysRuntimeCore r = pool.getRuntime(ExecSites.docker("nestio/lbzip2"))) {
                 actualStr = r.execCmd("echo", expectedStr);
             }
@@ -154,8 +154,8 @@ public class TestCommandRegistry {
 
     public void testExecSiteExecutor() throws IOException, InterruptedException {
         JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
-        SysRuntimeFactoryDocker dockerRuntimeFactory = SysRuntimeFactoryDocker.create();
-        SysRuntimeCoreExecSiteFactoryPool pool = new SysRuntimeCoreExecSiteFactoryPool(jvmCmdRegistry, dockerRuntimeFactory);
+        SysRuntimeFactoryDocker dockerRuntimeFactory = SysRuntimeFactoryDocker.get();
+        SysRuntimeCoreExecSiteFactory pool = SysRuntimeCoreExecSiteFactoryPool.of(jvmCmdRegistry, dockerRuntimeFactory);
         try (SysRuntimeCore runtime = pool.getRuntime(ExecSites.jvm())) {
             runtime.execCmd("/virt/is-command", "which");
         }

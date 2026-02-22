@@ -40,6 +40,7 @@ import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformer;
  * </pre>
  *
  */
+@Deprecated // Superseded by CmdExecSystem from the shellgebra system.
 public class StreamOpTransformExecutionPartitioner
     implements StreamOpTransformGeneric<StreamOpEntry<Location>>
 {

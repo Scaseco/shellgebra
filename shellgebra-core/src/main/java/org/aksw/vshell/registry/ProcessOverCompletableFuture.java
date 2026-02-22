@@ -9,14 +9,14 @@ public class ProcessOverCompletableFuture
 {
     private CompletableFuture<Integer> asyncComputation;
 
-    public ProcessOverCompletableFuture(CompletableFuture<Integer> asyncComputation) {
-        super();
+    public ProcessOverCompletableFuture(CompletableFuture<Integer> asyncComputation, OutboundIo outboundIo) {
+        super(outboundIo);
         this.asyncComputation = asyncComputation;
     }
 
-    public static Process of(Supplier<Integer> supplier) {
+    public static Process of(OutboundIo outboundIo, Supplier<Integer> supplier) {
         CompletableFuture<Integer> future = CompletableFuture.supplyAsync(supplier);
-        return new ProcessOverCompletableFuture(future);
+        return new ProcessOverCompletableFuture(future, outboundIo);
     }
 
     @Override

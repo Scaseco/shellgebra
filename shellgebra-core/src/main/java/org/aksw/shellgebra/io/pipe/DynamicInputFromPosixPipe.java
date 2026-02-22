@@ -1,19 +1,21 @@
-package org.aksw.vshell.registry;
+package org.aksw.shellgebra.io.pipe;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-import org.aksw.shellgebra.io.pipe.PosixPipe;
+import org.aksw.vshell.registry.DynamicInput;
+import org.aksw.vshell.registry.InputBase;
 
-public class DynamicInputFromPipe
+public class DynamicInputFromPosixPipe
     extends InputBase
     implements DynamicInput
 {
     private PosixPipe pipe;
 
-    public DynamicInputFromPipe(PosixPipe pipe) {
-        super(pipe.getInputStream());
+    public DynamicInputFromPosixPipe(PosixPipe pipe) {
+        super(pipe.in);
+        this.pipe = pipe;
     }
 
     @Override
@@ -28,6 +30,7 @@ public class DynamicInputFromPipe
 
     @Override
     protected InputStream openInputStream() throws IOException {
-        return pipe.getInputStream();
+        throw new IllegalStateException("Should not be called");
+        // return pipe.in;
     }
 }

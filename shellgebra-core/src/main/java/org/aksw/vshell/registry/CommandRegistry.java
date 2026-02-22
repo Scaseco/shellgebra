@@ -18,7 +18,7 @@ import org.aksw.shellgebra.shim.core.ArgsTransform;
  * in contrast to names such as foo.
  */
 public class CommandRegistry
-    implements CommandCatalog
+    implements CommandSiteCatalog
 {
     // value may be null to indicate absence of the command.
     private Map<String, Multimap<ExecSite, CommandBinding>> toolToSiteToCmd = new HashMap<>();// HashBasedTable.create();
@@ -79,7 +79,7 @@ public class CommandRegistry
     }
 
     @Override
-    public Multimap<ExecSite, CommandBinding> get(String virtualCommandName) {
-        return getKnownExecSites(virtualCommandName).orElse(Multimaps.unmodifiableMultimap(LinkedHashMultimap.create()));
+    public Optional<Multimap<ExecSite, CommandBinding>> get(String virtualCommandName) {
+        return getKnownExecSites(virtualCommandName);
     }
 }

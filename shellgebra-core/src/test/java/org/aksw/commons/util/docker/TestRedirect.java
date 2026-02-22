@@ -32,7 +32,6 @@ import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.apache.commons.io.IOUtils;
 
 public class TestRedirect {
-
     @Test
     public void test01() throws IOException, InterruptedException {
         Path pipePath = Path.of("/tmp/my-pipe");
@@ -87,7 +86,7 @@ public class TestRedirect {
     // 'set up the fd table and fork' mechanism.
     // @Test
     public void testStdin() throws IOException, InterruptedException {
-        try (SysRuntimeCore runtime = new SysRuntimeCoreHost()) {
+        try (SysRuntimeCore runtime = SysRuntimeCoreHost.get()) {
             Path fifoPath = Path.of("/tmp/my-test-fifo");
             Files.deleteIfExists(fifoPath);
             runtime.runCmd("mkfifo", fifoPath.toString());
@@ -156,7 +155,7 @@ public class TestRedirect {
 
     // @Test - TODO Perhaps restore this test case - it fails indeterministically.
     public void testStdin2() throws Exception {
-        try (SysRuntimeCore runtime = new SysRuntimeCoreHost()) {
+        try (SysRuntimeCore runtime = SysRuntimeCoreHost.get()) {
             Path procCtlPath = Path.of("/tmp/proc_ctl");
             Files.deleteIfExists(procCtlPath);
             runtime.runCmd("mkfifo", procCtlPath.toString());

@@ -26,7 +26,7 @@ public class ExecSiteToProcessDispatcher
 {
     private FinalPlacement finalPlacement;
     // private CommandParserCatalog parserCatalog;
-    private CommandCatalog commandCatalog;
+    private CommandSiteCatalog commandCatalog;
 
     private FileMapper fileMapper;
     private ExecutorService executorService;
@@ -40,7 +40,7 @@ public class ExecSiteToProcessDispatcher
 
     private Deque<Process> closeables = new ArrayDeque<>();
 
-    public ExecSiteToProcessDispatcher(FinalPlacement finalPlacement, ProcessRunner context, CommandCatalog commandCatalog, FileMapper fileMapper, ExecSiteResolver resolver, ExecutorService executorService) {
+    public ExecSiteToProcessDispatcher(FinalPlacement finalPlacement, ProcessRunner context, CommandSiteCatalog commandCatalog, FileMapper fileMapper, ExecSiteResolver resolver, ExecutorService executorService) {
         super();
         this.fileMapper = fileMapper;
         this.context = context;
@@ -82,7 +82,7 @@ public class ExecSiteToProcessDispatcher
         return fileMapper;
     }
 
-    public CommandCatalog getCommandCatalog() {
+    public CommandSiteCatalog getCommandCatalog() {
         return commandCatalog;
     }
 

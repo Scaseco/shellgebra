@@ -21,7 +21,7 @@ public class MainPlaygroundShellgebra {
 //       String imageName = "nestio/lbzip2";
         String imageName = "adfreiburg/qlever:commit-a307781";
 
-        SysRuntimeFactoryDocker factory = SysRuntimeFactoryDocker.create();
+        SysRuntimeFactoryDocker factory = SysRuntimeFactoryDocker.get();
         ImageIntrospector introspector = ImageIntrospectorImpl.of();
         try (SysRuntimeCoreDocker runtimeCore = factory.createCore(imageName)) {
             List<ShellCatalogEntry> entries = ImageIntrospectorImpl.getShellSubCatalog(ImageIntrospectorImpl.getShellCatalog(), "bash");

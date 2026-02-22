@@ -21,7 +21,7 @@ import org.aksw.shellgebra.shim.core.ArgumentList;
  * Rewrites a final placement such that the virtual command name is resolved to the physical one.
  */
 public class FinalPlacementResolver {
-    public static FinalPlacement resolve(FinalPlacement inPlacement, ExecSiteResolver resolver, CommandCatalog inferredCatalog) {
+    public static FinalPlacement resolve(FinalPlacement inPlacement, ExecSiteResolver resolver, CommandSiteCatalog inferredCatalog) {
         PlacedCmd root = inPlacement.cmdOp();
 
         Map<CmdOpVar, PlacedCmd> inMap = inPlacement.placements();
@@ -35,7 +35,7 @@ public class FinalPlacementResolver {
         return new FinalPlacement(tmp, outMap);
     }
 
-    public static CmdOp resolve(CmdOp cmdOp, ExecSite execSite, ExecSiteResolver resolver, CommandCatalog inferredCatalog) {
+    public static CmdOp resolve(CmdOp cmdOp, ExecSite execSite, ExecSiteResolver resolver, CommandSiteCatalog inferredCatalog) {
         CmdOpTransform transform = new CmdOpTransformBase() {
             @Override
             public CmdOp transform(CmdOpExec op, List<CmdArg> subOps) {
@@ -68,9 +68,9 @@ public class FinalPlacementResolver {
         private Map<CmdOpVar, PlacedCmd> inMap;
         private Map<CmdOpVar, PlacedCmd> outMap = new HashMap<>();
         private ExecSiteResolver resolver;
-        private CommandCatalog inferredCatalog;
+        private CommandSiteCatalog inferredCatalog;
 
-        public FinalPlacementResolverWorker(ExecSiteResolver resolver, CommandCatalog inferredCatalog, Map<CmdOpVar, PlacedCmd> inMap) {
+        public FinalPlacementResolverWorker(ExecSiteResolver resolver, CommandSiteCatalog inferredCatalog, Map<CmdOpVar, PlacedCmd> inMap) {
             super();
             this.resolver = resolver;
             this.inferredCatalog = inferredCatalog;

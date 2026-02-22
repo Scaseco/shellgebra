@@ -36,7 +36,7 @@ class CmdOpSubOpProcessorJvm
         ExecStage execStage = new ExecStage(op);
         cxt.externalExecutions.put(outPipePath, execStage);
 
-        CmdOp catProcOutcmdOp = CmdOpExec.ofLiteralArgs("cat", outPipePath);
+        CmdOp catProcOutcmdOp = CmdOpExec.ofLiteralArgv("cat", outPipePath);
         CmdOp result = CmdOps.group(notifyProcCtlCmdOp, catProcOutcmdOp);
         return result;
     }

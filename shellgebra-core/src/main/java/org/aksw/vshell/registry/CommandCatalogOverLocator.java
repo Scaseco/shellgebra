@@ -14,7 +14,7 @@ import org.aksw.shellgebra.exec.model.ExecSite;
  * The results returned by the locator will associated with the preset execSiet.
  */
 public class CommandCatalogOverLocator
-    implements CommandCatalog
+    implements CommandSiteCatalog
 {
     private ExecSite execSite;
     private CommandBindingLocator locator;
@@ -30,9 +30,9 @@ public class CommandCatalogOverLocator
     }
 
     @Override
-    public Multimap<ExecSite, CommandBinding> get(String virtualCommandName) {
+    public Optional<Multimap<ExecSite, CommandBinding>> get(String virtualCommandName) {
         Optional<CommandBinding> match = locator.locate(virtualCommandName);
-        Map<ExecSite, CommandBinding> map = match.map(str -> Map.of(execSite, str)).orElse(Map.of());
-        return Multimaps.forMap(map);
+        Optional<Multimap<ExecSite, CommandBinding>> result = match.map(str -> Multimaps.forMap(Map.of(execSite, str)));
+        return result;
     }
 }

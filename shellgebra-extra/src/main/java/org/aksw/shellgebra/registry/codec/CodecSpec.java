@@ -4,12 +4,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.aksw.commons.util.docker.Argv;
+
+/**
+ * Specification for which commands can be used to encode/decode the codec with the given name.
+ */
 public class CodecSpec {
     private String name; // this is the codec name (not the tool name)
-    private List<CodecVariant> decoderVariants = new ArrayList<>();
-    private List<CodecVariant> encoderVariants = new ArrayList<>();
+    private List<Argv> decoderVariants = new ArrayList<>();
+    private List<Argv> encoderVariants = new ArrayList<>();
 
-    private CodecSpec(String name, List<CodecVariant> decoderVariants, List<CodecVariant> encoderVariants) {
+    private CodecSpec(String name, List<Argv> decoderVariants, List<Argv> encoderVariants) {
         super();
         this.name = name;
         this.decoderVariants = decoderVariants;
@@ -20,40 +25,60 @@ public class CodecSpec {
         return name;
     }
 
-    public List<CodecVariant> getDecoderVariants() {
+    public List<Argv> getDecoderVariants() {
         return decoderVariants;
     }
 
-    public List<CodecVariant> getEncoderVariants() {
+    public List<Argv> getEncoderVariants() {
         return encoderVariants;
     }
 
     public static class Builder {
         private String name;
-        private List<CodecVariant> decoderVariants = new ArrayList<>();
-        private List<CodecVariant> encoderVariants = new ArrayList<>();
+        private List<Argv> decoderVariants = new ArrayList<>();
+        private List<Argv> encoderVariants = new ArrayList<>();
 
         public Builder setName(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder addDecoderVariant(CodecVariant codecVariant) {
+        public Builder addDecoderVariant(String... codecVariant) {
+            addDecoderVariant(List.of(codecVariant));
+            return this;
+        }
+
+        public Builder addDecoderVariant(List<String> codecVariant) {
+            addDecoderVariant(Argv.of(codecVariant));
+            return this;
+        }
+
+        protected Builder addDecoderVariant(Argv codecVariant) {
             this.decoderVariants.add(codecVariant);
             return this;
         }
 
-        public Builder addDecoderVariants(Collection<CodecVariant> codecVariants) {
+        public Builder addDecoderVariants(Collection<Argv> codecVariants) {
             this.decoderVariants.addAll(codecVariants);
             return this;
         }
 
-        public Builder addEncoderVariant(CodecVariant codecVariant) {
+        public Builder addEncoderVariant(List<String> codecVariant) {
+            addEncoderVariant(Argv.of(codecVariant));
+            return this;
+        }
+
+        public Builder addEncoderVariant(String... codecVariant) {
+            addEncoderVariant(List.of(codecVariant));
+            return this;
+        }
+
+        protected Builder addEncoderVariant(Argv codecVariant) {
             this.encoderVariants.add(codecVariant);
             return this;
         }
 
-        public Builder addEncoderVariants(Collection<CodecVariant> codecVariants) {
+        public Builder addEncoderVariants(Collection<Argv> codecVariants) {
             this.encoderVariants.addAll(codecVariants);
             return this;
         }

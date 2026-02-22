@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdPrefix;
 import org.aksw.shellgebra.algebra.cmd.transformer.CmdOpTransformBase;
@@ -20,6 +21,21 @@ public class CmdOps {
 
     // Arrays.asList wraps array -> ctor copies into immutable list.
 
+
+    /**
+     * Returns an empty optional unless cmdOp represents "cat someFile" in which case the file is returned.
+     */
+//    public static Optional<String> extractCatFile(CmdOp cmdOp) {
+//        if (cmdOp instanceof CmdOpExec exec) {
+//            if ("cat".equals(exec.getName())) {
+//                if (exec.args().size() == 1) {
+//                    exec.args().args().get(0);
+//                }
+//            }
+//        }
+//        return Optional.empty();
+//    }
+
     public static CmdOp pipeline(CmdOp... ops) {
         return new CmdOpPipeline(Arrays.asList(ops));
     }
@@ -27,6 +43,15 @@ public class CmdOps {
     public static CmdOp pipeline(List<CmdOp> ops) {
         return new CmdOpPipeline(ops);
     }
+
+    public static CmdOp pipelineIfNeeded(CmdOp... ops) {
+        return new CmdOpPipeline(Arrays.asList(ops));
+    }
+
+    public static CmdOp pipelineIfNeeded(List<CmdOp> ops) {
+        return ops.size() == 1 ? ops.iterator().next() : pipeline(ops);
+    }
+
 
     public static CmdOp group(CmdOp... ops) {
         return group(Arrays.asList(ops), List.of());
@@ -42,6 +67,18 @@ public class CmdOps {
 
     public static CmdOp exec(String commandName, CmdArg... args) {
         return exec(commandName, Arrays.asList(args));
+    }
+
+    public static CmdOp execArgv(Argv argv) {
+        return CmdOpExec.ofLiteralArgv(argv.argv());
+    }
+
+    public static CmdOp execArgv(String... argv) {
+        return CmdOpExec.ofLiteralArgv(argv);
+    }
+
+    public static CmdOp execArgs(String commandName, List<String> args) {
+        return CmdOpExec.ofLiterals(commandName, args);
     }
 
     public static CmdOp exec(String commandName, List<CmdArg> args) {

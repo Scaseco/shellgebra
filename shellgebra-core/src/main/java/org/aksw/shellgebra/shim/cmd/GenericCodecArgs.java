@@ -1,6 +1,7 @@
 package org.aksw.shellgebra.shim.cmd;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,6 +71,10 @@ public class GenericCodecArgs
     }
 
     public static ArgsModular<GenericCodecArgs> parse(String[] args) {
+        return parse(Arrays.asList(args));
+    }
+
+    public static ArgsModular<GenericCodecArgs> parse(List<String> args) {
         GenericCodecArgs model = ArgsParserPicocli.of(GenericCodecArgs::new).parse(args);
         return new ArgsModular<>(model, GenericCodecArgs::renderArgList, GenericCodecArgs::stdinTest);
     }

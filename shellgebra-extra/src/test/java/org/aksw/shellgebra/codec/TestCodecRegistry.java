@@ -17,6 +17,10 @@ import org.apache.commons.io.IOUtils;
 
 public class TestCodecRegistry {
 
+//  CommandRegistry reg = new CommandRegistry();
+//  reg.put("/virt/bzip2-encode", ExecSites.jvm(), CommandBinding.of("bzip2", "-c"));
+//  reg.put("/virt/bzip2-decode", ExecSites.jvm(), CommandBinding.of("bzip2", "-cd"));
+
     @Test
     public void testJavaBzip2() throws IOException {
         assertRoundTrip("bzip2", "test content");

@@ -20,9 +20,13 @@ public class SysRuntimeCoreJvm
 {
     private JvmCommandRegistry jvmCmdRegistry;
 
-    public SysRuntimeCoreJvm(JvmCommandRegistry jvmCmdRegistry) {
+    protected SysRuntimeCoreJvm(JvmCommandRegistry jvmCmdRegistry) {
         super();
         this.jvmCmdRegistry = jvmCmdRegistry;
+    }
+
+    public static SysRuntimeCoreJvm of(JvmCommandRegistry jvmCmdRegistry) {
+        return new SysRuntimeCoreJvm(jvmCmdRegistry);
     }
 
     @Override

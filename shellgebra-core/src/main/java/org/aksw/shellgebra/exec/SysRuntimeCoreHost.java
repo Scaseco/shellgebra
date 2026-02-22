@@ -8,6 +8,15 @@ import org.aksw.shellgebra.util.SystemUtils;
 public class SysRuntimeCoreHost
     implements SysRuntimeCore
 {
+    private static final SysRuntimeCoreHost INSTANCE = new SysRuntimeCoreHost();
+
+    protected SysRuntimeCoreHost() {
+    }
+
+    public static SysRuntimeCore get() {
+        return INSTANCE;
+    }
+
     @Override
     public IProcessBuilder<?> newProcessBuilder() {
         return new ProcessBuilderNative();

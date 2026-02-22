@@ -6,6 +6,7 @@ import java.util.Objects;
 /**
  * A single conventional argument.
  * It represents a string that may be formed from a (non-empty) list of tokens.
+ * TODO: Perhaps define CmdArgWord to be always a double quoted string - single quoted ones don't have tokens.
  */
 public record CmdArgWord(StringEscapeType escapeType, List<Token> tokens)
     implements CmdArg

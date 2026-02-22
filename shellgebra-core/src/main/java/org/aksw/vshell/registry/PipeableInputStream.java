@@ -46,14 +46,14 @@ public class PipeableInputStream {
                     pipe = PosixPipe.open();
                     Runnable runnable = () -> {
                         try {
-                            rawInputStream.transferTo(pipe.getOutputStream());
+                            rawInputStream.transferTo(pipe.outputStream());
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     };
                     pumpThread = new Thread(runnable);
                     pumpThread.start();
-                    finalInputStream = new ProxyInputStream(pipe.getInputStream()) {
+                    finalInputStream = new ProxyInputStream(pipe.inputStream()) {
                         @Override
                         public void close() throws IOException {
                             try {

@@ -3,8 +3,10 @@ package org.aksw.shellgebra.algebra.cmd.op;
 import java.util.Arrays;
 import java.util.List;
 
+import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdPrefix;
+import org.aksw.shellgebra.exec.ListBuilder;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 
 // XXX Add a background flag
@@ -29,17 +31,23 @@ public record CmdOpExec(List<CmdPrefix> prefixes, String name, ArgumentList args
     }
 
     /** Args array where the first element is the program name. */
-    public static CmdOpExec ofLiteralArgs(String... argv) {
-        return ofLiteralArgs(List.of(argv));
+    public static CmdOpExec ofLiteralArgv(String... argv) {
+        return ofLiteralArgv(List.of(argv));
     }
 
-    public static CmdOpExec ofLiteralArgs(List<String> argv) {
+    public static CmdOpExec ofLiteralArgv(List<String> argv) {
         return ofLiterals(argv.get(0), argv.subList(1, argv.size()));
     }
 
 
     public static CmdOpExec assign(String key, String value) {
         return new CmdOpExec(List.of(new CmdPrefix(key, value)), null, ArgumentList.of());
+    }
+
+    public static Argv toArgv(CmdOpExec cmdOp) {
+        List<String> args = CmdArg.toPlainArgs(cmdOp.args().args());
+        List<String> strArgs = ListBuilder.ofString().add(cmdOp.name()).addAll(args).buildList();
+        return Argv.of(strArgs);
     }
 
     /**

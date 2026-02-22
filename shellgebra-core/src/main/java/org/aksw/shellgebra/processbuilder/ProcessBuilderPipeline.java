@@ -14,10 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.io.pipe.NamedPipe;
-import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.shellgebra.exec.graph.PathResource;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.io.pipe.NamedPipe;
+import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.shellgebra.util.PathLifeCycle;
 import org.aksw.shellgebra.util.PathLifeCycles;
 import org.slf4j.Logger;
@@ -158,11 +158,11 @@ public class ProcessBuilderPipeline
                     priorPath = pipe.getReadEndProcPath();
                     thisWriteEnd = () -> {
                         System.out.println("Closing write FD: " + pipe.getWriteFd());
-                        pipe.getOutputStream().close(); return null;
+                        pipe.outputStream().close(); return null;
                     };
                     nextReadEnd = () -> {
                         System.out.println("Closing read FD: " + pipe.getReadFd());
-                        pipe.getInputStream().close(); return null;
+                        pipe.inputStream().close(); return null;
                     };
                     logger.info("Created anonymous pipe, ReadFD=" + pipe.getReadFd() + " WriteFD=" + pipe.getWriteFd());
                 }
@@ -184,6 +184,7 @@ public class ProcessBuilderPipeline
                     Process r = current.start(executor);
                     r.waitFor();
                     return r;
+                //} catch (IOException e) {
                 } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 } finally {

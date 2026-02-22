@@ -57,9 +57,9 @@ public class DynamicOutputFromStream
             synchronized (lock) {
                 if (pipe == null) {
                     pipe = PosixPipe.open();
-                    ((DynamicOutputStream)outputStream()).setDelegate(pipe.getOutputStream());
+                    ((DynamicOutputStream)outputStream()).setDelegate(pipe.outputStream());
                     Runnable runnable = () -> {
-                        try (InputStream in = pipe.getInputStream()) {
+                        try (InputStream in = pipe.inputStream()) {
                         // InputStream in = pipe.getInputStream();
                         // try {
                             in.transferTo(coreOutput);
@@ -80,7 +80,7 @@ public class DynamicOutputFromStream
     public void close() throws IOException {
         try {
             if (pipe != null) {
-                pipe.getOutputStream().close();
+                pipe.outputStream().close();
             }
         } finally {
             try {

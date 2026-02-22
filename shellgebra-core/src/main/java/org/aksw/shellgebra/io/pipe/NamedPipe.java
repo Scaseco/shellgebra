@@ -23,7 +23,7 @@ public class NamedPipe {
                 : new LinkOption[] { LinkOption.NOFOLLOW_LINKS };
         Map<String, Object> attrs = Files.readAttributes(path, "unix:mode", opts);
         int mode = (Integer) attrs.get("mode");
-      return (mode & S_IFMT) == S_IFIFO;
+        return (mode & S_IFMT) == S_IFIFO;
     }
 
     public static boolean isNamedPipe(Path path, boolean followSymlinks) throws IOException {

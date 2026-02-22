@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
-import org.aksw.shellgebra.exec.ListBuilder;
-import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSiteDockerImage;
 import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
-import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderDockerRun;
 import org.aksw.shellgebra.shim.core.JvmCommandParser;
 
 public class CmdOpVisitorToPbDocker
@@ -28,9 +26,12 @@ public class CmdOpVisitorToPbDocker
         // ProcessRunner context = dispatcher.getContext();
         String commandName = args.get(0);
         // CommandParserCatalog parserCatalog = dispatcher.getParserCatalog();
-        CommandCatalog commandCatalog = dispatcher.getCommandCatalog();
+        CommandSiteCatalog commandCatalog = dispatcher.getCommandCatalog();
         JvmCommandRegistry commandRegistry = dispatcher.getJvmCmdRegistry();
 
+        // FIXME The process below is probably wrong by now:
+        //   There is an abstract command and this one has bindings to concrete commands.
+        //   The binding may include an argument mapper that can validate whether the binding is applicable for the given arguments.
         // Important:
         // (1) Parser candidates are inferred from the jvm site
         // (2) The actual command is resolved against the docker exec site.
@@ -52,8 +53,9 @@ public class CmdOpVisitorToPbDocker
             throw new RuntimeException("No command parser found for: " + commandName);
         }
 
-        // FIXME The actual command should re-use the prior resolution - probably need to bass the resolver or "probe results" tracker here.
-        List<String> newArgv = resolveOrFail(commandCatalog, commandName, execSite, args);
+        // FIXME The actual command should re-use the prior resolution -
+        // probably need to pass the resolver or "probe results" tracker here.
+        List<String> newArgv = CommandCatalogs.resolveOrFail(commandCatalog, commandName, execSite, args);
 
         // List<String> newArgs = new ArrayList<>(args);
         // newArgs.set(0, actualCommandName);
@@ -75,31 +77,12 @@ public class CmdOpVisitorToPbDocker
         // Perhaps we can retain the original command - original command + exec site should
         // unambiguously give the actual command.
 
-        IProcessBuilderCore<?> result = ProcessBuilderDocker.of(newArgv)
+        IProcessBuilderCore<?> result = ProcessBuilderDockerRun.of(newArgv)
             .commandParser(parser)
             .imageRef(imageRef)
             .fileMapper(fileMapper)
             ;
 
         return result;
-    }
-
-    public static CommandBinding resolveOrFail(CommandCatalog commandCatalog, String commandName, ExecSite execSite) {
-        // FIXME The actual command should re-use the prior resolution - probably need to bass the resolver or "probe results" tracker here.
-        Set<CommandBinding> nameCands = commandCatalog.get(commandName, execSite)
-            .orElseThrow(() -> new RuntimeException("command " + commandName + " not found on exec site " + execSite));
-        if (nameCands.isEmpty()) {
-            throw new RuntimeException("Command " + commandName + " does not have resolutions on exec site " + execSite);
-        }
-        CommandBinding resolvedName = nameCands.iterator().next();
-        return resolvedName;
-    }
-
-    // Return resolved argv based on the given commandName and args.
-    public static List<String> resolveOrFail(CommandCatalog commandCatalog, String commandName, ExecSite execSite, List<String> args) {
-        CommandBinding commandBinding = resolveOrFail(commandCatalog, commandName, execSite);
-        List<String> newArgs = commandBinding.argsTransform().map(args);
-        List<String> newArgv = ListBuilder.ofString().add(commandBinding.commandName()).addAll(newArgs).buildList();
-        return newArgv;
     }
 }

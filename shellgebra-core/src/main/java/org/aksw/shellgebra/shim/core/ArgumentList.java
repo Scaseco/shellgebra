@@ -46,8 +46,11 @@ public record ArgumentList(List<CmdArg> args) {
         return result;
     }
 
-    /** Get non-redirect arguments. */
-    public List<CmdArg> getRealArgs() {
+    /**
+     * Get non-redirect arguments.
+     * These are arguments that will be provided to the command's actual invocation.
+     */
+    public List<CmdArg> getNonRedirectArgs() {
         List<CmdArg> result = args.stream()
             .filter(arg -> !(arg instanceof CmdArgRedirect))
             .toList();

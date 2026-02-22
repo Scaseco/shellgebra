@@ -7,6 +7,8 @@ import java.util.Objects;
 
 /**
  * Argument vector class. Wraps an list of strings.
+ * Provides domain methods to access the command name and argument list.
+ * Note, that the command name may be null (sometimes used to represent the null command which does nothing and always succeeds).
  */
 public record Argv(List<String> argv) {
     public Argv {
@@ -14,6 +16,7 @@ public record Argv(List<String> argv) {
         argv = List.copyOf(Objects.requireNonNull(argv));
     }
 
+    // XXX Move to some CollectionUtils class.
     private static void requireNonEmpty(Collection<?> list) {
         Objects.requireNonNull(list);
         if (list.isEmpty()) {

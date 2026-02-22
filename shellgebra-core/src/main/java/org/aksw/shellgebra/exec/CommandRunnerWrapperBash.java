@@ -22,7 +22,7 @@ public class CommandRunnerWrapperBash<T>
 
     @Override
     public T call(String... argv) {
-        CmdOp cmdOp = CmdOpExec.ofLiteralArgs(argv);
+        CmdOp cmdOp = CmdOpExec.ofLiteralArgv(argv);
         String[] argArray = SysRuntimeImpl.forBash().compileCommand(cmdOp);
         List<String> argList = List.of(SysRuntimeImpl.quoteArg(SysRuntimeImpl.join(argArray)));
         List<String> newArgList = shellCallTransform.apply(argList);

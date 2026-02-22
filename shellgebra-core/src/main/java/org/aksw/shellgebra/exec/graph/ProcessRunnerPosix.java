@@ -1,12 +1,9 @@
 package org.aksw.shellgebra.exec.graph;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.ProcessBuilder.Redirect;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -16,14 +13,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.IProcessBuilder;
-import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.io.pipe.DynamicPipe;
 import org.aksw.shellgebra.io.pipe.PosixPipe;
-import org.aksw.vshell.registry.FileInput;
-import org.aksw.vshell.registry.FileOutput;
+import org.aksw.vshell.registry.DynamicInput;
+import org.aksw.vshell.registry.DynamicOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +35,9 @@ public class ProcessRunnerPosix
 
     private Path basePath;
 
-    private PosixPipe pipeIn;
-    private PosixPipe pipeOut;
-    private PosixPipe pipeErr;
+    private DynamicPipe pipeIn;
+    private DynamicPipe pipeOut;
+    private DynamicPipe pipeErr;
 
     // Overrides for whether inherit stdin/stdout/stderr from the system (this jvm process) rather than the pipes.
 
@@ -61,7 +57,7 @@ public class ProcessRunnerPosix
     // private CompletableFuture<?> errFuture = null;
 
     // Should there be a process-builder base class that resolves redirects?
-    private ProcessCxt cxt; // FIXME Move some fields into process context?
+    // private ProcessCxt cxt; // FIXME Move some fields into process context?
 
     public ProcessRunnerPosix(
             Path basePath, // Do we still need basePath?
@@ -104,107 +100,116 @@ public class ProcessRunnerPosix
 //        return FileOutputTarget.of(getWriteEndProcPath(), out);
 //    }
 
+//    @Override
+//    public DynamicInput inputPipe() {
+//        return pipeIn.input();
+//        // return pipeIn.input().getFile();
+//        // return pipeIn.getReadEndProcPath();
+//    }
+//
+//    @Override
+//    public DynamicOutput outputPipe() {
+//        return pipeOut.output();
+//        // return pipeOut.output().getFile();
+//        // return pipeOut.getWriteEndProcPath();
+//    }
+//
+//    @Override
+//    public DynamicOutput errorPipe() {
+//        return pipeErr.output();
+//        // return pipeErr.output().getFile();
+//        // return pipeErr.getWriteEndProcPath();
+//    }
+
     @Override
-    public Path inputPipe() {
-        return pipeIn.getReadEndProcPath();
+    public DynamicInput internalIn() {
+        return pipeIn.input();
+        // return FileInput.of(pipeIn.getReadEndProcPath(), pipeIn.getInputStream());
     }
 
     @Override
-    public Path outputPipe() {
-        return pipeOut.getWriteEndProcPath();
+    public DynamicOutput internalOut() {
+        return pipeOut.output();
+        // return FileOutput.of(pipeOut.getWriteEndProcPath(), pipeOut.getOutputStream());
     }
 
     @Override
-    public Path errorPipe() {
-        return pipeErr.getWriteEndProcPath();
+    public DynamicOutput internalErr() {
+        return pipeErr.output();
+        // return FileOutput.of(pipeErr.getWriteEndProcPath(), pipeErr.getOutputStream());
     }
-
-    @Override
-    public FileInput internalIn() {
-        return FileInput.of(pipeIn.getReadEndProcPath(), pipeIn.getInputStream());
-    }
-
-    @Override
-    public FileOutput internalOut() {
-        return FileOutput.of(pipeOut.getWriteEndProcPath(), pipeOut.getOutputStream());
-    }
-
-    @Override
-    public FileOutput internalErr() {
-        return FileOutput.of(pipeErr.getWriteEndProcPath(), pipeErr.getOutputStream());
-    }
-
-    @Override
-    public PrintStream internalPrintOut() {
-        return pipeOut.printer(StandardCharsets.UTF_8);
-    }
-
-    @Override
-    public PrintStream internalPrintErr() {
-        return pipeErr.printer(StandardCharsets.UTF_8);
-    }
-
-    @Override
-    public Thread setOutputReader(Consumer<InputStream> reader) {
-        Runnable runnable = () -> {
-            try (InputStream in = getInputStream()) {
-                reader.accept(in);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        };
-        //outFuture = CompletableFuture.runAsync(runnable, executorService);
-        outFuture = new Thread(runnable);
-        outFuture.start();
-        return outFuture;
-    }
-
-    @Override
-    public Thread setErrorReader(Consumer<InputStream> reader) {
-        Runnable runnable = () -> {
-            try (InputStream in = getErrorStream()) {
-                reader.accept(in);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        };
-        errFuture = new Thread(runnable); // CompletableFuture.runAsync(runnable, executorService);
-        errFuture.start();
-        return errFuture;
-    }
-
-    @Override
-    public Thread setInputGenerator(Consumer<OutputStream> inputSupplier) {
-        Runnable runnable = () -> {
-             try (OutputStream out = getOutputStream()) {
-//            try {
-//                OutputStream out = getOutputStream();
-                inputSupplier.accept(out);
-                out.flush();
-                logger.info("Closing input generator file descriptor: " + SysRuntime.getFdPath(((FileOutputStream)out).getFD()));
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        };
-        inFuture = new Thread(runnable);// CompletableFuture.runAsync(runnable, executorService);
-        inFuture.start();
-        return inFuture;
-    }
+//
+//    @Override
+//    public PrintStream internalPrintOut() {
+//        return pipeOut.printer(StandardCharsets.UTF_8);
+//    }
+//
+//    @Override
+//    public PrintStream internalPrintErr() {
+//        return pipeErr.printer(StandardCharsets.UTF_8);
+//    }
+//
+//    @Override
+//    public Thread setOutputReader(Consumer<InputStream> reader) {
+//        Runnable runnable = () -> {
+//            try (InputStream in = getInputStream()) {
+//                reader.accept(in);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        };
+//        //outFuture = CompletableFuture.runAsync(runnable, executorService);
+//        outFuture = new Thread(runnable);
+//        outFuture.start();
+//        return outFuture;
+//    }
+//
+//    @Override
+//    public Thread setErrorReader(Consumer<InputStream> reader) {
+//        Runnable runnable = () -> {
+//            try (InputStream in = getErrorStream()) {
+//                reader.accept(in);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        };
+//        errFuture = new Thread(runnable); // CompletableFuture.runAsync(runnable, executorService);
+//        errFuture.start();
+//        return errFuture;
+//    }
+//
+//    @Override
+//    public Thread setInputGenerator(Consumer<OutputStream> inputSupplier) {
+//        Runnable runnable = () -> {
+//             try (OutputStream out = getOutputStream()) {
+////            try {
+////                OutputStream out = getOutputStream();
+//                inputSupplier.accept(out);
+//                out.flush();
+//                logger.info("Closing input generator file descriptor: " + SysRuntime.getFdPath(((FileOutputStream)out).getFD()));
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                throw new RuntimeException(e);
+//            }
+//        };
+//        inFuture = new Thread(runnable);// CompletableFuture.runAsync(runnable, executorService);
+//        inFuture.start();
+//        return inFuture;
+//    }
 
     @Override
     public OutputStream getOutputStream() {
-        return pipeIn.getOutputStream();
+        return pipeIn.outputStream();
     }
 
     @Override
     public InputStream getInputStream() {
-        return pipeOut.getInputStream();
+        return pipeOut.inputStream();
     }
 
     @Override
     public InputStream getErrorStream() {
-        return pipeErr.getInputStream();
+        return pipeErr.inputStream();
     }
 
     @Override

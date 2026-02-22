@@ -71,7 +71,7 @@ public class ProcessBuilderGroup
         Process pumpProcess = null;
         if (isProbablyNamedPipe && requiresAnonPipe) {
             PosixPipe anonPipe = PosixPipe.open();
-            pumpProcess = ProcessBuilderDocker.catProcess(rawInputPath, anonPipe.getWriteEndProcPath());
+            pumpProcess = ProcessBuilderDockerRun.catProcess(rawInputPath, anonPipe.getWriteEndProcPath());
             resultPath = anonPipe.getReadEndProcPath();
         } else {
             resultPath = rawInputPath;
@@ -112,7 +112,7 @@ public class ProcessBuilderGroup
         Closeable closeAction = null;
         if (isProbablyNamedPipe && requiresAnonPipe) {
             PosixPipe anonPipe = PosixPipe.open();
-            pumpProcess = ProcessBuilderDocker.catProcess(anonPipe.getReadEndProcPath(), rawPath);
+            pumpProcess = ProcessBuilderDockerRun.catProcess(anonPipe.getReadEndProcPath(), rawPath);
             resultPath = anonPipe.getWriteEndProcPath();
             closeAction = anonPipe; // () -> anonPipe.close(); // TODO Perhaps only close the write end?
         } else {

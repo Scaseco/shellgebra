@@ -1,17 +1,15 @@
 package org.aksw.shellgebra.io.pipe;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.aksw.shellgebra.exec.graph.PipeBase;
+import org.aksw.vshell.registry.DynamicInput;
+import org.aksw.vshell.registry.DynamicOutput;
 import org.newsclub.net.unix.FileDescriptorCast;
 
 import jnr.posix.POSIX;
@@ -24,7 +22,7 @@ import jnr.posix.POSIXFactory;
  */
 public final class PosixPipe
     extends PipeBase
-    implements Closeable
+    implements DynamicPipe
 {
     private final POSIX posix;
     private final int readFd;
@@ -33,8 +31,35 @@ public final class PosixPipe
     private final FileDescriptor readFdObj;
     private final FileDescriptor writeFdObj;
 
-    private final FileInputStream in;
-    private final FileOutputStream out;
+    final FileInputStream in;
+    final FileOutputStream out;
+
+    private DynamicInput input;
+    private DynamicOutput output;
+
+    @Override
+    public DynamicInput input() {
+        if (input == null) {
+            synchronized (this) {
+                if (input == null) {
+                    input = new DynamicInputFromPosixPipe(this);
+                }
+            }
+        }
+        return input;
+    }
+
+    @Override
+    public DynamicOutput output() {
+        if (output == null) {
+            synchronized (this) {
+                if (output == null) {
+                    output = new DynamicOutputFromPosixPipe(this);
+                }
+            }
+        }
+        return output;
+    }
 
     private PosixPipe(POSIX posix,
                       int readFd,
@@ -51,6 +76,7 @@ public final class PosixPipe
         this.in = in;
         this.out = out;
     }
+
 
     /**
      * Create a new anonymous pipe (readFd, writeFd).
@@ -80,15 +106,15 @@ public final class PosixPipe
         return new PosixPipe(posix, readFd, writeFd, readFdObj, writeFdObj, in, out);
     }
 
-    @Override
-    public InputStream getInputStream() {
-        return in;
-    }
-
-    @Override
-    public OutputStream getOutputStream() {
-        return out;
-    }
+//    @Override
+//    public InputStream getInputStream() {
+//        return in;
+//    }
+//
+//    @Override
+//    public OutputStream getOutputStream() {
+//        return out;
+//    }
 
     public int getReadFd() {
         return readFd;

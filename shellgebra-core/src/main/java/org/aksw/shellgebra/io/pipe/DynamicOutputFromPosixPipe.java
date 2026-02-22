@@ -1,19 +1,21 @@
-package org.aksw.vshell.registry;
+package org.aksw.shellgebra.io.pipe;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
-import org.aksw.shellgebra.io.pipe.PosixPipe;
+import org.aksw.vshell.registry.DynamicOutput;
+import org.aksw.vshell.registry.OutputBase;
 
-public class DynamicOutputFromPipe
+public class DynamicOutputFromPosixPipe
     extends OutputBase
     implements DynamicOutput
 {
     private PosixPipe pipe;
 
-    protected DynamicOutputFromPipe(PosixPipe pipe) {
-        super(pipe.getOutputStream());
+    public DynamicOutputFromPosixPipe(PosixPipe pipe) {
+        super(pipe.out);
+        this.pipe = pipe;
     }
 
     @Override
@@ -28,6 +30,7 @@ public class DynamicOutputFromPipe
 
     @Override
     protected OutputStream openOutputStream() throws IOException {
-        return pipe.getOutputStream();
+        throw new IllegalStateException("Should not be called");
+        // return pipe.out;
     }
 }

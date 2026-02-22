@@ -41,7 +41,7 @@ import org.aksw.shellgebra.algebra.cmd.transformer.CmdTransformBase;
 import org.aksw.shellgebra.exec.CmdStrOps;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.SysRuntimeImpl;
-import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderDockerRun;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.shellgebra.util.PathLifeCycle;
 import org.aksw.shellgebra.util.PathLifeCycles;
@@ -248,7 +248,7 @@ public class BoundStageDocker
 
             @Override
             public CmdArg transform(CmdArgCmdOp arg, CmdOp subOp) {
-                String path = ProcessBuilderDocker.extractSimpleCatPath(subOp);
+                String path = ProcessBuilderDockerRun.extractSimpleCatPath(subOp);
                 CmdArg r = path != null
                     ? CmdArg.ofPathString(path)
                     : CmdTransformBase.super.transform(arg, subOp);

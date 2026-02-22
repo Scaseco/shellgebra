@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgCmdOp;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArgLiteral;
@@ -22,7 +23,6 @@ import org.aksw.shellgebra.algebra.stream.transformer.StreamOpTransformBase;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.registry.codec.CodecRegistry;
 import org.aksw.shellgebra.registry.codec.CodecSpec;
-import org.aksw.shellgebra.registry.codec.CodecVariant;
 
 // CmdOp transformation that does not consider execution sites such as host or docker container.
 // FIXME StreamOps (if even needed at all) should only translate to virtual commands.
@@ -80,14 +80,14 @@ public class StreamOpTransformToCmdOp
 
         CodecSpec spec = registry.getCodecSpec(name)
             .orElseThrow(() -> new NoSuchElementException("No codec with name: " + name));
-        for (CodecVariant variant : spec.getDecoderVariants()) {
+        for (Argv variant : spec.getDecoderVariants()) {
             // String[] cmd = variant.getCmd();
-            String toolName = variant.getToolName();
+            String toolName = variant.command();
             String resolvedCmdName = resolveCmdName(toolName, env.getRuntime());
 
             // cmd[0] = resolvedCmdName;
             List<CmdArg> args = new ArrayList<>();
-            variant.getArgs().forEach(s -> args.add(new CmdArgLiteral(s)));
+            variant.args().forEach(s -> args.add(new CmdArgLiteral(s)));
             SysRuntime runtime = env.getRuntime();
 
             boolean canSubst = true;

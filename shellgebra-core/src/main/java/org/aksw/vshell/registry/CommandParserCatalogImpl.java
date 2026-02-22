@@ -9,10 +9,10 @@ import org.aksw.shellgebra.shim.core.JvmCommandParser;
 public class CommandParserCatalogImpl
     implements CommandParserCatalog
 {
-    private CommandCatalog commandCatalog;
+    private CommandSiteCatalog commandCatalog;
     private JvmCommandRegistry commandRegistry;
 
-    public CommandParserCatalogImpl(CommandCatalog commandCatalog, JvmCommandRegistry commandRegistry) {
+    public CommandParserCatalogImpl(CommandSiteCatalog commandCatalog, JvmCommandRegistry commandRegistry) {
         super();
         this.commandCatalog = commandCatalog;
         this.commandRegistry = commandRegistry;

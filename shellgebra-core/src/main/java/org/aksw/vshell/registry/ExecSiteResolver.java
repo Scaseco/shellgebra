@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.collect.Multimap;
+
 import org.aksw.commons.util.docker.ContainerUtils;
 import org.aksw.commons.util.docker.ImageIntrospectorImpl;
 import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
@@ -25,13 +27,13 @@ import org.testcontainers.containers.ContainerFetchException;
 import org.testcontainers.containers.ContainerLaunchException;
 
 public class ExecSiteResolver {
-    private CommandCatalog cmdCatalog;
+    private CommandSiteCatalog cmdCatalog;
 
     private JvmCommandRegistry jvmCmdRegistry;
     private ExecSiteProbeResults cmdAvailability;
     private ImageIntrospector dockerImageIntrospector;
 
-    public ExecSiteResolver(CommandCatalog cmdCatalog, JvmCommandRegistry jvmCmdRegistry,
+    public ExecSiteResolver(CommandSiteCatalog cmdCatalog, JvmCommandRegistry jvmCmdRegistry,
             ExecSiteProbeResults cmdAvailability, ImageIntrospector dockerImageIntrospector) {
         super();
         this.cmdCatalog = cmdCatalog;
@@ -40,13 +42,13 @@ public class ExecSiteResolver {
         this.dockerImageIntrospector = dockerImageIntrospector;
     }
 
-    public static ExecSiteResolver of(CommandCatalog commandCatalog, JvmCommandRegistry jvmCmdRegistry) {
+    public static ExecSiteResolver of(CommandSiteCatalog commandCatalog, JvmCommandRegistry jvmCmdRegistry) {
         // Model model = RDFDataMgr.loadModel("shell-ontology.ttl");
         ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of();
         return new ExecSiteResolver(commandCatalog, jvmCmdRegistry, ExecSiteProbeResults.get(), imageIntrospector);
     }
 
-    public CommandCatalog getCommandCatalog() {
+    public CommandSiteCatalog getCommandCatalog() {
         return cmdCatalog;
     }
 
@@ -71,7 +73,7 @@ public class ExecSiteResolver {
 
     public Map<ExecSite, CommandBinding> resolve(String virtualCmd) {
         Map<ExecSite, CommandBinding> result = new LinkedHashMap<>();
-        Map<ExecSite, Collection<CommandBinding>> map = cmdCatalog.get(virtualCmd).asMap();
+        Map<ExecSite, Collection<CommandBinding>> map = cmdCatalog.get(virtualCmd).map(Multimap::asMap).orElse(Map.of());
         for (Entry<ExecSite, Collection<CommandBinding>> e : map.entrySet()) {
             ExecSite execSite = e.getKey();
             for (CommandBinding cmdBinding : e.getValue()) {

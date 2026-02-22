@@ -12,6 +12,7 @@ import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderBase;
 import org.aksw.shellgebra.shim.core.JvmCommand;
+import org.aksw.vshell.registry.ProcessBase.OutboundIo;
 
 public class ProcessBuilderJvm
     extends ProcessBuilderBase<ProcessBuilderJvm>
@@ -55,8 +56,8 @@ public class ProcessBuilderJvm
         return true;
     }
 
-    protected static ClosePolicyWrapper<FileInput> resolveInputRedirect(FileInput defaultSource, JRedirect redirect) throws FileNotFoundException {
-        ClosePolicyWrapper<FileInput> result;
+    protected static ClosePolicyWrapper<DynamicInput> resolveInputRedirect(DynamicInput defaultSource, JRedirect redirect) throws FileNotFoundException {
+        ClosePolicyWrapper<DynamicInput> result;
         if (redirect instanceof JRedirectJava x) {
             Redirect r = x.redirect();
             switch (r.type()) {
@@ -66,6 +67,10 @@ public class ProcessBuilderJvm
             case READ:
                 result = ClosePolicyWrapper.doClose(FileInput.of(r.file()));
                 break;
+            case PIPE:
+                throw new RuntimeException("Unsupported or not implemented");
+                // result =
+                // break;
             default:
                 throw new RuntimeException("Unsupported or not implemented");
             }
@@ -75,8 +80,8 @@ public class ProcessBuilderJvm
         return result;
     }
 
-    protected static ClosePolicyWrapper<FileOutput> resolveOutputRedirect(FileOutput defaultTarget, JRedirect redirect) throws FileNotFoundException {
-        ClosePolicyWrapper<FileOutput> result;
+    protected static ClosePolicyWrapper<DynamicOutput> resolveOutputRedirect(DynamicOutput defaultTarget, JRedirect redirect) throws FileNotFoundException {
+        ClosePolicyWrapper<DynamicOutput> result;
         if (redirect instanceof JRedirectJava x) {
             Redirect r = x.redirect();
             switch (r.type()) {
@@ -103,21 +108,24 @@ public class ProcessBuilderJvm
         String c = a.command();
         JvmCommand cmd = jvmCmdRegistry.get(c)
                 .orElseThrow(() -> new RuntimeException("Command not found: " + c));
-        Process process = ProcessOverCompletableFuture.of(() -> runCommand(executor, jvmCmdRegistry, a, cmd));
+
+        OutboundIo outboundIo = ProcessShell.setupPublicStreams(this, executor);
+        Process process = ProcessOverCompletableFuture.of(outboundIo, () -> runCommand(executor, jvmCmdRegistry, a, cmd));
         return process;
     }
 
-    private Integer runCommand(ProcessRunner executor, JvmCommandRegistry jvmCmdRegistry, Argv a, JvmCommand cmd) {
+    private Integer runCommand(ProcessRunner cxt, JvmCommandRegistry jvmCmdRegistry, Argv a, JvmCommand cmd) {
         // XXX Is ClosePolicyWrapper sufficient or is reference counting needed?
         try(
-            ClosePolicyWrapper<FileInput> in = resolveInputRedirect(executor.internalIn(), redirectInput());
-            ClosePolicyWrapper<FileOutput> out = resolveOutputRedirect(executor.internalOut(), redirectOutput());
-            ClosePolicyWrapper<FileOutput> err = resolveOutputRedirect(executor.internalErr(), redirectError())) {
+            // TODO Make the process expose the appropriate pipe
+            ClosePolicyWrapper<DynamicInput> in = resolveInputRedirect(cxt.internalIn(), redirectInput());
+            ClosePolicyWrapper<DynamicOutput> out = resolveOutputRedirect(cxt.internalOut(), redirectOutput());
+            ClosePolicyWrapper<DynamicOutput> err = resolveOutputRedirect(cxt.internalErr(), redirectError())) {
 
             JvmExecCxt execCxt = new JvmExecCxt(
-                executor,
+                cxt,
                 jvmCmdRegistry,
-                executor.environment(), executor.directory(), in.entity(), out.entity(), err.entity());
+                cxt.environment(), cxt.directory(), in.entity(), out.entity(), err.entity());
 
             int exitValue = cmd.run(execCxt, a);
             return exitValue;

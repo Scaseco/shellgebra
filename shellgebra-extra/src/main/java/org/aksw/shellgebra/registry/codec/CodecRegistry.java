@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.aksw.commons.util.docker.Argv;
 import org.aksw.shellgebra.algebra.common.TranscodeMode;
 import org.aksw.shellgebra.shim.cmd.JavaCodec;
 import org.aksw.shellgebra.shim.cmd.JavaCodecProvider;
@@ -45,16 +46,16 @@ public class CodecRegistry {
         return Optional.ofNullable(registry.get(name));
     }
 
-    public List<CodecVariant> getEncoders(String name) {
-        List<CodecVariant> result = getCodecSpec(name).stream()
+    public List<Argv> getEncoders(String name) {
+        List<Argv> result = getCodecSpec(name).stream()
             .map(CodecSpec::getEncoderVariants)
             .flatMap(Collection::stream)
             .toList();
         return result;
     }
 
-    public List<CodecVariant> getDecoders(String name) {
-        List<CodecVariant> result = getCodecSpec(name).stream()
+    public List<Argv> getDecoders(String name) {
+        List<Argv> result = getCodecSpec(name).stream()
             .map(CodecSpec::getDecoderVariants)
             .flatMap(Collection::stream)
             .toList();
@@ -81,10 +82,10 @@ public class CodecRegistry {
         {
             CodecSpec spec = CodecSpec.newBuilder()
                 .setName("bzip2")
-                .addDecoderVariant(CodecVariant.of("lbzip2", "-cd"))
-                .addDecoderVariant(CodecVariant.of("bzip2", "-cd"))
-                .addEncoderVariant(CodecVariant.of("lbzip2", "-c"))
-                .addEncoderVariant(CodecVariant.of("bzip2", "-c"))
+                .addDecoderVariant("lbzip2", "-cd")
+                .addDecoderVariant("bzip2", "-cd")
+                .addEncoderVariant("lbzip2", "-c")
+                .addEncoderVariant("bzip2", "-c")
                 .build();
             registry.add(spec);
         }
@@ -92,8 +93,8 @@ public class CodecRegistry {
         {
             CodecSpec spec = CodecSpec.newBuilder()
                 .setName("gz") // reuse "gz" which is the name in commons-compress.
-                .addDecoderVariant(CodecVariant.of("gzip", "-cd"))
-                .addEncoderVariant(CodecVariant.of("gzip", "-c"))
+                .addDecoderVariant("gzip", "-cd")
+                .addEncoderVariant("gzip", "-c")
                 .build();
             registry.add(spec);
         }

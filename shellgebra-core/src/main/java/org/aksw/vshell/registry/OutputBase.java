@@ -9,10 +9,10 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 
 public abstract class OutputBase
+    // extends SingletonOutputStreamBase
     implements Output
 {
     private OutputStream outputStream;
-
     private PrintStream printer;
     private BufferedWriter writer = null;
     private Charset writerCharset = null;
@@ -20,9 +20,36 @@ public abstract class OutputBase
     protected OutputBase(OutputStream outputStream) {
         super();
         this.outputStream = outputStream;
+        // super(outputStream);
+    }
+
+    public static Output of(OutputStream outputStream) {
+        Objects.requireNonNull(outputStream);
+        return new OutputBase(outputStream) {
+            @Override
+            protected OutputStream openOutputStream() throws IOException {
+                throw new IllegalStateException("Should never be called because stream is set on init.");
+            }
+        };
     }
 
     protected abstract OutputStream openOutputStream() throws IOException;
+
+    @Override
+    public OutputStream outputStream() {
+        if (outputStream == null) {
+            synchronized (this) {
+                if (outputStream == null) {
+                    try {
+                        outputStream = openOutputStream(); // Files.newOutputStream(path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+        return outputStream;
+    }
 
     @Override
     public Charset getWriterCharset() {
@@ -40,20 +67,6 @@ public abstract class OutputBase
     }
 
     @Override
-    public OutputStream outputStream() {
-        synchronized (this) {
-            if (outputStream == null) {
-                try {
-                    outputStream = openOutputStream(); // Files.newOutputStream(path);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-        return outputStream;
-    }
-
-    @Override
     public final PrintStream printStream() {
         return printStream(Charset.defaultCharset());
     }
@@ -61,21 +74,23 @@ public abstract class OutputBase
     @Override
     public final PrintStream printStream(Charset charset) {
         Objects.requireNonNull(charset, "charset");
-        synchronized (this) {
-            if (printer == null) {
-                if (writer != null) {
-                    throw new IllegalStateException("Cannot create PrintStream because a BufferedWriter was already created with charset: " + writerCharset);
-                }
+        if (printer == null || writerCharset == null) {
+            synchronized (this) {
+                if (printer == null) {
+                    if (writer != null) {
+                        throw new IllegalStateException("Cannot create PrintStream because a BufferedWriter was already created with charset: " + writerCharset);
+                    }
 
-                writerCharset = charset;
-                printer = new PrintStream(outputStream(), true, charset);
-            } else {
-                if (!writerCharset.equals(charset)) {
-                    throw new IllegalStateException("BufferedWriter was created with charset: " + writerCharset);
+                    writerCharset = charset;
+                    printer = new PrintStream(outputStream(), true, charset);
                 }
             }
-            return printer;
+        } else {
+            if (!writerCharset.equals(charset)) {
+                throw new IllegalStateException("BufferedWriter was created with charset: " + writerCharset);
+            }
         }
+        return printer;
     }
 
     @Override
@@ -86,20 +101,23 @@ public abstract class OutputBase
     @Override
     public final BufferedWriter writer(Charset charset) {
         Objects.requireNonNull(charset, "charset");
-        synchronized (this) {
-            if (writer == null) {
-                if (printer != null) {
-                    throw new IllegalStateException("Cannot create BufferedWriter because a PrintStream was already created with charset: " + writerCharset);
-                }
+        if (writer == null || writerCharset == null) {
+            synchronized (this) {
+                if (writer == null) {
+                    if (printer != null) {
+                        throw new IllegalStateException("Cannot create BufferedWriter because a PrintStream was already created with charset: " + writerCharset);
+                    }
 
-                writerCharset = charset;
-                writer = new BufferedWriter(new OutputStreamWriter(outputStream(), charset));
-            } else {
-                if (!writerCharset.equals(charset))
-                    throw new IllegalStateException("BufferedWriter was created with charset: " + writerCharset);
+                    writerCharset = charset;
+                    writer = new BufferedWriter(new OutputStreamWriter(outputStream(), charset));
+                }
             }
-            return writer;
+        } else {
+            if (!writerCharset.equals(charset)) {
+                 throw new IllegalStateException("BufferedWriter was created with charset: " + writerCharset);
+            }
         }
+        return writer;
     }
 
     @Override

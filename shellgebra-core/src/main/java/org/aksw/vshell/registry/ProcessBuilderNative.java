@@ -8,9 +8,9 @@ import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
-import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
-import org.aksw.shellgebra.processbuilder.ProcessBuilderBase;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderBase;
+import org.aksw.vshell.registry.ProcessBase.OutboundIo;
 
 public class ProcessBuilderNative
     extends ProcessBuilderBase<ProcessBuilderNative>
@@ -20,22 +20,28 @@ public class ProcessBuilderNative
     }
 
     @Override
-    public Process start(ProcessRunner executor) throws IOException {
+    public Process start(ProcessRunner cxt) throws IOException {
         ProcessBuilder pb = new ProcessBuilder();
-
         pb.command(this.command());
         pb.environment().putAll(this.environment());
         if (this.directory() != null) {
             pb.directory(this.directory().toFile());
         }
 
-        pb = configure(pb, this, executor);
+        boolean inheritInFromSystem = true;
+        boolean inheritOutFromSystem = true;
+        boolean inheritErrFromSystem = true;
 
-        // pb = executor.configure(pb);
+        // ProcessBuilder clone = clone(processBuilder);
+        configureInput(this.redirectInput(), cxt.inputPipe(), inheritInFromSystem, pb::redirectInput);
+        configureOutput(this.redirectOutput(), cxt.outputPipe(), inheritOutFromSystem, pb::redirectOutput);
+        configureOutput(this.redirectError(), cxt.errorPipe(), inheritErrFromSystem, pb::redirectError);
 
-        return pb.start();
+        OutboundIo outboundIo = ProcessShell.setupPublicStreams(this, cxt);
+        Process rawProcess = pb.start();
+        Process result = ProcessShell.wrapIfNeeded(rawProcess, outboundIo);
+        return result;
     }
-
 
     private static void configureInput(JRedirect redirect, Path fd, boolean fdOverridesInherit, Consumer<Redirect> redirectConsumer) {
         if (redirect instanceof JRedirectJava x) {
@@ -96,18 +102,6 @@ public class ProcessBuilderNative
 //        configureOutput(redirectError(), cxt.errorPipe(), inheritErrFromSystem, pb::redirectError);
 //        return pb;
 //    }
-
-    public static  ProcessBuilder configure(ProcessBuilder tgt, IProcessBuilderCore<?> src, ProcessRunner cxt) {
-        boolean inheritInFromSystem = true;
-        boolean inheritOutFromSystem = true;
-        boolean inheritErrFromSystem = true;
-
-        // ProcessBuilder clone = clone(processBuilder);
-        configureInput(src.redirectInput(), cxt.inputPipe(), inheritInFromSystem, tgt::redirectInput);
-        configureOutput(src.redirectOutput(), cxt.outputPipe(), inheritOutFromSystem, tgt::redirectOutput);
-        configureOutput(src.redirectError(), cxt.errorPipe(), inheritErrFromSystem, tgt::redirectError);
-        return tgt;
-    }
 
     @Override
     protected ProcessBuilderNative cloneActual() {

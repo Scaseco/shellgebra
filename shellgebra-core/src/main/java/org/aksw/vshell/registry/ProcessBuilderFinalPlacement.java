@@ -18,24 +18,17 @@ import org.aksw.shellgebra.processbuilder.ProcessBuilderCore;
 /**
  *
  */
-//record Rewrite(
-//    PlacedCmd placedCmd,
-//    FinalPlacement placement,
-//    IProcessBuilderCore<?> processBuilderPrototype,
-//    ExecutableInvocation invocation) {
-//}
-
 public class ProcessBuilderFinalPlacement
     extends ProcessBuilderCore<ProcessBuilderFinalPlacement>
 {
     private FileMapper fileMapper;
     private ExecSiteResolver resolver;
     // private CommandParserCatalog parserCatalog;
-    private CommandCatalog commandCatalog;
+    private CommandSiteCatalog commandCatalog;
 
     private FinalPlacement placement;
 
-    public ProcessBuilderFinalPlacement(FileMapper fileMapper, ExecSiteResolver resolver, CommandCatalog commandCatalog) {
+    public ProcessBuilderFinalPlacement(FileMapper fileMapper, ExecSiteResolver resolver, CommandSiteCatalog commandCatalog) {
         super();
         this.fileMapper = Objects.requireNonNull(fileMapper);
         this.resolver = Objects.requireNonNull(resolver);
@@ -119,10 +112,6 @@ public class ProcessBuilderFinalPlacement
     public boolean accessesStdIn() {
         return true;
     }
-//
-//    public ExecSiteResolver getResolver() {
-//        return resolver;
-//    }
 }
 
 class CmdOpVisitorToPbJvm
@@ -133,17 +122,9 @@ class CmdOpVisitorToPbJvm
 
     @Override
     protected IProcessBuilderCore<?> toProcessBuilder(List<String> argv) {
-
-        // <XXX Factor out>
-        CommandCatalog commandCatalog = getDispatcher().getCommandCatalog();
+        CommandSiteCatalog commandCatalog = getDispatcher().getCommandCatalog();
         ExecSite execSite = ExecSites.jvm();
-        String commandName = argv.get(0);
-
-        List<String> rawArgs = argv.subList(1,  argv.size());
-        List<String> newArgv = CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, commandName, execSite, rawArgs);
-        // </XXX Factor out>
-
-
+        List<String> newArgv = CommandCatalogs.resolveOrFail(commandCatalog, execSite, argv);
         JvmCommandRegistry jvmCmdRegistry = getDispatcher().getJvmCmdRegistry();
         IProcessBuilderCore<?> result = ProcessBuilderJvm.of(jvmCmdRegistry, newArgv);
         return result;
@@ -151,24 +132,17 @@ class CmdOpVisitorToPbJvm
 }
 
 class CmdOpVisitorToPbHost
-    extends CmdOpVisitorToBase {
+    extends CmdOpVisitorToBase
+{
     public CmdOpVisitorToPbHost(ExecSiteToProcessDispatcher dispatcher) {
         super(dispatcher);
     }
 
     @Override
     protected IProcessBuilderCore<?> toProcessBuilder(List<String> argv) {
-
-        // <XXX Factor out>
-        CommandCatalog commandCatalog = getDispatcher().getCommandCatalog();
+        CommandSiteCatalog commandCatalog = getDispatcher().getCommandCatalog();
         ExecSite execSite = ExecSites.host();
-        String commandName = argv.get(0);
-
-        List<String> rawArgs = argv.subList(1,  argv.size());
-        List<String> newArgv = CmdOpVisitorToPbDocker.resolveOrFail(commandCatalog, commandName, execSite, rawArgs);
-        // </XXX Factor out>
-
-
+        List<String> newArgv = CommandCatalogs.resolveOrFail(commandCatalog, execSite, argv);
         IProcessBuilderCore<?> result = InvokableProcessBuilderHost.of(newArgv);
         return result;
     }

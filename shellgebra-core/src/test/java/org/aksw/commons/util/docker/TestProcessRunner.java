@@ -3,18 +3,17 @@ package org.aksw.commons.util.docker;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.graph.ProcessIoWrapper;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
-import org.aksw.shellgebra.processbuilder.ProcessBuilderDocker;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderDockerRun;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderGroup;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderPipeline;
 import org.aksw.shellgebra.registry.init.InitCommandRegistry;
@@ -25,7 +24,6 @@ import org.aksw.vshell.registry.ProcessBuilderJvm;
 import org.aksw.vshell.registry.ProcessBuilderNative;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.newsclub.net.unix.FileDescriptorCast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +31,54 @@ public class TestProcessRunner {
     private static final Logger logger = LoggerFactory.getLogger(TestProcessRunner.class);
 
     @Test
-    public void test01() throws Exception {
-        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
+    public void testNative() throws Exception {
+        String expected = "testNative: OK";
+        Process process = ProcessBuilderNative.of("/bin/echo", expected).start();
+        ExecResult actual = consume(process);
+        assertEquals(expected, actual.out());
+    }
 
+    @Test
+    public void testJvm() throws Exception {
+        String expected = "testJvm: OK";
+        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
+        Process process = ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", expected).start();
+        ExecResult actual = consume(process);
+        assertEquals(expected, actual.out());
+    }
+
+    @Test
+    public void testDocker() throws Exception {
+        String expected = "testDocker: OK";
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
-        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
-            runner.setOutputLineReaderUtf8(logger::info);
-            runner.setErrorLineReaderUtf8(logger::info);
-            runner.setInputPrintStreamUtf8(out -> {
+        Process process = ProcessBuilderDockerRun.of("nestio/lbzip2", fileMapper, "/bin/echo", "testDocker: OK").start();
+        ExecResult actual = consume(process);
+        assertEquals(expected, actual.out());
+    }
+
+    public record ExecResult(int execCode, String out, String err) {}
+
+    public static ExecResult consume(Process process) throws Exception {
+        StringBuilder outBuilder = new StringBuilder();
+        StringBuilder errBuilder = new StringBuilder();
+        try (ProcessIoWrapper wrapper = ProcessIoWrapper.of(process)) {
+            // wrapper.setOutputLineReaderUtf8(logger::info);
+            wrapper.setOutputLineReaderUtf8(str -> {
+                // System.out.println("got output line: " + str);
+                if (!outBuilder.isEmpty()) {
+                    outBuilder.append("\n");
+                }
+                outBuilder.append(str);
+            });
+            // wrapper.setErrorLineReaderUtf8(logger::info);
+            wrapper.setErrorLineReaderUtf8(str -> {
+                // System.out.println("got error line: " + str);
+                if (!errBuilder.isEmpty()) {
+                    errBuilder.append("\n");
+                }
+                errBuilder.append(str);
+            });
+            wrapper.setInputPrintStreamUtf8(out -> {
                 logger.info("Data generation thread started.");
                 for (int i = 0; i < 10000; ++i) {
                     out.println("" + i);
@@ -48,6 +86,43 @@ public class TestProcessRunner {
                 out.flush();
                 logger.info("Data generation thread terminated.");
             });
+            process.waitFor();
+            System.out.println("All processes completed.");
+        }
+
+        ExecResult result = new ExecResult(process.exitValue(), outBuilder.toString(), errBuilder.toString());
+        return result;
+    }
+
+
+    @Test
+    public void test01() throws Exception {
+        JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
+
+        FileMapper fileMapper = FileMapper.of("/tmp/shared");
+
+        System.out.println("Process 6");
+        Process process = ProcessBuilderPipeline.of(
+            // ProcessBuilderJvm.of("/bin/head", "-n10"),
+            ProcessBuilderNative.of("/bin/head", "-n10"),
+            ProcessBuilderDockerRun.of("nestio/lbzip2", fileMapper, "/usr/bin/lbzip2", "-c"),
+            ProcessBuilderJvm.of(jvmCmdRegistry, "/jvm/bzip2", "-d"))
+            // ProcessBuilderJvm.of("/bin/cat"))
+            .start();
+        System.out.println("Process started");
+
+        try (ProcessIoWrapper wrapper = ProcessIoWrapper.of(process)) {
+            wrapper.setOutputLineReaderUtf8(logger::info);
+            wrapper.setErrorLineReaderUtf8(logger::info);
+            wrapper.setInputPrintStreamUtf8(out -> {
+                logger.info("Data generation thread started.");
+                for (int i = 0; i < 10000; ++i) {
+                    out.println("" + i);
+                }
+                out.flush();
+                logger.info("Data generation thread terminated.");
+            });
+            // wrapper.waitFor();
 
 //            System.out.println("Process 1");
 //            ProcessBuilderNative.of("head", "-n 2").start(runner).waitFor();
@@ -80,18 +155,10 @@ public class TestProcessRunner {
 //                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
 //                .waitFor();
 
-            System.out.println("Process 6");
-            ProcessBuilderPipeline.of(
-                // ProcessBuilderJvm.of("/bin/head", "-n10"),
-                ProcessBuilderNative.of("/bin/head", "-n10"),
-                ProcessBuilderDocker.of("nestio/lbzip2", fileMapper, "/usr/bin/lbzip2", "-c"),
-                ProcessBuilderJvm.of(jvmCmdRegistry, "/jvm/bzip2", "-d"))
-                // ProcessBuilderJvm.of("/bin/cat"))
-                .start(runner)
-                .waitFor();
 
             System.out.println("All processes completed.");
         }
+        process.waitFor();
     }
 
     @Test
@@ -99,7 +166,23 @@ public class TestProcessRunner {
         JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
 
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
-        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
+
+
+        Process process = ProcessBuilderGroup.of(
+            ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 1"),
+            ProcessBuilderNative.of("head", "-n 2"),
+
+            ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 2"),
+            ProcessBuilderNative.of("head", "-n 4"),
+
+            ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 3"),
+            ProcessBuilderPipeline.of(
+                ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/head", "-n10"),
+                ProcessBuilderDockerRun.of("nestio/lbzip2", fileMapper, "/usr/bin/lbzip2", "-c"),
+                ProcessBuilderJvm.of(jvmCmdRegistry, "/jvm/bzip2", "-d"))
+        ).start();
+
+        try (ProcessIoWrapper runner = ProcessIoWrapper.of(process)) {
             runner.setOutputLineReaderUtf8(logger::info);
             runner.setErrorLineReaderUtf8(logger::info);
             runner.setInputPrintStreamUtf8(out -> {
@@ -110,22 +193,10 @@ public class TestProcessRunner {
                 out.flush();
                 logger.info("Data generation thread terminated.");
             });
+            process.waitFor();
 
             // InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
 
-            ProcessBuilderGroup.of(
-                ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 1"),
-                ProcessBuilderNative.of("head", "-n 2"),
-
-                ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 2"),
-                ProcessBuilderNative.of("head", "-n 4"),
-
-                ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/echo", "Process 3"),
-                ProcessBuilderPipeline.of(
-                    ProcessBuilderJvm.of(jvmCmdRegistry, "/bin/head", "-n10"),
-                    ProcessBuilderDocker.of("nestio/lbzip2", fileMapper, "/usr/bin/lbzip2", "-c"),
-                    ProcessBuilderJvm.of(jvmCmdRegistry, "/jvm/bzip2", "-d"))
-            ).start(runner).waitFor();
         }
     }
 
@@ -191,10 +262,13 @@ public class TestProcessRunner {
 //    }
 
     // @Test
-    public void testDocker() throws Exception {
+    public void testDocker2() throws Exception {
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
 
-        try (ProcessRunner runner = ProcessRunnerPosix.create()) {
+        Process process = ProcessBuilderDockerRun.of("echo", "DOCKERTESTMSG")
+        .imageRef("ubuntu:24.04").fileMapper(fileMapper).start(); // .entrypoint("bash")
+
+        try (ProcessIoWrapper runner = ProcessIoWrapper.of(process)) {
             runner.setOutputLineReaderUtf8(logger::info);
             runner.setErrorLineReaderUtf8(logger::info);
             runner.setInputPrintStreamUtf8(out -> {
@@ -207,20 +281,17 @@ public class TestProcessRunner {
             });
 
         // long pid = ProcessHandle.current().pid()
-        try (FileInputStream in = new FileInputStream(runner.inputPipe().toFile())) {
-//             System.out.println("fd is " + ContainerUtils.extractFD(in.getFD()));
-             int fdVal = FileDescriptorCast.using(in.getFD()).as(Integer.class);
-             Path procPath = Paths.get("/proc/self/fd/" + fdVal);
-             System.out.println("fd = " + fdVal);
-             System.out.println("proc path = " + procPath);
-        }
+//        try (FileInputStream in = new FileInputStream(runner.inputPipe().toFile())) {
+////             System.out.println("fd is " + ContainerUtils.extractFD(in.getFD()));
+//             int fdVal = FileDescriptorCast.using(in.getFD()).as(Integer.class);
+//             Path procPath = Paths.get("/proc/self/fd/" + fdVal);
+//             System.out.println("fd = " + fdVal);
+//             System.out.println("proc path = " + procPath);
+//        }
 
+        process.waitFor();
 
         // SharedSecrets.getJavaIOFileDescriptorAccess();
-
-        ProcessBuilderDocker.of("echo", "DOCKERTESTMSG")
-            .imageRef("ubuntu:24.04").fileMapper(fileMapper).start(runner) // .entrypoint("bash")
-            .waitFor();
 //            ProcessBuilderDocker.of("head", "-n 2")
 //                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
 //                .waitFor();
@@ -248,7 +319,7 @@ public class TestProcessRunner {
                 ArgsModular<GenericCodecArgs> model = GenericCodecArgs.parse(args);
                 model.toArgList().args();
 
-                ProcessBuilderDocker
+                ProcessBuilderDockerRun
                     .of("/usr/bin/lbzip2", "-cd", in.toString())
                     .imageRef("nestio/lbzip2")
                     .commandParser(GenericCodecArgs::parse)

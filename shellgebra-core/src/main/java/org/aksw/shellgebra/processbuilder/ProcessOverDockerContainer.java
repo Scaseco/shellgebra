@@ -1,38 +1,23 @@
 package org.aksw.shellgebra.processbuilder;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Objects;
 
 import org.aksw.commons.util.docker.ContainerUtils;
+import org.aksw.vshell.registry.ProcessBase;
 import org.testcontainers.containers.GenericContainer;
 
 public class ProcessOverDockerContainer
-    extends Process
+    extends ProcessBase
 {
     private GenericContainer<?> container;
 
-    public ProcessOverDockerContainer(GenericContainer<?> container) {
-        super();
+    protected ProcessOverDockerContainer(GenericContainer<?> container, OutboundIo outboundIo) {
+        super(outboundIo);
         this.container = Objects.requireNonNull(container);
     }
 
-    @Override
-    public OutputStream getOutputStream() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public InputStream getInputStream() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public InputStream getErrorStream() {
-        // TODO Auto-generated method stub
-        return null;
+    public static Process of(GenericContainer<?> container, OutboundIo outboundIo) {
+        return new ProcessOverDockerContainer(container, outboundIo);
     }
 
     @Override

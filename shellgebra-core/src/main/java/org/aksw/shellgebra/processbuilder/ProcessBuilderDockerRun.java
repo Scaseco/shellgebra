@@ -42,18 +42,20 @@ import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.shellgebra.shim.core.Args;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.shellgebra.shim.core.JvmCommandParser;
+import org.aksw.vshell.registry.ProcessBase.OutboundIo;
+import org.aksw.vshell.registry.ProcessShell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Process builder that starts a process in a fresh docker container via docker run.
+ * Process builder that starts a process as a fresh docker container via {@code docker run}.
  *
- * Use {@link ProcessBuilderDockerExec} to start a process in an already running container.
+ * Use {@link ProcessBuilderDockerExec} to start a process in an already running container via {@code docker exec}.
  */
-public class ProcessBuilderDocker
-    extends InvokableProcessBuilderBase<ProcessBuilderDocker>
+public class ProcessBuilderDockerRun
+    extends InvokableProcessBuilderBase<ProcessBuilderDockerRun>
 {
-    private static final Logger logger = LoggerFactory.getLogger(ProcessBuilderDocker.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProcessBuilderDockerRun.class);
 
     protected String imageRef;
     protected String entrypoint;
@@ -71,7 +73,7 @@ public class ProcessBuilderDocker
     // We could allow setting a BiFunction<String, Args, CmdOp> parser function for parser registry lookups.
     // protected CmdOpExec cmdOpExec;
 
-    public ProcessBuilderDocker() {
+    public ProcessBuilderDockerRun() {
         super();
     }
 
@@ -95,10 +97,8 @@ public class ProcessBuilderDocker
         if (inv == null) {
             throw new IllegalStateException("No invocation set");
         }
-
         List<String> argv = inv.asArgv().argv();
         List<String> args = argv.subList(1, argv.size());
-
         CmdOp op;
         boolean actualInteractive;
         Optional<Boolean> baseInteractive = Optional.ofNullable(interactive);
@@ -127,23 +127,23 @@ public class ProcessBuilderDocker
         return actualInteractive;
     }
 
-    public static ProcessBuilderDocker of(String imageName, FileMapper fileMapper, String ... command) {
-        return new ProcessBuilderDocker().imageRef(imageName).fileMapper(fileMapper).command(command);
+    public static ProcessBuilderDockerRun of(String imageName, FileMapper fileMapper, String... command) {
+        return new ProcessBuilderDockerRun().imageRef(imageName).fileMapper(fileMapper).command(command);
     }
 
-    public static ProcessBuilderDocker of(String ... command) {
-        return new ProcessBuilderDocker().command(command);
+    public static ProcessBuilderDockerRun of(String ... command) {
+        return new ProcessBuilderDockerRun().command(command);
     }
 
-    public static ProcessBuilderDocker of(List<String> command) {
-        return new ProcessBuilderDocker().command(command);
+    public static ProcessBuilderDockerRun of(List<String> command) {
+        return new ProcessBuilderDockerRun().command(command);
     }
 
     public String imageRef() {
         return imageRef;
     }
 
-    public ProcessBuilderDocker imageRef(String imageRef) {
+    public ProcessBuilderDockerRun imageRef(String imageRef) {
         this.imageRef = imageRef;
         return self();
     }
@@ -161,7 +161,7 @@ public class ProcessBuilderDocker
 //        return entrypoint;
 //    }
 
-    public ProcessBuilderDocker interactive(Boolean interactive) {
+    public ProcessBuilderDockerRun interactive(Boolean interactive) {
         this.interactive = interactive;
         return self();
     }
@@ -170,7 +170,7 @@ public class ProcessBuilderDocker
         return interactive;
     }
 
-    public ProcessBuilderDocker commandParser(JvmCommandParser commandParser) {
+    public ProcessBuilderDockerRun commandParser(JvmCommandParser commandParser) {
         this.commandParser = commandParser;
         return self();
     }
@@ -195,7 +195,7 @@ public class ProcessBuilderDocker
         return fileMapper;
     }
 
-    public ProcessBuilderDocker fileMapper(FileMapper fileMapper) {
+    public ProcessBuilderDockerRun fileMapper(FileMapper fileMapper) {
         this.fileMapper = fileMapper;
         return self();
     }
@@ -204,12 +204,12 @@ public class ProcessBuilderDocker
         return workingDirectory;
     }
 
-    public ProcessBuilderDocker workingDirectory(String workingDirectory) {
+    public ProcessBuilderDockerRun workingDirectory(String workingDirectory) {
         this.workingDirectory = workingDirectory;
         return self();
     }
 
-    public ProcessBuilderDocker compiler(InvocationCompiler compiler) {
+    public ProcessBuilderDockerRun compiler(InvocationCompiler compiler) {
         this.compiler = compiler;
         return self();
     }
@@ -271,7 +271,7 @@ public class ProcessBuilderDocker
         if (ar != null) {
             op = new CmdOpExec(invocation().asArgv().argv().get(0), ar.toArgList());
         } else {
-            op = CmdOpExec.ofLiteralArgs(invocation().asArgv().asArgv().argv());
+            op = CmdOpExec.ofLiteralArgv(invocation().asArgv().asArgv().argv());
         }
 
 //        List<String> argv = inv.asArgv().argv();
@@ -305,6 +305,8 @@ public class ProcessBuilderDocker
             CmdRedirect.err(hostMountableErrorPath.toString())
         );
 
+        OutboundIo outboundIo = ProcessShell.setupPublicStreams(this, executor);
+
         /*
         op = CmdOps.appendRedirects(op,
             CmdRedirect.in(containerInputPath),
@@ -327,7 +329,9 @@ public class ProcessBuilderDocker
             runnable.run();
 
             // TODO In general exec.close() must be called!
-            return new ProcessOverDockerContainer(container);
+
+            // FIXME The returned process so far lacks wiring of the streams!
+            return ProcessOverDockerContainer.of(container, outboundIo);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -476,7 +480,7 @@ public class ProcessBuilderDocker
         // Create an invocation of the script string as an inline bash script.
         Invocation inv = new Invocation.Script(scriptString, ScriptContent.contentTypeBash);
 
-        SysRuntimeFactoryDocker sysRuntimeFactory = SysRuntimeFactoryDocker.create();
+        SysRuntimeFactoryDocker sysRuntimeFactory = SysRuntimeFactoryDocker.get();
 
         ExecutableInvocation exec;
         // XXX The entrypoint would only be needed to start a container for resolving commands!
@@ -517,6 +521,10 @@ public class ProcessBuilderDocker
             .withLogConsumer(frame -> logger.info(frame.getUtf8StringWithoutLineEnding()))
             ;
 
+        if (workingDirectory != null) {
+            result = result.withWorkingDirectory(workingDirectory);
+        }
+
         for (Bind bind : fileMapper.getBinds()) {
             result = result.withFileSystemBind(bind.getPath(), bind.getVolume().getPath(), ContainerUtils.toBindMode(bind.getAccessMode()));
             logger.info("Adding bind: " + bind);
@@ -546,8 +554,8 @@ public class ProcessBuilderDocker
     }
 
     @Override
-    protected ProcessBuilderDocker cloneActual() {
-        ProcessBuilderDocker result = new ProcessBuilderDocker();
+    protected ProcessBuilderDockerRun cloneActual() {
+        ProcessBuilderDockerRun result = new ProcessBuilderDockerRun();
         applySettings(result);
         return result;
     }
@@ -556,12 +564,12 @@ public class ProcessBuilderDocker
         return containerPathResolver;
     }
 
-    protected ProcessBuilderDocker containerPathResolver(ContainerPathResolver containerPathResolver) {
+    protected ProcessBuilderDockerRun containerPathResolver(ContainerPathResolver containerPathResolver) {
         this.containerPathResolver = containerPathResolver;
         return self();
     }
 
-    protected void applySettings(ProcessBuilderDocker target) {
+    protected void applySettings(ProcessBuilderDockerRun target) {
         target.imageRef(imageRef());
 
         // target.entrypoint(entrypoint());

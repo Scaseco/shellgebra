@@ -52,9 +52,9 @@ public class DynamicInputFromStream
             synchronized (lock) {
                 if (pipe == null) {
                     pipe = PosixPipe.open();
-                    ((DynamicInputStream)inputStream()).setDelegate(pipe.getInputStream());
+                    ((DynamicInputStream)inputStream()).setDelegate(pipe.inputStream());
                     Runnable runnable = () -> {
-                        try (OutputStream out = pipe.getOutputStream()) {
+                        try (OutputStream out = pipe.outputStream()) {
                             coreInput.transferTo(out);
                             out.flush();
                         } catch (IOException e) {

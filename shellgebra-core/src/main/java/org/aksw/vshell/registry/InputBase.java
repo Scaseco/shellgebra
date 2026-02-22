@@ -15,12 +15,39 @@ public abstract class InputBase
     private BufferedReader reader = null;
     private Charset readerCharset = null;
 
+    /** Create an instance of this class with a preset InputStream instance. */
     public InputBase(InputStream inputStream) {
         super();
         this.inputStream = inputStream;
     }
 
+    public static Input of(InputStream inputStream) {
+        Objects.requireNonNull(inputStream);
+        return new InputBase(inputStream) {
+            @Override
+            protected InputStream openInputStream() throws IOException {
+                throw new IllegalStateException("Should never be called because stream is set on init.");
+            }
+        };
+    }
+
     protected abstract InputStream openInputStream() throws IOException;
+
+    @Override
+    public InputStream inputStream() {
+        if (inputStream == null) {
+            synchronized (this) {
+                if (inputStream == null) {
+                    try {
+                        inputStream = openInputStream(); // Files.newInputStream(path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+        return inputStream;
+    }
 
     @Override
     public Charset getReaderCharset() {
@@ -33,20 +60,6 @@ public abstract class InputBase
     }
 
     @Override
-    public InputStream inputStream() {
-        synchronized (this) {
-            if (inputStream == null) {
-                try {
-                    inputStream = openInputStream(); // Files.newInputStream(path);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-        return inputStream;
-    }
-
-    @Override
     public final BufferedReader reader() {
         return reader(Charset.defaultCharset());
     }
@@ -54,16 +67,17 @@ public abstract class InputBase
     @Override
     public final BufferedReader reader(Charset charset) {
         Objects.requireNonNull(charset, "charset");
-        synchronized (this) {
-            if (reader == null) {
-                readerCharset = charset;
-                reader = new BufferedReader(new InputStreamReader(inputStream(), charset));
-            } else {
-                if (!readerCharset.equals(charset))
-                    throw new IllegalStateException("BufferedReader was created with charset: " + readerCharset);
+        if (reader == null || readerCharset == null) {
+            synchronized (this) {
+                if (reader == null) {
+                    readerCharset = charset;
+                    reader = new BufferedReader(new InputStreamReader(inputStream(), charset));
+                }
             }
-            return reader;
+        } else if (!readerCharset.equals(charset)) {
+            throw new IllegalStateException("BufferedReader was created with charset: " + readerCharset);
         }
+        return reader;
     }
 
     @Override
@@ -90,7 +104,7 @@ public abstract class InputBase
         if (reader != null) {
             reader.close();
         } else if (inputStream != null) {
-            inputStream.close();
+            inputStream.close(); // Closes the underlying input stream.
         }
     }
 }

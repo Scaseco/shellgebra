@@ -29,7 +29,7 @@ public class TestSysRuntimeDocker {
 
     @Test
     public void test01() throws IOException, InterruptedException {
-        SysRuntimeFactoryDocker f = SysRuntimeFactoryDocker.create();
+        SysRuntimeFactoryDocker f = SysRuntimeFactoryDocker.get();
         String str;
         try (SysRuntime sys = f.create("ubuntu:24.04")) {
             str = sys.which("cat");
@@ -40,7 +40,7 @@ public class TestSysRuntimeDocker {
 
     @Test
     public void test02() throws IOException, InterruptedException {
-        SysRuntimeFactoryDocker f = SysRuntimeFactoryDocker.create();
+        SysRuntimeFactoryDocker f = SysRuntimeFactoryDocker.get();
         boolean b;
         try (SysRuntime sys = f.create("ubuntu:24.04")) {
             b = sys.exists("/usr/bin/cat");

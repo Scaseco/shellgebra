@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 
 /**
  * Process builder for common settings without the 'command' property.
@@ -30,6 +31,12 @@ public interface IProcessBuilderCore<X extends IProcessBuilderCore<X>>
     X redirectErrorStream(boolean redirectErrorStream);
 
     Process start(ProcessRunner executor) throws IOException;
+
+    default Process start() throws IOException {
+        ProcessRunner cxt = ProcessRunnerPosix.create();
+        Process result = start(cxt);
+        return result;
+    }
 
     X redirectInput(JRedirect redirect);
     JRedirect redirectInput();

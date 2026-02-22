@@ -24,20 +24,14 @@ public class SysRuntimeFactoryDocker {
         if (instance == null) {
             synchronized (SysRuntimeFactoryDocker.class) {
                 if (instance == null) {
-                    instance = SysRuntimeFactoryDocker.create();
+                    instance = create();
                 }
             }
         }
         return instance;
     }
 
-    public SysRuntimeFactoryDocker(ImageIntrospector imageIntrospector, Table<String, Argv, Boolean> imageToEntrypoints, ExecSiteProbeResults probeResults) {
-        this.imageIntrospector = imageIntrospector;
-        this.imageToEntrypoints = imageToEntrypoints;
-        this.probeResults = probeResults;
-    }
-
-    public static SysRuntimeFactoryDocker create() {
+    private static SysRuntimeFactoryDocker create() {
         // Model shellModel = RDFDataMgr.loadModel("shell-ontology.ttl");
         // Could use a default disk-based database to track command availabilities.
         ExecSiteProbeResults probeResults = ExecSiteProbeResults.get(); // new CommandAvailability();
@@ -45,6 +39,12 @@ public class SysRuntimeFactoryDocker {
         ImageIntrospector imageIntrospector = ImageIntrospectorImpl.of(); // (shellModel, probeResults);
         // imageIntrospector = new ImageIntrospectorCaching(imageIntrospector);
         return new SysRuntimeFactoryDocker(imageIntrospector, imageToEntrypoints, probeResults);
+    }
+
+    public SysRuntimeFactoryDocker(ImageIntrospector imageIntrospector, Table<String, Argv, Boolean> imageToEntrypoints, ExecSiteProbeResults probeResults) {
+        this.imageIntrospector = imageIntrospector;
+        this.imageToEntrypoints = imageToEntrypoints;
+        this.probeResults = probeResults;
     }
 
     public ExecSiteProbeResults getProbeResults() {

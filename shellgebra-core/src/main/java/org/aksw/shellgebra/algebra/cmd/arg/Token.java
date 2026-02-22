@@ -22,7 +22,7 @@ public sealed interface Token {
     }
 
     /**
-     * XXX Extend with optional read/write flags.
+     * XXX Extend with optional read/write flags. Alternatively, the flag could be maintained in a separate map - but that's harder to manage.
      * XXX Extend with flag whether this path is relative to a container - as to remapping paths already mapped to a container?
      *       Alternatively, this could be partly detected via fileMapper lookups (i.e. is this a mapped path?)
      */

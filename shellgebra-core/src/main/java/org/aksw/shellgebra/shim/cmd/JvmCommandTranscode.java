@@ -3,6 +3,7 @@ package org.aksw.shellgebra.shim.cmd;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.aksw.commons.io.util.stream.OutputStreamTransform;
 import org.aksw.shellgebra.shim.core.ArgsModular;
 import org.aksw.vshell.registry.JvmExecCxt;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
+import org.apache.commons.io.IOUtils;
 
 public class JvmCommandTranscode
     extends JvmCommandBase<GenericCodecArgs>
@@ -39,6 +41,9 @@ public class JvmCommandTranscode
         if (model.isDecode()) {
             Objects.requireNonNull(inTransform, "No decoding for " + codecName);
             InputStream encodedIn = cxt.in().inputStream();
+
+            // System.out.println("CONSUMED INPUT DATA WAS: " + IOUtils.toString(encodedIn, StandardCharsets.UTF_8));
+
             InputStream decodedIn = inTransform.apply(encodedIn);
             OutputStream os = cxt.out().outputStream();
             System.out.println("transcode reading started.");

@@ -82,6 +82,11 @@ public class CmdOpVisitorToCmdString
         return result;
     }
 
+    public static String toArg(List<String> cmd) {
+        String result = cmd.stream().collect(Collectors.joining(" "));
+        return result;
+    }
+
     public CmdOpVisitorToCmdString(CmdStrOps strOps) {
         super();
         this.strOps = Objects.requireNonNull(strOps);

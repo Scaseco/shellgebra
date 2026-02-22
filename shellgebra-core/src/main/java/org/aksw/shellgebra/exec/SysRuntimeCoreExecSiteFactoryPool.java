@@ -11,6 +11,10 @@ import org.aksw.shellgebra.exec.model.ExecSiteVisitor;
 import org.aksw.vshell.registry.JvmCommandRegistry;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * A pool for launching runtimes for exec sites on demand.
+ * The runtimes are kept running until the pool is shutdown.
+ */
 public class SysRuntimeCoreExecSiteFactoryPool
     implements SysRuntimeCoreExecSiteFactory
 {
@@ -18,10 +22,18 @@ public class SysRuntimeCoreExecSiteFactoryPool
     private SysRuntimeFactoryDocker sysRuntimeDockerFactory;
     private Map<ExecSite, SysRuntimeCore> execSiteToRuntime = new ConcurrentHashMap<>();
 
-    public SysRuntimeCoreExecSiteFactoryPool(JvmCommandRegistry jvmCmdRegistry, SysRuntimeFactoryDocker sysRuntimeDockerFactory) {
+    protected SysRuntimeCoreExecSiteFactoryPool(JvmCommandRegistry jvmCmdRegistry, SysRuntimeFactoryDocker sysRuntimeDockerFactory) {
         super();
         this.jvmCmdRegistry = jvmCmdRegistry;
         this.sysRuntimeDockerFactory = sysRuntimeDockerFactory;
+    }
+
+    public static SysRuntimeCoreExecSiteFactory of(JvmCommandRegistry jvmCmdRegistry) {
+        return of(jvmCmdRegistry, SysRuntimeFactoryDocker.get());
+    }
+
+    public static SysRuntimeCoreExecSiteFactory of(JvmCommandRegistry jvmCmdRegistry, SysRuntimeFactoryDocker sysRuntimeDockerFactory) {
+        return new SysRuntimeCoreExecSiteFactoryPool(jvmCmdRegistry, sysRuntimeDockerFactory);
     }
 
     // Instances should be closed after used.
@@ -38,8 +50,8 @@ public class SysRuntimeCoreExecSiteFactoryPool
     }
 
     public SysRuntimeCore getFactory(ExecSite execSite) {
-        ExecSiteVisitor<SysRuntimeCore> visitor = new ExecSiteVisitorSysRuntimeCoreFactory();
-        SysRuntimeCore result = execSite.accept(visitor);
+        ExecSiteVisitorSysRuntimeCoreFactory factory = new ExecSiteVisitorSysRuntimeCoreFactory();
+        SysRuntimeCore result = factory.create(execSite);
         return result;
     }
 
@@ -60,12 +72,16 @@ public class SysRuntimeCoreExecSiteFactoryPool
 
         @Override
         public SysRuntimeCore visit(ExecSiteCurrentHost execSite) {
-            return new SysRuntimeCoreHost();
+            return SysRuntimeCoreHost.get();
         }
 
         @Override
         public SysRuntimeCore visit(ExecSiteCurrentJvm execSite) {
-            return new SysRuntimeCoreJvm(jvmCmdRegistry);
+            return SysRuntimeCoreJvm.of(jvmCmdRegistry);
+        }
+
+        public SysRuntimeCore create(ExecSite execSite) {
+            return execSite.accept(this);
         }
     }
 }
