@@ -14,10 +14,15 @@ import java.util.concurrent.CompletableFuture;
 
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.io.pipe.NamedPipe;
 import org.aksw.shellgebra.io.pipe.PosixPipe;
-import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.vshell.registry.ProcessBase.OutboundIo;
+import org.aksw.vshell.registry.ProcessBase.ToInternalIo;
+import org.aksw.vshell.registry.DynamicInputShared;
+import org.aksw.vshell.registry.DynamicOutputShared;
 import org.aksw.vshell.registry.ProcessOverCompletableFuture;
+import org.aksw.vshell.registry.ProcessShell;
 
 public class ProcessBuilderGroup
     extends ProcessBuilderCompound<ProcessBuilderGroup>
@@ -42,10 +47,21 @@ public class ProcessBuilderGroup
     @Override
     public Process start(ProcessRunner executor) throws IOException {
         List<? extends IProcessBuilderCore<?>> pbs = copyProcessBuilders();
-        CompletableFuture<Integer> future = CompletableFuture.supplyAsync(() -> run(executor, pbs));
-        return new ProcessOverCompletableFuture(future);
-    }
+        OutboundIo outboundIo = new OutboundIo(executor.getOutputStream(), executor.getInputStream(), executor.getErrorStream());
 
+        // Duplicate internal io so that it remains open while
+        // concurrent execution is in progress.
+        ToInternalIo internalIo = new ToInternalIo(executor.internalIn().dup(), executor.internalOut().dup(), executor.internalErr().dup());
+
+        CompletableFuture<Integer> future = CompletableFuture.supplyAsync(() -> {
+            try (ToInternalIo io = internalIo) {
+                int exitValue = run(executor, pbs);
+                return exitValue;
+            }
+        });
+        // OutboundIo outboundIo = ProcessShell.setupPublicStreams(null, executor);
+        return new ProcessOverCompletableFuture(future, outboundIo);
+    }
 
     private PathAndProcess processInput(Path inputPipePath, JRedirect redirect, boolean requiresAnonPipe) throws IOException {
         // Extract effective raw input path

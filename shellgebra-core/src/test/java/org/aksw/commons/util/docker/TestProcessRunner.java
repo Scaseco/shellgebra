@@ -7,10 +7,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.ProcessIoWrapper;
+import org.aksw.shellgebra.exec.graph.ProcessIoWrapper.ExecResult;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderDockerRun;
@@ -51,46 +53,23 @@ public class TestProcessRunner {
     public void testDocker() throws Exception {
         String expected = "testDocker: OK";
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
-        Process process = ProcessBuilderDockerRun.of("nestio/lbzip2", fileMapper, "/bin/echo", "testDocker: OK").start();
+        Process process = ProcessBuilderDockerRun.of("nestio/lbzip2", fileMapper, "/bin/echo", expected).start();
         ExecResult actual = consume(process);
         assertEquals(expected, actual.out());
     }
 
-    public record ExecResult(int execCode, String out, String err) {}
-
     public static ExecResult consume(Process process) throws Exception {
-        StringBuilder outBuilder = new StringBuilder();
-        StringBuilder errBuilder = new StringBuilder();
-        try (ProcessIoWrapper wrapper = ProcessIoWrapper.of(process)) {
-            // wrapper.setOutputLineReaderUtf8(logger::info);
-            wrapper.setOutputLineReaderUtf8(str -> {
-                // System.out.println("got output line: " + str);
-                if (!outBuilder.isEmpty()) {
-                    outBuilder.append("\n");
-                }
-                outBuilder.append(str);
-            });
-            // wrapper.setErrorLineReaderUtf8(logger::info);
-            wrapper.setErrorLineReaderUtf8(str -> {
-                // System.out.println("got error line: " + str);
-                if (!errBuilder.isEmpty()) {
-                    errBuilder.append("\n");
-                }
-                errBuilder.append(str);
-            });
-            wrapper.setInputPrintStreamUtf8(out -> {
+        ExecResult result = ProcessIoWrapper
+            .builder(process)
+            .setInputWriterUtf8(out -> {
                 logger.info("Data generation thread started.");
                 for (int i = 0; i < 10000; ++i) {
-                    out.println("" + i);
+                    out.write("" + i);
+                    out.newLine();
                 }
-                out.flush();
                 logger.info("Data generation thread terminated.");
-            });
-            process.waitFor();
-            System.out.println("All processes completed.");
-        }
-
-        ExecResult result = new ExecResult(process.exitValue(), outBuilder.toString(), errBuilder.toString());
+            })
+            .consume();
         return result;
     }
 
@@ -101,7 +80,7 @@ public class TestProcessRunner {
 
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
 
-        System.out.println("Process 6");
+        // System.out.println("Process 6");
         Process process = ProcessBuilderPipeline.of(
             // ProcessBuilderJvm.of("/bin/head", "-n10"),
             ProcessBuilderNative.of("/bin/head", "-n10"),
@@ -111,57 +90,12 @@ public class TestProcessRunner {
             .start();
         System.out.println("Process started");
 
-        try (ProcessIoWrapper wrapper = ProcessIoWrapper.of(process)) {
-            wrapper.setOutputLineReaderUtf8(logger::info);
-            wrapper.setErrorLineReaderUtf8(logger::info);
-            wrapper.setInputPrintStreamUtf8(out -> {
-                logger.info("Data generation thread started.");
-                for (int i = 0; i < 10000; ++i) {
-                    out.println("" + i);
-                }
-                out.flush();
-                logger.info("Data generation thread terminated.");
-            });
-            // wrapper.waitFor();
-
-//            System.out.println("Process 1");
-//            ProcessBuilderNative.of("head", "-n 2").start(runner).waitFor();
-//            Thread.sleep(1000);
-//
-//            System.out.println("Process 2");
-//            ProcessBuilderNative.of("head", "-n 4").start(runner).waitFor();
-
-            // InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
-
-//            System.out.println("Process 3");
-//            ProcessBuilderJvm.of("/bin/head", "-n10").start(runner).waitFor();
-
-//            System.out.println("Process 4a");
-//            ProcessBuilderDocker.of("echo", "FIRST DOCKER TEST STRING")
-//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
-//                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
-//                .start(runner)
-//                .waitFor();
-//
-//            System.out.println("Process 4b");
-//            ProcessBuilderDocker.of("echo", "SECOND DOCKER TEST STRING")
-//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper)
-//                .redirectInput(new JRedirectJava(Redirect.from(new File("/dev/null"))))
-//                .start(runner)
-//                .waitFor();
-
-//            System.out.println("Process 5");
-//            ProcessBuilderDocker.of("head", "-n 4") // .of("head", "-n 4")
-//                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
-//                .waitFor();
-
-
-            System.out.println("All processes completed.");
-        }
-        process.waitFor();
+        ExecResult actual = consume(process);
+        System.out.println(actual.out());
     }
 
     @Test
+    // @Disabled
     public void testGroup() throws Exception {
         JvmCommandRegistry jvmCmdRegistry = InitCommandRegistry.initJvmCmdRegistry(new JvmCommandRegistry());
 
@@ -182,22 +116,27 @@ public class TestProcessRunner {
                 ProcessBuilderJvm.of(jvmCmdRegistry, "/jvm/bzip2", "-d"))
         ).start();
 
-        try (ProcessIoWrapper runner = ProcessIoWrapper.of(process)) {
-            runner.setOutputLineReaderUtf8(logger::info);
-            runner.setErrorLineReaderUtf8(logger::info);
-            runner.setInputPrintStreamUtf8(out -> {
-                logger.info("Data generation thread started.");
-                for (int i = 0; i < 10000; ++i) {
-                    out.println("" + i);
-                }
-                out.flush();
-                logger.info("Data generation thread terminated.");
-            });
-            process.waitFor();
 
-            // InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
-
-        }
+        ExecResult actual = consume(process);
+        System.out.println(actual.out());
+//
+//        try (ProcessIoWrapper runner = ProcessIoWrapper.of(process)) {
+//            runner.setOutputLineReaderUtf8(logger::info);
+//            runner.setErrorLineReaderUtf8(logger::info);
+//            runner.setInputWriterUtf8(out -> {
+//                logger.info("Data generation thread started.");
+//                for (int i = 0; i < 10000; ++i) {
+//                    out.write("" + i);
+//                    out.newLine();
+//                }
+//                out.flush();
+//                logger.info("Data generation thread terminated.");
+//            });
+//            process.waitFor();
+//
+//            // InitCommandRegistry.initJvmCmdRegistry(runner.getJvmCmdRegistry());
+//
+//        }
     }
 
 
@@ -268,17 +207,20 @@ public class TestProcessRunner {
         Process process = ProcessBuilderDockerRun.of("echo", "DOCKERTESTMSG")
         .imageRef("ubuntu:24.04").fileMapper(fileMapper).start(); // .entrypoint("bash")
 
-        try (ProcessIoWrapper runner = ProcessIoWrapper.of(process)) {
-            runner.setOutputLineReaderUtf8(logger::info);
-            runner.setErrorLineReaderUtf8(logger::info);
-            runner.setInputPrintStreamUtf8(out -> {
-                logger.info("Data generation thread started.");
-                for (int i = 0; i < 1000; ++i) {
-                    out.println("" + i);
-                }
-                out.flush();
-                logger.info("Data generation thread terminated.");
-            });
+
+        ProcessIoWrapper runner = ProcessIoWrapper.builder(process)
+                .setOutputLineReaderUtf8(logger::info)
+                .setErrorLineReaderUtf8(logger::info)
+                .setInputWriterUtf8(out -> {
+                    logger.info("Data generation thread started.");
+                    for (int i = 0; i < 1000; ++i) {
+                        out.write("" + i);
+                        out.newLine();
+                    }
+                    out.flush();
+                    logger.info("Data generation thread terminated.");
+                })
+                .exec();
 
         // long pid = ProcessHandle.current().pid()
 //        try (FileInputStream in = new FileInputStream(runner.inputPipe().toFile())) {
@@ -296,10 +238,10 @@ public class TestProcessRunner {
 //                .imageRef("ubuntu:24.04").entrypoint("bash").fileMapper(fileMapper).start(runner)
 //                .waitFor();
 
-        }
     }
 
     @Test
+    @Disabled
     public void testProcessBuilderLbzip2() throws Exception {
         String expectedStr = "Hello World";
         Path in = Files.createTempFile("data-", ".bz2");

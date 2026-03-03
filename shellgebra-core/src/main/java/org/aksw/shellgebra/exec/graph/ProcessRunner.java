@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.aksw.shellgebra.exec.IProcessBuilder;
-import org.aksw.vshell.registry.DynamicInput;
-import org.aksw.vshell.registry.DynamicOutput;
+import org.aksw.vshell.registry.DynamicInputShared;
+import org.aksw.vshell.registry.DynamicOutputShared;
 
 public interface ProcessRunner
     extends AutoCloseable
@@ -20,9 +20,17 @@ public interface ProcessRunner
     Map<String, String> environment();
     Path directory();
 
-    DynamicInput internalIn();
-    DynamicOutput internalOut();
-    DynamicOutput internalErr();
+    // The internalX methods always return a fresh ref-counted instance that MUST be closed!
+    DynamicInputShared internalIn();
+    DynamicOutputShared internalOut();
+    DynamicOutputShared internalErr();
+
+    /**
+     * Release the internal pipes.
+     * Running processes that hold references can finish their work.
+     * Attempting to acquire new pipes will fail.
+     */
+    void releaseInternalIo();
 
     OutputStream getOutputStream();
     InputStream getInputStream();

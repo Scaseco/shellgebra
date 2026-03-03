@@ -1,5 +1,7 @@
 package org.aksw.shellgebra.exec.graph;
 
+import org.aksw.shellgebra.exec.resource.ReferenceCountedObject;
+
 public interface FileDescription<T>
     extends AutoCloseable {
 

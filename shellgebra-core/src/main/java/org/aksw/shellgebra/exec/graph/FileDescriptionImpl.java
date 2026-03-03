@@ -2,6 +2,8 @@ package org.aksw.shellgebra.exec.graph;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.aksw.shellgebra.exec.resource.ReferenceCountedObject;
+
 public class FileDescriptionImpl<T>
     implements FileDescription<T>
 {

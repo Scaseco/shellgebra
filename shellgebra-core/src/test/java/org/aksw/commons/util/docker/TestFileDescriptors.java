@@ -35,7 +35,7 @@ public class TestFileDescriptors {
         PosixPipe pipe = PosixPipe.open();
 
         CompletableFuture.runAsync(() -> {
-            try (PrintStream out = new PrintStream(pipe.getOutputStream())) {
+            try (PrintStream out = new PrintStream(pipe.outputStream())) {
                 for (int i = 0; i < 1000; ++i) {
                     out.println(i);
                     out.flush();
@@ -52,7 +52,7 @@ public class TestFileDescriptors {
         // Run this in a terminal to test reading from the same pipe end:
         System.out.println("head -n2 " + pipe.getReadEndProcPath());
 
-        try (InputStream in = pipe.getInputStream()) {
+        try (InputStream in = pipe.inputStream()) {
             // Thread.sleep(60000);
             System.out.println("Transferring data.");
             long amount = in.transferTo(System.out);

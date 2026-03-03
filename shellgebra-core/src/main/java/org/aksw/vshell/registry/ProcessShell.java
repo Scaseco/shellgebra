@@ -37,9 +37,9 @@ public class ProcessShell
     }
 
     public static Process wrap(Process delegate, OutputStream toInStream, InputStream fromOutStream, InputStream fromErrStream) {
-        Output toIn = OutputBase.of(toInStream);
-        Input fromOut = InputBase.of(fromOutStream);
-        Input fromErr = InputBase.of(fromErrStream);
+        Output toIn = OutputBase.ofNullable(toInStream);
+        Input fromOut = InputBase.ofNullable(fromOutStream);
+        Input fromErr = InputBase.ofNullable(fromErrStream);
         return wrap(delegate, toIn, fromOut, fromErr);
     }
 
@@ -47,9 +47,9 @@ public class ProcessShell
         try {
             boolean eager = true;
             if (eager) {
-                toIn.outputStream();
-                fromOut.inputStream();
-                fromErr.inputStream();
+                if (toIn != null) toIn.outputStream();
+                if (fromOut != null) fromOut.inputStream();
+                if (fromErr != null) fromErr.inputStream();
             }
 //            toIn = toInPath == null ? null : Files.newOutputStream(toInPath);
 //            fromOut = fromOutPath == null ? null : Files.newInputStream(fromOutPath);
@@ -89,6 +89,7 @@ public class ProcessShell
         return new OutboundIo(toIn, fromOut, fromErr);
     }
 
+    // Intended for wrapping native processes (java.lang.Process)
     public static Process wrapIfNeeded(Process rawProcess, OutboundIo streams) {
         OutputStream toIn = streams.toIn();
         InputStream fromOut = streams.fromOut();

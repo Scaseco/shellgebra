@@ -1,12 +1,13 @@
 package org.aksw.shellgebra.exec.graph;
 
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -17,24 +18,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.aksw.shellgebra.exec.SysRuntime;
+import org.aksw.vshell.registry.ProcessBase;
+import org.aksw.vshell.registry.ProcessBase.OutboundIo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProcessIoWrapper
     implements AutoCloseable
 {
-    private static final Logger logger = LoggerFactory.getLogger(ProcessIoWrapper.class);
+    public interface ThrowingConsumer<T> { void accept(T item) throws IOException; }
 
-    private Process process;
+
+    private static final Logger logger = LoggerFactory.getLogger(ProcessIoWrapper.class);
+    private OutboundIo process;
 
     private ExecutorService executorService;
     // Threads seem to be more easy to cancel (interrupt) and join than futures.
     private Thread inFuture = null;
     private Thread outFuture = null;
     private Thread errFuture = null;
-
-
 
     // private CompletableFuture<?> inFuture = null;
     // private CompletableFuture<?> outFuture = null;
@@ -43,13 +45,13 @@ public class ProcessIoWrapper
     // Should there be a process-builder base class that resolves redirects?
     // private ProcessCxt cxt; // FIXME Move some fields into process context?
 
-    private ProcessIoWrapper(Process process) {
+    private ProcessIoWrapper(OutboundIo process) {
         super();
         this.process = process;
         this.executorService = Executors.newCachedThreadPool();
     }
 
-    public static ProcessIoWrapper of(Process process) {
+    public static ProcessIoWrapper of(OutboundIo process) {
         return new ProcessIoWrapper(process);
     }
 
@@ -58,7 +60,7 @@ public class ProcessIoWrapper
             try (InputStream in = getInputStream()) {
                 reader.accept(in);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new UncheckedIOException(e);
             }
         };
         //outFuture = CompletableFuture.runAsync(runnable, executorService);
@@ -69,10 +71,12 @@ public class ProcessIoWrapper
 
     public Thread setErrorReader(Consumer<InputStream> reader) {
         Runnable runnable = () -> {
+            InputStream tmp = null;
             try (InputStream in = getErrorStream()) {
+                tmp = in;
                 reader.accept(in);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new UncheckedIOException(e);
             }
         };
         errFuture = new Thread(runnable); // CompletableFuture.runAsync(runnable, executorService);
@@ -85,13 +89,15 @@ public class ProcessIoWrapper
              try (OutputStream out = getOutputStream()) {
 //            try {
 //                OutputStream out = getOutputStream();
-                inputSupplier.accept(out);
+                if (inputSupplier != null) {
+                    inputSupplier.accept(out);
+                }
                 out.flush();
                 // FIXME Ideally the stream would always be a FileOutputStream.
                 // logger.info("Closing input generator file descriptor: " + SysRuntime.getFdPath(((FileOutputStream)out).getFD()));
             } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
+                // e.printStackTrace();
+                throw new UncheckedIOException(e);
             }
         };
         inFuture = new Thread(runnable);// CompletableFuture.runAsync(runnable, executorService);
@@ -99,16 +105,20 @@ public class ProcessIoWrapper
         return inFuture;
     }
 
+    public OutboundIo getOutboundIo() {
+        return process;
+    }
+
     public OutputStream getOutputStream() {
-        return process.getOutputStream();
+        return process.toIn();
     }
 
     public InputStream getInputStream() {
-        return process.getInputStream();
+        return process.fromOut();
     }
 
     public InputStream getErrorStream() {
-        return process.getInputStream();
+        return process.fromErr();
     }
 
     public Thread setOutputLineReaderUtf8(Consumer<String> lineCallback) {
@@ -127,12 +137,24 @@ public class ProcessIoWrapper
         return setErrorReader(in -> readLines(in, charset, lineCallback));
     }
 
-    public Thread setInputPrintStreamUtf8(Consumer<PrintStream> writerCallback) {
-        return setInputPrintStream(StandardCharsets.UTF_8, true, writerCallback);
+    public Thread setInputWriterUtf8(ThrowingConsumer<BufferedWriter> writerCallback) {
+        return setInputWriter(StandardCharsets.UTF_8, writerCallback);
     }
 
-    public Thread setInputPrintStream(Charset charset, boolean autoFlush, Consumer<PrintStream> writerCallback) {
-        return setInputGenerator(out -> writerCallback.accept(new PrintStream(out, autoFlush, charset)));
+    public Thread setInputWriter(Charset charset, ThrowingConsumer<BufferedWriter> writerCallback) {
+        return setInputGenerator(out -> {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, charset))) {
+                writerCallback.accept(writer);
+                writer.flush();
+            } catch (IOException e) {
+                String msg = e.getMessage();
+                // Ignore broken pipe on the input.
+                if (msg != null && msg.contains("Broken pipe")) {
+                    return;
+                }
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
     static void readLines(InputStream in, Charset charset, Consumer<String> lineCallback) {
@@ -180,6 +202,13 @@ public class ProcessIoWrapper
         }
     }
 
+    // Wait for writer threads to exit.
+    public void waitFor() throws InterruptedException {
+        outFuture.join();
+        errFuture.join();
+        inFuture.join();
+    }
+
     public void close() throws Exception {
     }
 
@@ -216,6 +245,8 @@ public class ProcessIoWrapper
         // Files.deleteIfExists(basePath);
     }
 
+    public record ExecResult(int execCode, String out, String err) {}
+
 //    public static Builder newBuilder() {
 //        return new Builder();
 //    }
@@ -246,4 +277,131 @@ public class ProcessIoWrapper
 //        clone.redirectError(new JRedirectJava(Redirect.to(pipeIn.getWriteEndProcFile())));
 //        return clone;
 //    }
+
+    public static class Builder {
+        //private Process process;
+        private OutboundIo io;
+        private Process process; // optional
+
+        private Consumer<OutputStream> toIn;
+        private Consumer<InputStream> fromOut;
+        private Consumer<InputStream> fromErr;
+
+        private Builder(OutboundIo io, Process process) {
+            super();
+            this.io = io;
+            this.process = process;
+        }
+
+        public Builder setOutputReader(Consumer<InputStream> reader) {
+            this.fromOut = reader;
+            return this;
+        }
+
+        public Builder setErrorReader(Consumer<InputStream> reader) {
+            this.fromErr = reader;
+            return this;
+        }
+
+        public Builder setInputGenerator(Consumer<OutputStream> inputSupplier) {
+            this.toIn = inputSupplier;
+            return this;
+        }
+
+        public Builder setOutputLineReaderUtf8(Consumer<String> lineCallback) {
+            return setOutputLineReader(StandardCharsets.UTF_8, lineCallback);
+        }
+
+        public Builder setOutputLineReader(Charset charset, Consumer<String> lineCallback) {
+            return setOutputReader(in -> readLines(in, charset, lineCallback));
+        }
+
+        public Builder setErrorLineReaderUtf8(Consumer<String> lineCallback) {
+            return setErrorLineReader(StandardCharsets.UTF_8, lineCallback);
+        }
+
+        public Builder setErrorLineReader(Charset charset, Consumer<String> lineCallback) {
+            return setErrorReader(in -> readLines(in, charset, lineCallback));
+        }
+
+        public Builder setInputWriterUtf8(ThrowingConsumer<BufferedWriter> writerCallback) {
+            return setInputWriter(StandardCharsets.UTF_8, writerCallback);
+        }
+
+        public Builder setInputWriter(Charset charset, ThrowingConsumer<BufferedWriter> writerCallback) {
+            return setInputGenerator(out -> {
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, charset))) {
+                    writerCallback.accept(writer);
+                    writer.flush();
+                } catch (IOException e) {
+                    String msg = e.getMessage();
+                    // Ignore broken pipe on the input.
+                    if (msg != null && msg.contains("Broken pipe")) {
+                        return;
+                    }
+                    throw new UncheckedIOException(e);
+                }
+            });
+        }
+
+        public ProcessIoWrapper exec() {
+            ProcessIoWrapper wrapper = ProcessIoWrapper.of(io);
+            wrapper.setInputGenerator(toIn);
+            wrapper.setOutputReader(fromOut);
+            wrapper.setErrorReader(fromErr);
+            return wrapper;
+        }
+
+        public ExecResult consume() throws Exception {
+            StringBuilder outBuilder = new StringBuilder();
+            StringBuilder errBuilder = new StringBuilder();
+            Builder builder = this;
+
+//            if (toIn == null) {
+//                // If there is no input generator then close input immediately
+//                builder.setInputGenerator(IOUtils::closeQuietly);
+//            }
+//
+            // try (ProcessIoWrapper wrapper = ProcessIoWrapper.of(process)) {
+                // wrapper.setOutputLineReaderUtf8(logger::info);
+                builder.setOutputLineReaderUtf8(str -> {
+                    // System.out.println("got output line: " + str);
+                    if (!outBuilder.isEmpty()) {
+                        outBuilder.append("\n");
+                    }
+                    outBuilder.append(str);
+                });
+                // wrapper.setErrorLineReaderUtf8(logger::info);
+                builder.setErrorLineReaderUtf8(str -> {
+                    // System.out.println("got error line: " + str);
+                    if (!errBuilder.isEmpty()) {
+                        errBuilder.append("\n");
+                    }
+                    errBuilder.append(str);
+                });
+                System.out.println("All processes completed.");
+                ProcessIoWrapper wrapper = builder.exec();
+                if (process != null) {
+                    process.waitFor();
+                }
+
+               wrapper.waitFor();
+                // wrapper.waitFor();
+            // }
+
+            int exitValue = process == null ? 0 : process.exitValue();
+
+            ExecResult result = new ExecResult(exitValue, outBuilder.toString(), errBuilder.toString());
+            return result;
+        }
+    }
+
+    public static Builder builder(OutboundIo io) {
+        return new Builder(io, null);
+    }
+
+    public static Builder builder(Process process) {
+        OutboundIo io = ProcessBase.getOutboundIo(process);
+        return new Builder(io, process);
+    }
 }

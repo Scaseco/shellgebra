@@ -1,5 +1,7 @@
 package org.aksw.vshell.registry;
 
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -8,10 +10,16 @@ public class ProcessOverCompletableFuture
     extends ProcessBase
 {
     private CompletableFuture<Integer> asyncComputation;
+    private CompletableFuture<Process> onExit = new CompletableFuture<>();
 
     public ProcessOverCompletableFuture(CompletableFuture<Integer> asyncComputation, OutboundIo outboundIo) {
         super(outboundIo);
-        this.asyncComputation = asyncComputation;
+        this.asyncComputation = Objects.requireNonNull(asyncComputation);
+        asyncComputation.handle((v, t) -> {
+            Optional.ofNullable(t)
+                .ifPresentOrElse(onExit::completeExceptionally, () -> onExit.complete(this));
+            return null;
+        });
     }
 
     public static Process of(OutboundIo outboundIo, Supplier<Integer> supplier) {
@@ -32,6 +40,11 @@ public class ProcessOverCompletableFuture
     @Override
     public void destroy() {
         asyncComputation.cancel(true);
+    }
+
+    @Override
+    public CompletableFuture<Process> onExit() {
+        return onExit;
     }
 
     @Override

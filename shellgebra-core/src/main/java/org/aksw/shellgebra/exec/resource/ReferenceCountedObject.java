@@ -1,10 +1,11 @@
-package org.aksw.shellgebra.exec.graph;
+package org.aksw.shellgebra.exec.resource;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //Resource<T> from previous response, repeated for clarity
 // XXX Could reuse https://github.com/almson/almson-refcount
+// See also ResourceMgr which defers 'killing' of resources and can 'revive' them.
 public final class ReferenceCountedObject<T> {
     private final T resource;
     private final AutoCloseable closeAction;
@@ -39,7 +40,7 @@ public final class ReferenceCountedObject<T> {
         }
         if (oldCount == 0) {
             try {
-                System.out.println("Closing resource: " + this);
+                // System.err.println("Closing resource: " + this);
                 closeAction.close();
             } catch (Exception e) {
                 Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
@@ -54,6 +55,11 @@ public final class ReferenceCountedObject<T> {
     /** For debugging. */
     public int refCount() {
         return refCount.get();
+    }
+
+    @Override
+    public String toString() {
+        return "(refcount " + refCount() + " on " + resource + ")";
     }
 
     public static <T extends AutoCloseable> ReferenceCountedObject<T> of(T obj) {

@@ -18,8 +18,9 @@ import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.io.pipe.DynamicPipe;
 import org.aksw.shellgebra.io.pipe.PosixPipe;
-import org.aksw.vshell.registry.DynamicInput;
-import org.aksw.vshell.registry.DynamicOutput;
+import org.aksw.vshell.registry.DynamicInputShared;
+import org.aksw.vshell.registry.DynamicOutputShared;
+import org.aksw.vshell.registry.ProcessBase.ToInternalIo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,8 @@ public class ProcessRunnerPosix
     private DynamicPipe pipeIn;
     private DynamicPipe pipeOut;
     private DynamicPipe pipeErr;
+
+    private ToInternalIo internalIo;
 
     // Overrides for whether inherit stdin/stdout/stderr from the system (this jvm process) rather than the pipes.
 
@@ -74,12 +77,29 @@ public class ProcessRunnerPosix
         this.pipeOut = pipeOut;
         this.pipeErr = pipeErr;
 
+        this.internalIo = new ToInternalIo(
+            DynamicInputShared.of(pipeIn.input()),
+            DynamicOutputShared.of(pipeOut.output()),
+            DynamicOutputShared.of(pipeErr.output()));
+
 //        // Make sure to init the internal-facing streams.
 //        pipeIn.getInputStream();
 //        pipeOut.getOutputStream();
 //        pipeErr.getOutputStream();
 
         // this.jvmCmdRegistry = new JvmCommandRegistry();
+    }
+
+    @Override
+    public void releaseInternalIo() {
+        internalIo.close();
+//        try {
+//            internalIo.fromIn().close();
+//            internalIo.toOut().close();
+//            internalIo.toErr().close();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
 //    @Override
@@ -122,20 +142,23 @@ public class ProcessRunnerPosix
 //    }
 
     @Override
-    public DynamicInput internalIn() {
-        return pipeIn.input();
+    public DynamicInputShared internalIn() {
+        return internalIo.fromIn();
+        // return pipeIn.input();
         // return FileInput.of(pipeIn.getReadEndProcPath(), pipeIn.getInputStream());
     }
 
     @Override
-    public DynamicOutput internalOut() {
-        return pipeOut.output();
+    public DynamicOutputShared internalOut() {
+        return internalIo.toOut();
+        // return pipeOut.output();
         // return FileOutput.of(pipeOut.getWriteEndProcPath(), pipeOut.getOutputStream());
     }
 
     @Override
-    public DynamicOutput internalErr() {
-        return pipeErr.output();
+    public DynamicOutputShared internalErr() {
+        return internalIo.toErr();
+        // return pipeErr.output();
         // return FileOutput.of(pipeErr.getWriteEndProcPath(), pipeErr.getOutputStream());
     }
 //
@@ -269,12 +292,13 @@ public class ProcessRunnerPosix
 
     @Override
     public void close() throws Exception {
-        cancelAndGet(inFuture);
-        // Close the internal output pipe ends to indicate EOF to the outside readers.
-        internalIn().inputStream().close();
+//        cancelAndGet(inFuture);
+//        // Close the internal output pipe ends to indicate EOF to the outside readers.
+//        internalIn().inputStream().close();
 
         // TODO Clean up / harden clean up procedure.
         // inThread.cancel(true);
+        releaseInternalIo();
         executorService.shutdown();
         try {
             executorService.awaitTermination(5, TimeUnit.SECONDS);
@@ -285,15 +309,11 @@ public class ProcessRunnerPosix
             }
         }
 
-        internalOut().outputStream().close();
-        internalErr().outputStream().close();
+//        internalOut().outputStream().close();
+//        internalErr().outputStream().close();
 
         cancelAndGet(outFuture);
         cancelAndGet(errFuture);
-
-        pipeIn.close();
-        pipeOut.close();
-        pipeErr.close();
 
         Files.deleteIfExists(basePath);
     }

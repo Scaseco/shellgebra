@@ -1,11 +1,48 @@
 package org.aksw.vshell.registry;
 
+import java.io.Closeable;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.apache.commons.io.IOUtils;
 
 public abstract class ProcessBase
     extends Process
 {
+    /**
+     * Record that holds the IO streams a process exposes to the outside via
+     * {@link Process#getInputStream()}, {@link Process#getOutputStream()} and {@link Process#getErrorStream()}.
+     */
+    public record OutboundIo(OutputStream toIn, InputStream fromOut, InputStream fromErr) {}
+
+    public static OutboundIo getOutboundIo(Process process) {
+        return new OutboundIo(process.getOutputStream(), process.getInputStream(), process.getErrorStream());
+    }
+
+    public static OutboundIo getOutboundIo(ProcessRunner context) {
+        return new OutboundIo(context.getOutputStream(), context.getInputStream(), context.getErrorStream());
+    }
+
+    public interface HasOutboundIo {
+        OutboundIo getOutboundIo();
+    }
+
+    public record ToInternalIo(
+        DynamicInputShared fromIn,
+        DynamicOutputShared toOut,
+        DynamicOutputShared toErr)
+    implements Closeable {
+        @Override
+        public void close() {
+            IOUtils.closeQuietly(fromIn);
+            IOUtils.closeQuietly(toOut);
+            IOUtils.closeQuietly(toErr);
+        }
+    }
+
+    // private OutboundIo outboundIo;
+
     // Client-facing streams
     private final OutputStream toIn;
     private final InputStream fromOut;
@@ -20,8 +57,6 @@ public abstract class ProcessBase
 //    private final PipedInputStream stdinIn;
 
     private volatile Integer exitValue = null;
-
-    public record OutboundIo(OutputStream toIn, InputStream fromOut, InputStream fromErr) {}
 
     public ProcessBase(OutboundIo io) {
         this(io.toIn(), io.fromOut(), io.fromErr());

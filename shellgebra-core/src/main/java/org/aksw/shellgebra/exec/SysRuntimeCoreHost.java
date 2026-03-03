@@ -2,8 +2,8 @@ package org.aksw.shellgebra.exec;
 
 import java.io.IOException;
 
-import org.aksw.shellgebra.processbuilder.ProcessBuilderNative;
 import org.aksw.shellgebra.util.SystemUtils;
+import org.aksw.vshell.registry.ProcessBuilderNative;
 
 public class SysRuntimeCoreHost
     implements SysRuntimeCore

@@ -33,4 +33,9 @@ public class DynamicInputFromPosixPipe
         throw new IllegalStateException("Should not be called");
         // return pipe.in;
     }
+
+    @Override
+    public String toString() {
+        return "(DynamicInputFromPosixPipe " + pipe + ")";
+    }
 }

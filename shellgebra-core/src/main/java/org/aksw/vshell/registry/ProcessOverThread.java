@@ -11,8 +11,8 @@ public class ProcessOverThread
     private Thread thread;
     private volatile Process actualProcess;
 
-    public ProcessOverThread() {
-        super();
+    public ProcessOverThread(OutboundIo outboundIo) {
+        super(outboundIo);
     }
 
     void setThread(Thread thread) {
@@ -34,19 +34,20 @@ public class ProcessOverThread
         thread.interrupt();
     }
 
-    public static Process startInThread(IProcessBuilderCore<?> processBuilder, ProcessRunner context) {
-        ProcessOverThread result = new ProcessOverThread();
-        Runnable runnable = () -> {
-            try {
-                Process actualProcess = processBuilder.start(context);
-                result.setActualProcess(actualProcess);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        };
-        Thread thread = new Thread(runnable);
-        result.setThread(thread);
-        thread.start();
-        return result;
-    }
+//    public static Process startInThread(IProcessBuilderCore<?> processBuilder, ProcessRunner context) {
+//        ProcessOverThread result = new ProcessOverThread();
+//
+//        Runnable runnable = () -> {
+//            try {
+//                Process actualProcess = processBuilder.start(context);
+//                result.setActualProcess(actualProcess);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        };
+//        Thread thread = new Thread(runnable);
+//        result.setThread(thread);
+//        thread.start();
+//        return result;
+//    }
 }

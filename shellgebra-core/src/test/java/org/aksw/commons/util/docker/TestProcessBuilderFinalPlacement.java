@@ -3,8 +3,6 @@ package org.aksw.commons.util.docker;
 import java.io.IOException;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
 import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.arg.CmdPrefix;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
@@ -12,6 +10,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
+import org.aksw.shellgebra.exec.graph.ProcessIoWrapper;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.shellgebra.exec.model.ExecSite;
@@ -45,34 +44,41 @@ public class TestProcessBuilderFinalPlacement {
         // CommandParserCatalog parserCatalog = new CommandParserCatalogImpl(unionCatalog, jvmCmdRegistry);
 
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
+
+        // FIXME Reuse existing jvmCmdRegistry!
+        // InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
+        // InitCommandRegistry.initJvmCmdRegistry(execSystem.getJvmCmdRegistry());
+        // Try to resolve the command on a certain docker image.
+        ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
+
         try (ProcessRunner context = ProcessRunnerPosix.create()) {
-            context.setOutputLineReaderUtf8(line -> logger.info("Got line: " + line));
-            context.setErrorLineReaderUtf8(logger::info);
-            context.setInputPrintStreamUtf8(out -> {
-                out.println("hello world");
-//                logger.info("Data generation thread started.");
-//                for (int i = 0; i < 10000; ++i) {
-//                    out.println("" + i);
-//                }
-//                out.flush();
-//                logger.info("Data generation thread terminated.");
-            });
-            // FIXME Reuse existing jvmCmdRegistry!
-            // InitCommandRegistry.initJvmCmdRegistry(context.getJvmCmdRegistry());
-            // InitCommandRegistry.initJvmCmdRegistry(execSystem.getJvmCmdRegistry());
-            // Try to resolve the command on a certain docker image.
-            ExecSite qleverExecSite = ExecSites.docker("adfreiburg/qlever:commit-a307781");
             Process p = execSystem.exec(context, fileMapper, cmdOp, qleverExecSite);
-//
-//            ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, execSystem.getResolver(), execSystem.getUnionCatalog());
-//            pb.command(inlined);
-//            Process p = pb.start(context);
 
-            // Thread.sleep(5000);
+            ProcessIoWrapper.Builder wrapper = ProcessIoWrapper.builder(p);
+                wrapper.setOutputLineReaderUtf8(line -> logger.info("Got line: " + line));
+                wrapper.setErrorLineReaderUtf8(logger::info);
+                wrapper.setInputWriterUtf8(out -> {
+                    out.write("hello world");
+                    out.newLine();
+//                    logger.info("Data generation thread started.");
+//                    for (int i = 0; i < 10000; ++i) {
+//                        out.println("" + i);
+//                    }
+//                    out.flush();
+//                    logger.info("Data generation thread terminated.");
+                });
 
-            System.out.println("Shutting context down.");
-            p.waitFor();
-            context.shutdown();
+//                ProcessBuilderFinalPlacement pb = new ProcessBuilderFinalPlacement(fileMapper, execSystem.getResolver(), execSystem.getUnionCatalog());
+//                pb.command(inlined);
+//                Process p = pb.start(context);
+
+                // Thread.sleep(5000);
+
+                System.out.println("Shutting context down.");
+                p.waitFor();
+                context.shutdown();
+            // }
+
         }
     }
 

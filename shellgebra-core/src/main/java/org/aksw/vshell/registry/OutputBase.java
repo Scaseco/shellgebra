@@ -23,14 +23,21 @@ public abstract class OutputBase
         // super(outputStream);
     }
 
+    public static Output ofNullable(OutputStream outputStream) {
+        Output result = (outputStream == null)
+            ? null
+            : new OutputBase(outputStream) {
+                @Override
+                protected OutputStream openOutputStream() throws IOException {
+                    throw new IllegalStateException("Should never be called because stream is set on init.");
+                }
+            };
+        return result;
+    }
+
     public static Output of(OutputStream outputStream) {
         Objects.requireNonNull(outputStream);
-        return new OutputBase(outputStream) {
-            @Override
-            protected OutputStream openOutputStream() throws IOException {
-                throw new IllegalStateException("Should never be called because stream is set on init.");
-            }
-        };
+        return ofNullable(outputStream);
     }
 
     protected abstract OutputStream openOutputStream() throws IOException;

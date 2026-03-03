@@ -45,12 +45,18 @@ public class InvokableProcessBuilderHost
 
         InvocationCompiler finalCompiler = compiler != null ? compiler : InvocationCompilerImpl.getDefault();
         ExecutableInvocation exec = finalCompiler.compile(inv, ctx);
+        List<String> argv = exec.argv();
+        // ProcessBuilderNative pb = ProcessBuilderNative.of(argv);
+
         ProcessBuilder pb = new ProcessBuilder();
-        pb.command(exec.argv());
-        ProcessBuilderNative.configure(pb, this, executor);
-        Process p = pb.start();
+        pb.command(argv);
+
+        // ProcessBuilderNative.start(pb, this, executor);
+        Process p = ProcessBuilderNative.start(pb, this, executor);
+
+        // Process p = pb.start(executor);
         // Cleanup after process exit.
-        p.toHandle().onExit().thenRun(() -> {
+        p.onExit().thenRun(() -> {
             try {
                 exec.close();
             } catch (Exception e) {

@@ -13,8 +13,12 @@ import java.nio.charset.Charset;
  * Views must be used consistently: Once a reader with a specific charset has been obtained,
  * then it is not possible to obtain another reader view with a different charset.
  *
- * Closing the readers or the inputStream directly should be avoided and may raise an
- * {@link UnsupportedOperationException}.
+ * FIXME Ideally it should be close shielder wrappers - we yet need to proxy BufferedReader.
+ * Each call to inputStream or reader returns a fresh close-shielded wrapper over
+ * the same underlying resource. It is good practice to close the inputStream or reader.
+ *
+ *
+ * You must close the Input instance itself to close the underlying resource.
  */
 public interface Input
     extends Closeable
@@ -25,6 +29,10 @@ public interface Input
     BufferedReader reader(Charset charset);
     Charset getReaderCharset();
 
-    /** Transfer remaining data to output. Reuses a reader if present. */
+    /**
+     * Transfer remaining data to output.
+     * Reuses a previously acquired reader if present.
+     * Otherwise, falls back to using the input stream.
+     */
     void transferTo(Output output) throws IOException;
 }

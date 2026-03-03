@@ -21,14 +21,21 @@ public abstract class InputBase
         this.inputStream = inputStream;
     }
 
+    public static Input ofNullable(InputStream inputStream) {
+        Input result = (inputStream == null)
+            ? null
+            : new InputBase(inputStream) {
+                @Override
+                protected InputStream openInputStream() throws IOException {
+                    throw new IllegalStateException("Should never be called because stream is set on init.");
+                }
+            };
+        return result;
+    }
+
     public static Input of(InputStream inputStream) {
         Objects.requireNonNull(inputStream);
-        return new InputBase(inputStream) {
-            @Override
-            protected InputStream openInputStream() throws IOException {
-                throw new IllegalStateException("Should never be called because stream is set on init.");
-            }
-        };
+        return ofNullable(inputStream);
     }
 
     protected abstract InputStream openInputStream() throws IOException;

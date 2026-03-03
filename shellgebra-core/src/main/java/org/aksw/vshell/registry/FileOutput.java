@@ -47,4 +47,9 @@ public class FileOutput
     public Path getPath() {
         return path;
     }
+
+    @Override
+    public String toString() {
+        return "(FileOutput " + path + ")";
+    }
 }

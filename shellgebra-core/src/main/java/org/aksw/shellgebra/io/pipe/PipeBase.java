@@ -11,10 +11,12 @@ import java.nio.charset.Charset;
 public abstract class PipeBase
     implements Pipe
 {
+    @Override
     public InputStream inputStream() {
         return input().inputStream();
     }
 
+    @Override
     public OutputStream outputStream() {
         return output().outputStream();
     }
@@ -23,26 +25,32 @@ public abstract class PipeBase
      * Convenience methods below, inspired by ProcessBuilder from Java 17+.
      */
 
+    @Override
     public final PrintStream printer() {
         return output().printStream();
     }
 
+    @Override
     public final PrintStream printer(Charset charset) {
         return output().printStream(charset);
     }
 
+    @Override
     public final BufferedWriter writer() {
         return output().writer();
     }
 
+    @Override
     public final BufferedWriter writer(Charset charset) {
         return output().writer(charset);
     }
 
+    @Override
     public final BufferedReader reader() {
         return input().reader();
     }
 
+    @Override
     public final BufferedReader reader(Charset charset) {
         return input().reader(charset);
     }

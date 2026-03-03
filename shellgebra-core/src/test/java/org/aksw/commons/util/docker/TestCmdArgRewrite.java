@@ -20,6 +20,7 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOpGroup;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpPipeline;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.graph.ProcessIoWrapper;
+import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 import org.aksw.shellgebra.exec.model.ExecSite;
 import org.aksw.shellgebra.exec.model.ExecSites;
@@ -27,6 +28,7 @@ import org.aksw.shellgebra.registry.init.InitCommandRegistry;
 import org.aksw.shellgebra.shim.core.ArgumentList;
 import org.aksw.vshell.registry.CmdExecSystem;
 import org.aksw.vshell.registry.CmdExecSystem.CmdArgActiveProcessSubstitution;
+import org.aksw.vshell.registry.ProcessBase;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,25 +52,28 @@ public class TestCmdArgRewrite {
         CmdArg cmdArg = CmdArg.ofProcessSubstution(cmdOp);
 
         FileMapper fileMapper = FileMapper.of("/tmp/shared");
-        try (ProcessIoWrapper wrapper = ProcessRunnerPosix.create()) {
-            context.setOutputLineReaderUtf8(line -> logger.info("Got line: " + line));
-            context.setErrorLineReaderUtf8(logger::info);
-            context.setInputPrintStreamUtf8(out -> {
-                out.println("hello world");
-            });
 
-            CmdArgActiveProcessSubstitution cmdArgActive = cmdExecSystem.exec(context, fileMapper, cmdArg, qleverExecSite);
-            CmdArg rewrittenArg = cmdArgActive.cmdArg();
-            Deque<Process> processes = cmdArgActive.processes();
+        ProcessRunner context = ProcessRunnerPosix.create();
+        CmdArgActiveProcessSubstitution cmdArgActive = cmdExecSystem.exec(context, fileMapper, cmdArg, qleverExecSite);
+        CmdArg rewrittenArg = cmdArgActive.cmdArg();
+        Deque<Process> processes = cmdArgActive.processes();
 
-            System.out.println("Processes: " + processes.size());
-            System.out.println("Rewritten arg: " + rewrittenArg);
+        System.out.println("Processes: " + processes.size());
+        System.out.println("Rewritten arg: " + rewrittenArg);
 
-            TokenPath token = (TokenPath)((CmdArgWord)rewrittenArg).tokens().get(0);
-            try (InputStream in = Files.newInputStream(Path.of(token.path()))) {
-                System.out.println("Content: " + IOUtils.toString(in, StandardCharsets.UTF_8));
-            }
+        TokenPath token = (TokenPath)((CmdArgWord)rewrittenArg).tokens().get(0);
+        try (InputStream in = Files.newInputStream(Path.of(token.path()))) {
+            System.out.println("Content: " + IOUtils.toString(in, StandardCharsets.UTF_8));
         }
+
+        ProcessIoWrapper.Builder wrapper = ProcessIoWrapper.builder(ProcessBase.getOutboundIo(context));
+        wrapper.setOutputLineReaderUtf8(line -> logger.info("Got line: " + line));
+        wrapper.setErrorLineReaderUtf8(logger::info);
+        wrapper.setInputWriterUtf8(out -> {
+            out.write("hello world");
+            out.newLine();
+        });
+        wrapper.exec();
     }
 
     public CmdOp createCmdOpX() {

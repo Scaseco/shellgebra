@@ -1,22 +1,21 @@
 package org.aksw.shellgebra.processbuilder;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import org.aksw.shellgebra.exec.graph.PathResource;
+import org.aksw.vshell.registry.ProcessBase;
 
 public class ProcessPipeline
-    extends Process
+    extends ProcessBase
 {
     private List<Process> processes;
     private List<PathResource> pipes;
     private CompletableFuture<?> future;
 
-    public ProcessPipeline(List<Process> processes, List<PathResource> pipes) {
-        super();
+    public ProcessPipeline(List<Process> processes, List<PathResource> pipes, OutboundIo outboundIo) {
+        super(outboundIo);
         this.processes = processes;
         this.pipes = pipes;
         List<CompletableFuture<Process>> futures = processes.stream().map(Process::onExit).toList();
@@ -29,24 +28,6 @@ public class ProcessPipeline
                 }
             }
         });
-    }
-
-    // TODO Wire up
-    @Override
-    public OutputStream getOutputStream() {
-        return null;
-    }
-
-    // TODO Wire up
-    @Override
-    public InputStream getInputStream() {
-        return null;
-    }
-
-    // TODO Wire up
-    @Override
-    public InputStream getErrorStream() {
-        return null;
     }
 
     @Override

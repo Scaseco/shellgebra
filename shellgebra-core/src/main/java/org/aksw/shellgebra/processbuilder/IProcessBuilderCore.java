@@ -1,10 +1,12 @@
 package org.aksw.shellgebra.processbuilder;
 
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
 import java.util.Map;
 
 import org.aksw.shellgebra.exec.graph.JRedirect;
+import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.exec.graph.ProcessRunnerPosix;
 
@@ -35,17 +37,27 @@ public interface IProcessBuilderCore<X extends IProcessBuilderCore<X>>
     default Process start() throws IOException {
         ProcessRunner cxt = ProcessRunnerPosix.create();
         Process result = start(cxt);
+        cxt.releaseInternalIo();
         return result;
     }
 
     X redirectInput(JRedirect redirect);
     JRedirect redirectInput();
+    default X redirectInput(Redirect redirect) {
+        return redirectInput(new JRedirectJava(redirect));
+    }
 
     X redirectOutput(JRedirect redirect);
     JRedirect redirectOutput();
+    default X redirectOutput(Redirect redirect) {
+        return redirectOutput(new JRedirectJava(redirect));
+    }
 
     X redirectError(JRedirect redirect);
     JRedirect redirectError();
+    default X redirectError(Redirect redirect) {
+        return redirectError(new JRedirectJava(redirect));
+    }
 
     /**
      * Whether the process builder can read from anonymous pipes.

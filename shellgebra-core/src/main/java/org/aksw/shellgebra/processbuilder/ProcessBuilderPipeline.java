@@ -2,6 +2,7 @@ package org.aksw.shellgebra.processbuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,11 +16,15 @@ import java.util.function.Supplier;
 
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.PathResource;
+import org.aksw.shellgebra.exec.graph.ProcessIoWrapper;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.io.pipe.NamedPipe;
 import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.shellgebra.util.PathLifeCycle;
 import org.aksw.shellgebra.util.PathLifeCycles;
+import org.aksw.vshell.registry.ProcessBase.OutboundIo;
+import org.aksw.vshell.registry.ProcessOverFuture;
+import org.aksw.vshell.registry.ProcessShell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +100,12 @@ public class ProcessBuilderPipeline
         // TODO Improve error handling: Always shut down executor service, deal with process startup failure.
         ExecutorService executorService = Executors.newCachedThreadPool();
 
+        OutputStream toIn = null;
+        InputStream fromOut = null;
+        InputStream fromErr = null;
+
         for (int i = 0; i < n; ++i) {
+            boolean isFirst = i == 0;
             boolean isLast = i == n - 1;
             IProcessBuilderCore<?> currentBuilderPrototype = pbs.get(i);
             IProcessBuilderCore<?> current = currentBuilderPrototype.clone();
@@ -179,13 +189,23 @@ public class ProcessBuilderPipeline
             // Callable<?> nextc = nextReadEnd;
 
             // Note: If named pipes are involved, then a process cannot start before the target process has been connected.
+            Process r = current.start(executor);
+            if (isFirst) {
+                toIn = r.getOutputStream();
+            }
+
+            if (isLast) {
+                fromOut = r.getInputStream();
+                fromErr = r.getErrorStream();
+            }
+
             Supplier<Process> processSupplier = () -> {
                 try {
-                    Process r = current.start(executor);
                     r.waitFor();
                     return r;
                 //} catch (IOException e) {
-                } catch (IOException | InterruptedException e) {
+                // } catch (IOException | InterruptedException e) {
+                } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 } finally {
                     try {
@@ -212,12 +232,16 @@ public class ProcessBuilderPipeline
             prevReadEnd = nextReadEnd;
         }
 
-        List<Process> processes = CompletableFuture.allOf(processFutures.toArray(CompletableFuture[]::new)).thenApply(v -> {
+        CompletableFuture<List<Process>> processes = CompletableFuture.allOf(processFutures.toArray(CompletableFuture[]::new)).thenApply(v -> {
             return processFutures.stream().map(CompletableFuture::join).toList();
-        }).join();
+        });
         executorService.shutdown();
 
-        return new ProcessPipeline(processes, pipes); // List.of()
+        OutboundIo outboundIo = new OutboundIo(toIn, fromOut, fromErr);
+        Process lazyProcess = ProcessOverFuture.ofList(processes);
+        return ProcessShell.wrapIfNeeded(lazyProcess, outboundIo);
+
+        // return new ProcessPipeline(processes, pipes, outboundIo); // List.of()
     }
 
     @Override

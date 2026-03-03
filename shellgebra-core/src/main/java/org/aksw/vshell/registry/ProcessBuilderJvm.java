@@ -56,16 +56,16 @@ public class ProcessBuilderJvm
         return true;
     }
 
-    protected static ClosePolicyWrapper<DynamicInput> resolveInputRedirect(DynamicInput defaultSource, JRedirect redirect) throws FileNotFoundException {
-        ClosePolicyWrapper<DynamicInput> result;
+    protected static DynamicInput resolveInputRedirect(DynamicInputShared defaultSource, JRedirect redirect) throws FileNotFoundException {
+        DynamicInput result;
         if (redirect instanceof JRedirectJava x) {
             Redirect r = x.redirect();
             switch (r.type()) {
             case INHERIT:
-                result = ClosePolicyWrapper.dontClose(defaultSource);
+                result = defaultSource.dup(); // ClosePolicyWrapper.dontClose(defaultSource);
                 break;
             case READ:
-                result = ClosePolicyWrapper.doClose(FileInput.of(r.file()));
+                result = FileInput.of(r.file()); // ClosePolicyWrapper.doClose(FileInput.of(r.file()));
                 break;
             case PIPE:
                 throw new RuntimeException("Unsupported or not implemented");
@@ -80,16 +80,17 @@ public class ProcessBuilderJvm
         return result;
     }
 
-    protected static ClosePolicyWrapper<DynamicOutput> resolveOutputRedirect(DynamicOutput defaultTarget, JRedirect redirect) throws FileNotFoundException {
-        ClosePolicyWrapper<DynamicOutput> result;
+    protected static DynamicOutput resolveOutputRedirect(DynamicOutputShared defaultSink, JRedirect redirect) throws FileNotFoundException {
+        DynamicOutput result;
         if (redirect instanceof JRedirectJava x) {
             Redirect r = x.redirect();
             switch (r.type()) {
             case INHERIT:
-                result = ClosePolicyWrapper.dontClose(defaultTarget);
+                result = defaultSink.dup();
+                // result = ClosePolicyWrapper.doClose(defaultTarget);
                 break;
             case WRITE:
-                result = ClosePolicyWrapper.doClose(FileOutput.of(r.file()));
+                result = FileOutput.of(r.file()); // ClosePolicyWrapper.doClose(FileOutput.of(r.file()));
                 break;
             default:
                 throw new RuntimeException("Unsupported or not implemented");
@@ -110,28 +111,37 @@ public class ProcessBuilderJvm
                 .orElseThrow(() -> new RuntimeException("Command not found: " + c));
 
         OutboundIo outboundIo = ProcessShell.setupPublicStreams(this, executor);
-        Process process = ProcessOverCompletableFuture.of(outboundIo, () -> runCommand(executor, jvmCmdRegistry, a, cmd));
+        DynamicInput in = resolveInputRedirect(executor.internalIn(), redirectInput());
+        DynamicOutput out = resolveOutputRedirect(executor.internalOut(), redirectOutput());
+        DynamicOutput err = resolveOutputRedirect(executor.internalErr(), redirectError());
+
+        JvmExecCxt execCxt = new JvmExecCxt(
+                executor,
+                jvmCmdRegistry,
+                executor.environment(), executor.directory(), in, out, err);
+
+        Process process = ProcessOverCompletableFuture.of(outboundIo, () -> runCommand(execCxt, jvmCmdRegistry, a, cmd));
         return process;
     }
 
-    private Integer runCommand(ProcessRunner cxt, JvmCommandRegistry jvmCmdRegistry, Argv a, JvmCommand cmd) {
+    private Integer runCommand(JvmExecCxt execCxt, JvmCommandRegistry jvmCmdRegistry, Argv a, JvmCommand cmd) {
         // XXX Is ClosePolicyWrapper sufficient or is reference counting needed?
-        try(
-            // TODO Make the process expose the appropriate pipe
-            ClosePolicyWrapper<DynamicInput> in = resolveInputRedirect(cxt.internalIn(), redirectInput());
-            ClosePolicyWrapper<DynamicOutput> out = resolveOutputRedirect(cxt.internalOut(), redirectOutput());
-            ClosePolicyWrapper<DynamicOutput> err = resolveOutputRedirect(cxt.internalErr(), redirectError())) {
-
-            JvmExecCxt execCxt = new JvmExecCxt(
-                cxt,
-                jvmCmdRegistry,
-                cxt.environment(), cxt.directory(), in.entity(), out.entity(), err.entity());
-
-            int exitValue = cmd.run(execCxt, a);
-            return exitValue;
+        // TODO Make the process expose the appropriate pipe
+        int exitValue;
+        try {
+            exitValue = cmd.run(execCxt, a);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                execCxt.in().close();
+                execCxt.out().close();
+                execCxt.err().close();
+            } catch (Exception e2) {
+                throw new RuntimeException(e2);
+            }
         }
+        return exitValue;
     }
 
     @Override

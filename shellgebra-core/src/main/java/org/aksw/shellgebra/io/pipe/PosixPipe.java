@@ -77,7 +77,6 @@ public final class PosixPipe
         this.out = out;
     }
 
-
     /**
      * Create a new anonymous pipe (readFd, writeFd).
      */
@@ -141,20 +140,29 @@ public final class PosixPipe
      * Linux-only: path that other processes can open to attach to the pipe read end.
      * Think: cat $(pipe.getReadEndProcPath())
      */
+    @Override
     public Path getReadEndProcPath() {
         return procPath(readFd);
     }
 
+    @Override
     public File getReadEndProcFile() {
         return procPath(readFd).toFile();
     }
 
+    @Override
     public Path getWriteEndProcPath() {
         return procPath(writeFd);
     }
 
+    @Override
     public File getWriteEndProcFile() {
         return procPath(writeFd).toFile();
+    }
+
+    @Override
+    public String toString() {
+        return "(PosixPipe readFd: " + readFd + " writeFd: " + writeFd + ")";
     }
 
     /**
