@@ -11,7 +11,8 @@ public class ProcessOverFuture
     private CompletableFuture<Process> onExitFuture = new CompletableFuture<>();
 
     public static Process ofOne(CompletableFuture<Process> process) {
-        return ofList(process.thenApply(List::of));
+        CompletableFuture<List<Process>> tmp = process.thenApply(List::of);
+        return ofList(tmp);
     }
 
     public static Process ofList(CompletableFuture<List<Process>> processFuture) {
@@ -21,7 +22,7 @@ public class ProcessOverFuture
     protected ProcessOverFuture(CompletableFuture<List<Process>> processFuture) {
         super(null);
         this.processFuture = processFuture;
-        processFuture.whenComplete((ps, t) -> {
+        this.processFuture.whenComplete((ps, t) -> {
             if (t == null) {
                 Process lastP = ps.getLast();
                 // p.onExit().then;

@@ -64,8 +64,11 @@ public class ProcessBuilderNative
         OutboundIo outboundIo = ProcessShell.setupPublicStreams(self, cxt);
         CompletableFuture<Process> futureProcess = CompletableFuture.supplyAsync(() -> {
             try {
-                return pb.start();
+                Process r = pb.start();
+                return r;
             } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
         });

@@ -318,17 +318,6 @@ public class ProcessRunnerPosix
         Files.deleteIfExists(basePath);
     }
 
-    public static ProcessBuilder clone(ProcessBuilder original) {
-        ProcessBuilder clone = new ProcessBuilder();
-        clone.command(original.command());
-        clone.environment().putAll(original.environment());
-        clone.redirectInput(original.redirectInput());
-        clone.redirectOutput(original.redirectOutput());
-        clone.redirectError(original.redirectError());
-        clone.directory(original.directory());
-        return clone;
-    }
-
     public IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder) {
         IProcessBuilder<?> clone = processBuilder.clone();
 

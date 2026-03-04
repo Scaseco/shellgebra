@@ -3,16 +3,20 @@ package org.aksw.shellgebra.processbuilder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 
-/** A direct wrapper. */
+/**
+ * A stateless {@link IProcessBuilder} adapter for Java's native {@link ProcessBuilder}.
+ */
 public class ProcessBuilderCoreNativeWrapper
-    extends ProcessBuilderBase<ProcessBuilderCoreNativeWrapper>
+    implements IProcessBuilder<ProcessBuilderCoreNativeWrapper>
 {
     private ProcessBuilder delegate;
 
@@ -21,12 +25,33 @@ public class ProcessBuilderCoreNativeWrapper
         this.delegate = delegate;
     }
 
-    @Override
-    public ProcessBuilderCoreNativeWrapper cloneActual() {
-        // List<String> argv = getDelegate().command();
-        ProcessBuilderCoreNativeWrapper result = new ProcessBuilderCoreNativeWrapper(new ProcessBuilder());
-        return result;
+    public static ProcessBuilder clone(ProcessBuilder original) {
+        ProcessBuilder clone = new ProcessBuilder();
+        applySettings(clone, original);
+        return clone;
     }
+
+    public static ProcessBuilder applySettings(ProcessBuilder clone, ProcessBuilder original) {
+        clone.command(original.command());
+        clone.environment().putAll(original.environment());
+        clone.redirectInput(original.redirectInput());
+        clone.redirectOutput(original.redirectOutput());
+        clone.redirectError(original.redirectError());
+        clone.directory(original.directory());
+        return clone;
+    }
+
+    @Override
+    public ProcessBuilderCoreNativeWrapper clone() {
+        ProcessBuilder copy = clone(delegate);
+        return new ProcessBuilderCoreNativeWrapper(copy);
+    }
+//    @Override
+//    public ProcessBuilderCoreNativeWrapper cloneActual() {
+//        // List<String> argv = getDelegate().command();
+//        ProcessBuilderCoreNativeWrapper result = new ProcessBuilderCoreNativeWrapper(new ProcessBuilder());
+//        return result;
+//    }
 
     public static ProcessBuilderCoreNativeWrapper wrap(ProcessBuilder delegate) {
         return new ProcessBuilderCoreNativeWrapper(delegate);
@@ -64,9 +89,13 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public Process start(ProcessRunner executor) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+    public Process start() throws IOException {
+        return getDelegate().start();
+    }
+
+    @Override
+    public Process start(ProcessRunner context) throws IOException {
+        throw new UnsupportedOperationException("This low-level wrapper does not support being launched with a context.");
     }
 
     @Override
@@ -115,6 +144,18 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
+    public ProcessBuilderCoreNativeWrapper command(String... command) {
+        getDelegate().command(command);
+        return this;
+    }
+
+    @Override
+    public ProcessBuilderCoreNativeWrapper command(List<String> command) {
+        getDelegate().command(command);
+        return this;
+    }
+
+    @Override
     public boolean supportsAnonPipeRead() {
         return true;
     }
@@ -132,5 +173,10 @@ public class ProcessBuilderCoreNativeWrapper
     @Override
     public boolean accessesStdIn() {
         return true;
+    }
+
+    @Override
+    public List<String> command() {
+        return getDelegate().command();
     }
 }
