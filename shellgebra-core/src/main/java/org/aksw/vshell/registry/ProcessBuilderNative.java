@@ -13,11 +13,25 @@ import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
 import org.aksw.shellgebra.processbuilder.IProcessBuilderCore;
 import org.aksw.shellgebra.processbuilder.ProcessBuilderBase;
-import org.aksw.shellgebra.processbuilder.ProcessBuilderCoreNativeWrapper;
+import org.aksw.shellgebra.processbuilder.ProcessBuilderNativeWrapper;
 import org.aksw.vshell.registry.ProcessBase.OutboundIo;
 import org.aksw.vshell.registry.ProcessBase.ToInternalIo;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Process builder that creates native processes.
+ * Differences to Java's {@link ProcessBuilder}:
+ * <ul>
+ *   <li>Handles redirects with named pipes: Named pipes block process creation.
+ *       This class can immediately return a deferred Process implementation
+ *       that is backed by a {@link CompletableFuture}. This makes it possible
+ *       to supply data any involved named pipes.</li>
+ *   <li>Support the {@link IProcessBuilderCore#start(ProcessRunner)} method which allows
+ *       for provisioning of custom files against which to resolve {@link Redirect#INHERIT}.</li>
+ * </ul>
+ *
+ * @see ProcessBuilderNativeWrapper
+ */
 public class ProcessBuilderNative
     extends ProcessBuilderBase<ProcessBuilderNative>
 {
@@ -38,7 +52,7 @@ public class ProcessBuilderNative
     }
 
     public static Process start(ProcessBuilder pb, IProcessBuilderCore<?> self, ProcessRunner cxt) throws IOException {
-        IProcessBuilderCore<?> pbWrapper = ProcessBuilderCoreNativeWrapper.wrap(pb);
+        IProcessBuilderCore<?> pbWrapper = ProcessBuilderNativeWrapper.wrap(pb);
         Process result = startInThread(pbWrapper, self, cxt);
         return result;
     }
@@ -161,18 +175,6 @@ public class ProcessBuilderNative
         }
         return result;
     }
-
-//    private ProcessBuilder configure(ProcessBuilder pb, ProcessRunner cxt) {
-//        boolean inheritInFromSystem = true;
-//        boolean inheritOutFromSystem = true;
-//        boolean inheritErrFromSystem = true;
-//
-//        // ProcessBuilder clone = clone(processBuilder);
-//        configureInput(redirectInput(), cxt.inputPipe(), inheritInFromSystem, pb::redirectInput);
-//        configureOutput(redirectOutput(), cxt.outputPipe(), inheritOutFromSystem, pb::redirectOutput);
-//        configureOutput(redirectError(), cxt.errorPipe(), inheritErrFromSystem, pb::redirectError);
-//        return pb;
-//    }
 
     @Override
     protected ProcessBuilderNative cloneActual() {

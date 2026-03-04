@@ -11,16 +11,21 @@ import org.aksw.shellgebra.exec.IProcessBuilder;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
+import org.aksw.vshell.registry.ProcessBuilderNative;
 
 /**
  * A stateless {@link IProcessBuilder} adapter for Java's native {@link ProcessBuilder}.
+ * Does not feature the enhancements of {@link ProcessBuilderNative}.
+ *
+ * @implNote
+ *   This class is used internally by {@link ProcessBuilderNative}.
  */
-public class ProcessBuilderCoreNativeWrapper
-    implements IProcessBuilder<ProcessBuilderCoreNativeWrapper>
+public class ProcessBuilderNativeWrapper
+    implements IProcessBuilder<ProcessBuilderNativeWrapper>
 {
     private ProcessBuilder delegate;
 
-    protected ProcessBuilderCoreNativeWrapper(ProcessBuilder delegate) {
+    protected ProcessBuilderNativeWrapper(ProcessBuilder delegate) {
         super();
         this.delegate = delegate;
     }
@@ -42,9 +47,9 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper clone() {
+    public ProcessBuilderNativeWrapper clone() {
         ProcessBuilder copy = clone(delegate);
-        return new ProcessBuilderCoreNativeWrapper(copy);
+        return new ProcessBuilderNativeWrapper(copy);
     }
 //    @Override
 //    public ProcessBuilderCoreNativeWrapper cloneActual() {
@@ -53,8 +58,8 @@ public class ProcessBuilderCoreNativeWrapper
 //        return result;
 //    }
 
-    public static ProcessBuilderCoreNativeWrapper wrap(ProcessBuilder delegate) {
-        return new ProcessBuilderCoreNativeWrapper(delegate);
+    public static ProcessBuilderNativeWrapper wrap(ProcessBuilder delegate) {
+        return new ProcessBuilderNativeWrapper(delegate);
     }
 
     public ProcessBuilder getDelegate() {
@@ -67,7 +72,7 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper directory(Path directory) {
+    public ProcessBuilderNativeWrapper directory(Path directory) {
         getDelegate().directory(directory.toFile());
         return this;
     }
@@ -83,7 +88,7 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper redirectErrorStream(boolean redirectErrorStream) {
+    public ProcessBuilderNativeWrapper redirectErrorStream(boolean redirectErrorStream) {
         getDelegate().redirectErrorStream(redirectErrorStream);
         return this;
     }
@@ -99,7 +104,7 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper redirectInput(JRedirect redirect) {
+    public ProcessBuilderNativeWrapper redirectInput(JRedirect redirect) {
         if (redirect instanceof JRedirectJava r) {
             getDelegate().redirectInput(r.redirect());
         } else {
@@ -114,7 +119,7 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper redirectOutput(JRedirect redirect) {
+    public ProcessBuilderNativeWrapper redirectOutput(JRedirect redirect) {
         if (redirect instanceof JRedirectJava r) {
             getDelegate().redirectOutput(r.redirect());
         } else {
@@ -129,7 +134,7 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper redirectError(JRedirect redirect) {
+    public ProcessBuilderNativeWrapper redirectError(JRedirect redirect) {
         if (redirect instanceof JRedirectJava r) {
             getDelegate().redirectError(r.redirect());
         } else {
@@ -144,13 +149,13 @@ public class ProcessBuilderCoreNativeWrapper
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper command(String... command) {
+    public ProcessBuilderNativeWrapper command(String... command) {
         getDelegate().command(command);
         return this;
     }
 
     @Override
-    public ProcessBuilderCoreNativeWrapper command(List<String> command) {
+    public ProcessBuilderNativeWrapper command(List<String> command) {
         getDelegate().command(command);
         return this;
     }

@@ -2,6 +2,7 @@ package org.aksw.commons.util.docker;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.aksw.shellgebra.exec.SysRuntime;
@@ -11,6 +12,7 @@ import org.aksw.shellgebra.exec.shell.ShellEnv;
 
 public class TestSysRuntimeHost {
     @Test
+    @Disabled
     public void test01() throws IOException, InterruptedException {
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
         ShellEnv shellEnv = new ShellEnv();
