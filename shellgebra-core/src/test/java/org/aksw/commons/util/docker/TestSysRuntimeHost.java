@@ -12,7 +12,7 @@ import org.aksw.shellgebra.exec.shell.ShellEnv;
 
 public class TestSysRuntimeHost {
     @Test
-    @Disabled
+    @Disabled // Uses local path; could change to touch $TMP/test.txt
     public void test01() throws IOException, InterruptedException {
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
         ShellEnv shellEnv = new ShellEnv();

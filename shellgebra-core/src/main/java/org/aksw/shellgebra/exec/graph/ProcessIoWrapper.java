@@ -379,11 +379,11 @@ public class ProcessIoWrapper
                     }
                     errBuilder.append(str);
                 });
-                System.out.println("All processes completed.");
                 ProcessIoWrapper wrapper = builder.exec();
                 if (process != null) {
                     process.waitFor();
                 }
+                System.out.println("All processes completed.");
 
                wrapper.waitFor();
                 // wrapper.waitFor();
