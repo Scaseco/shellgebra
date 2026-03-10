@@ -30,6 +30,9 @@ public class InitCommandRegistry {
 
         JvmCommand bzip2Cmd = JvmCommandTranscode.of(csf, CompressorStreamFactory.BZIP2);
         jvmCmdRegistry.put("/jvm/bzip2", bzip2Cmd);
+
+        JvmCommand gzipCmd = JvmCommandTranscode.of(csf, CompressorStreamFactory.GZIP);
+        jvmCmdRegistry.put("/jvm/gzip", gzipCmd);
         return jvmCmdRegistry;
     }
 
@@ -44,6 +47,9 @@ public class InitCommandRegistry {
         // Note: There can be multiple candidates per exec site.
         registry.put("/virt/lbzip2", ExecSites.host(), "/usr/bin/lbzip2");
         registry.put("/virt/lbzip2", ExecSites.jvm(), "/jvm/bzip2");
+
+        registry.put("/virt/gz", ExecSites.host(), "/usr/bin/gzip");
+        registry.put("/virt/gz", ExecSites.jvm(), "/jvm/gzip");
 
         registry.put("/virt/bzip2", ExecSites.jvm(), "/jvm/bzip2");
 
