@@ -51,12 +51,24 @@ public class ListBuilder<T> {
         return result;
     }
 
+//    public static <T> ListBuilder<T> of(List<T> list) {
+//    	return
+//    }
+
     public static ListBuilder<String> ofString(int initialCapacity) {
         return new ListBuilder<>(new ArrayList<>(initialCapacity), String[]::new);
     }
 
     public static ListBuilder<String> ofString() {
         return new ListBuilder<>(new ArrayList<>(), String[]::new);
+    }
+
+    public static ListBuilder<String> ofStrings(String ...strs) {
+        return ofString().addAll(strs);
+    }
+
+    public static ListBuilder<String> ofStrings(List<String>strs) {
+        return ofString().addAll(strs);
     }
 
     /**
