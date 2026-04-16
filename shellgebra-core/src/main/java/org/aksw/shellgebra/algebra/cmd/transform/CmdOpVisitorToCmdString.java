@@ -77,6 +77,7 @@ public class CmdOpVisitorToCmdString
      * as [/bin/bash, -c, scriptString].
      * All arguments will be quoted as needed.
      */
+    // FIXME Consolidate with SysRuntime.toScriptString which does the same it seems!
     public static String toArg(String[] cmd) {
         String result = Stream.of(cmd).collect(Collectors.joining(" "));
         return result;

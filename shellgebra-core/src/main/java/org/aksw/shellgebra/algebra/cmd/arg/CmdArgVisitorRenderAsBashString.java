@@ -38,6 +38,11 @@ public class CmdArgVisitorRenderAsBashString
         return result;
     }
 
+    public static String render(CmdArg arg) {
+        // XXX Get rid of needless list wrapping
+        return render(List.of(arg)).get(0);
+    }
+
     @Override
     public String visit(CmdArgWord arg) {
         TokenVisitor<String> renderer = new TokenVisitorRenderToString();

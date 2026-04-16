@@ -58,6 +58,7 @@ public class TestProcessRunner {
         assertEquals(expected, actual.out());
     }
 
+    /** Provide input and get the exec result. */
     public static ExecResult consume(Process process) throws Exception {
         ExecResult result = ProcessIoWrapper
             .builder(process)
@@ -72,7 +73,6 @@ public class TestProcessRunner {
             .consume();
         return result;
     }
-
 
     @Test
     public void test01() throws Exception {

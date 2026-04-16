@@ -245,7 +245,7 @@ public class ProcessIoWrapper
         // Files.deleteIfExists(basePath);
     }
 
-    public record ExecResult(int execCode, String out, String err) {}
+    public record ExecResult(int exitCode, String out, String err) {}
 
 //    public static Builder newBuilder() {
 //        return new Builder();
@@ -352,7 +352,7 @@ public class ProcessIoWrapper
             return wrapper;
         }
 
-        public ExecResult consume() throws Exception {
+        public ExecResult consume() throws InterruptedException {
             StringBuilder outBuilder = new StringBuilder();
             StringBuilder errBuilder = new StringBuilder();
             Builder builder = this;

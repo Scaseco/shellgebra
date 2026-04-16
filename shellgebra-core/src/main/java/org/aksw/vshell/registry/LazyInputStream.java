@@ -13,7 +13,7 @@ public class LazyInputStream
     private Callable<InputStream> creator;
 
     protected LazyInputStream(Callable<InputStream> creator) {
-        super(null);
+        super((InputStream)null);
         this.creator = Objects.requireNonNull(creator);
     }
 

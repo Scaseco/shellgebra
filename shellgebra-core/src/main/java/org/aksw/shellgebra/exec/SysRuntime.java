@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 
+import org.aksw.shellgebra.algebra.cmd.arg.CmdArg;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
+import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.newsclub.net.unix.FileDescriptorCast;
 
@@ -27,6 +29,17 @@ public interface SysRuntime
 
     /** Create a named pipe at the given path. */
     void createNamedPipe(Path path) throws IOException;
+
+    /**
+     * Compile the command such that it can act as a single argument.
+     * Such as {@code bash -c 'sub-command-expression'}.
+     */
+    default String toScriptString(CmdOp cmdOp) {
+        CmdOp dummy = new CmdOpExec("/dummy", CmdArg.ofCommandSubstitution(cmdOp));
+        CmdString cmdString = compileString(dummy);
+        String scriptString = cmdString.cmd()[1];
+        return scriptString;
+    }
 
     /**
      * Resolve the first argument of the array against {@link #which(String)}.
@@ -53,6 +66,13 @@ public interface SysRuntime
         SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
         CmdString cmdString = runtime.compileString(cmdOp);
         return cmdString;
+    }
+
+    // XXX Move to a better location?
+    public static String toScriptStringX(CmdOp cmdOp) {
+        SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
+        String scriptString = runtime.toScriptString(cmdOp);
+        return scriptString;
     }
 
     @Override

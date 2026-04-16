@@ -20,13 +20,11 @@ import org.aksw.shellgebra.algebra.cmd.op.CmdOp;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOpExec;
 import org.aksw.shellgebra.algebra.cmd.op.CmdOps;
 import org.aksw.shellgebra.algebra.cmd.op.CmdRedirect;
-import org.aksw.shellgebra.algebra.cmd.transform.CmdString;
 import org.aksw.shellgebra.algebra.cmd.transform.FileMapper;
 import org.aksw.shellgebra.exec.CmdOpRewriter;
 import org.aksw.shellgebra.exec.SysRuntime;
 import org.aksw.shellgebra.exec.SysRuntimeCoreLazy;
 import org.aksw.shellgebra.exec.SysRuntimeFactoryDocker;
-import org.aksw.shellgebra.exec.SysRuntimeImpl;
 import org.aksw.shellgebra.exec.graph.JRedirect;
 import org.aksw.shellgebra.exec.graph.JRedirect.JRedirectJava;
 import org.aksw.shellgebra.exec.graph.ProcessRunner;
@@ -343,7 +341,7 @@ public class ProcessBuilderDockerRun
         CmdOpExec cat = new CmdOpExec(List.of(), "cat", ArgumentList.of(
             CmdArg.ofPathString(source.toString()),
             CmdArg.redirect(CmdRedirect.out(target.toString()))));
-        String scriptString = toScriptString(cat);
+        String scriptString = SysRuntime.toScriptStringX(cat);
 
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", scriptString);
         Process process = pb.start();
@@ -459,14 +457,6 @@ public class ProcessBuilderDockerRun
         return ContainerUtils.getUserString();
     }
 
-    public static String toScriptString(CmdOp cmdOp) {
-        SysRuntime runtime = SysRuntimeImpl.forCurrentOs();
-        CmdOp dummy = new CmdOpExec("/dummy", CmdArg.ofCommandSubstitution(cmdOp));
-        CmdString cmdString = runtime.compileString(dummy);
-        String scriptString = cmdString.cmd()[1];
-        return scriptString;
-    }
-
     protected org.testcontainers.containers.GenericContainer<?> setupContainer(CmdOp rawCmdOp, FileMapper fileMapper) throws IOException {
         // TODO Consolidate with SysRuntimeCore: Need to get the appropriate bash entry point from some registry.
 
@@ -475,7 +465,7 @@ public class ProcessBuilderDockerRun
         String userStr = getUserString();
         logger.info("Setting up container " + imageRef + " with UID:GID=" + userStr);
 
-        String scriptString = toScriptString(cmdOp);
+        String scriptString = SysRuntime.toScriptStringX(cmdOp);
 
         // Create an invocation of the script string as an inline bash script.
         Invocation inv = new Invocation.Script(scriptString, ScriptContent.contentTypeBash);
