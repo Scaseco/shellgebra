@@ -167,14 +167,14 @@ public class ProcessBuilderPipeline
                     current.redirectOutput(new JRedirectJava(Redirect.to(thisPath.getPath().toFile())));
                     priorPath = pipe.getReadEndProcPath();
                     thisWriteEnd = () -> {
-                        System.out.println("Closing write FD: " + pipe.getWriteFd());
+                        logger.debug("Closing write FD: " + pipe.getWriteFd());
                         pipe.outputStream().close(); return null;
                     };
                     nextReadEnd = () -> {
-                        System.out.println("Closing read FD: " + pipe.getReadFd());
+                        logger.debug("Closing read FD: " + pipe.getReadFd());
                         pipe.inputStream().close(); return null;
                     };
-                    logger.info("Created anonymous pipe, ReadFD=" + pipe.getReadFd() + " WriteFD=" + pipe.getWriteFd());
+                    logger.debug("Created anonymous pipe, ReadFD=" + pipe.getReadFd() + " WriteFD=" + pipe.getWriteFd());
                 }
                 pipes.add(thisPath);
                 priorBuilder = current;

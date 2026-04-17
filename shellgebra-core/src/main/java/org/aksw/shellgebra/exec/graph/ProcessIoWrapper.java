@@ -232,51 +232,12 @@ public class ProcessIoWrapper
 
         getOutputStream().close();
         getErrorStream().close();
-//        internalOut().outputStream().close();
-//        internalErr().outputStream().close();
 
         cancelAndGet(outFuture);
         cancelAndGet(errFuture);
-
-//        pipeIn.close();
-//        pipeOut.close();
-//        pipeErr.close();
-
-        // Files.deleteIfExists(basePath);
     }
 
     public record ExecResult(int exitCode, String out, String err) {}
-
-//    public static Builder newBuilder() {
-//        return new Builder();
-//    }
-//
-//    public static class Builder {
-//        private Consumer<InputStream> inputAction;
-//        private Consumer<OutputStream> outputAction;
-//        private Consumer<OutputStream> errorAction;
-//    }
-
-//    public static ProcessBuilder clone(ProcessBuilder original) {
-//        ProcessBuilder clone = new ProcessBuilder();
-//        clone.command(original.command());
-//        clone.environment().putAll(original.environment());
-//        clone.redirectInput(original.redirectInput());
-//        clone.redirectOutput(original.redirectOutput());
-//        clone.redirectError(original.redirectError());
-//        clone.directory(original.directory());
-//        return clone;
-//    }
-//
-//    public IProcessBuilder<?> configure(IProcessBuilder<?> processBuilder) {
-//        IProcessBuilder<?> clone = processBuilder.clone();
-//
-//        // TODO Properly process the redirects
-//        clone.redirectInput(new JRedirectJava(Redirect.from(pipeIn.getReadEndProcFile())));
-//        clone.redirectOutput(new JRedirectJava(Redirect.to(pipeOut.getWriteEndProcFile())));
-//        clone.redirectError(new JRedirectJava(Redirect.to(pipeIn.getWriteEndProcFile())));
-//        return clone;
-//    }
 
     public static class Builder {
         //private Process process;
@@ -357,37 +318,28 @@ public class ProcessIoWrapper
             StringBuilder errBuilder = new StringBuilder();
             Builder builder = this;
 
-//            if (toIn == null) {
-//                // If there is no input generator then close input immediately
-//                builder.setInputGenerator(IOUtils::closeQuietly);
-//            }
-//
-            // try (ProcessIoWrapper wrapper = ProcessIoWrapper.of(process)) {
-                // wrapper.setOutputLineReaderUtf8(logger::info);
-                builder.setOutputLineReaderUtf8(str -> {
-                    // System.out.println("got output line: " + str);
-                    if (!outBuilder.isEmpty()) {
-                        outBuilder.append("\n");
-                    }
-                    outBuilder.append(str);
-                });
-                // wrapper.setErrorLineReaderUtf8(logger::info);
-                builder.setErrorLineReaderUtf8(str -> {
-                    // System.out.println("got error line: " + str);
-                    if (!errBuilder.isEmpty()) {
-                        errBuilder.append("\n");
-                    }
-                    errBuilder.append(str);
-                });
-                ProcessIoWrapper wrapper = builder.exec();
-                if (process != null) {
-                    process.waitFor();
+            builder.setOutputLineReaderUtf8(str -> {
+                // System.out.println("got output line: " + str);
+                if (!outBuilder.isEmpty()) {
+                    outBuilder.append("\n");
                 }
-                System.out.println("All processes completed.");
+                outBuilder.append(str);
+            });
+            // wrapper.setErrorLineReaderUtf8(logger::info);
+            builder.setErrorLineReaderUtf8(str -> {
+                // System.out.println("got error line: " + str);
+                if (!errBuilder.isEmpty()) {
+                    errBuilder.append("\n");
+                }
+                errBuilder.append(str);
+            });
+            ProcessIoWrapper wrapper = builder.exec();
+            if (process != null) {
+                process.waitFor();
+            }
+            logger.debug("All processes completed.");
 
-               wrapper.waitFor();
-                // wrapper.waitFor();
-            // }
+             wrapper.waitFor();
 
             int exitValue = process == null ? 0 : process.exitValue();
 

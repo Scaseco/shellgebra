@@ -20,12 +20,17 @@ import org.aksw.shellgebra.exec.model.ExecSites;
 import org.aksw.shellgebra.exec.model.PlacedCommand;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
 import org.aksw.shellgebra.registry.init.InitCommandRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The default command rewrite and execution system.
  * Technically a facade over command catalogs for different execution sites (host, docker, jvm).
  */
 public class CmdExecSystem {
+
+    private static final Logger logger = LoggerFactory.getLogger(CmdExecSystem.class);
+
     private JvmCommandRegistry jvmCmdRegistry;
     private CommandRegistry candidates;
 
@@ -110,9 +115,9 @@ public class CmdExecSystem {
         CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(cmdCatalog, candidates, inferredCatalog, resolver, preferredExecSites);
         PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
         CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
-        System.out.println("Candidate Placement: " + candidatePlacement);
+        logger.debug("Candidate Placement: " + candidatePlacement);
         FinalPlacement placed = FinalPlacer.place(candidatePlacement);
-        System.out.println("Placed: " + placed);
+        logger.debug("Placed: " + placed);
         FinalPlacement inlined = FinalPlacementInliner.inline(placed);
         return inlined;
     }

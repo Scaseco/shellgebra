@@ -19,14 +19,15 @@ import org.aksw.shellgebra.io.pipe.NamedPipe;
 import org.aksw.shellgebra.io.pipe.PosixPipe;
 import org.aksw.vshell.registry.ProcessBase.OutboundIo;
 import org.aksw.vshell.registry.ProcessBase.ToInternalIo;
-import org.aksw.vshell.registry.DynamicInputShared;
-import org.aksw.vshell.registry.DynamicOutputShared;
 import org.aksw.vshell.registry.ProcessOverCompletableFuture;
-import org.aksw.vshell.registry.ProcessShell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProcessBuilderGroup
     extends ProcessBuilderCompound<ProcessBuilderGroup>
 {
+    private static final Logger logger = LoggerFactory.getLogger(ProcessBuilderGroup.class);
+
     public static ProcessBuilderGroup of(IProcessBuilderCore<?> ... processBuilders) {
         return new ProcessBuilderGroup().processBuilders(processBuilders);
     }
@@ -179,7 +180,7 @@ public class ProcessBuilderGroup
 
             Process process;
             try {
-                System.out.println("Process started from: " + pb);
+                logger.debug("Process started from: " + pb);
                 process = pb.start(runner);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -188,7 +189,7 @@ public class ProcessBuilderGroup
             int exitValue;
             try {
                 exitValue = process.waitFor();
-                System.out.println("Process finished from: " + pb);
+                logger.debug("Process finished with exit code " + exitValue + " from: " + pb);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

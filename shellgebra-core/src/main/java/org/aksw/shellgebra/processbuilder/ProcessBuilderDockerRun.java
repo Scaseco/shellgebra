@@ -288,7 +288,7 @@ public class ProcessBuilderDockerRun
 //            op = CmdOpExec.ofLiteralArgs(argv);
 //            actualInteractive = baseInteractive.orElse(true);
 //        }
-        System.out.println("Interactive: " + actualInteractive);
+        // System.out.println("Interactive: " + actualInteractive);
 
         if (actualInteractive) {
             PathAndProcess inProcess = processInput(executor.inputPipe(), redirectInput());
@@ -337,7 +337,7 @@ public class ProcessBuilderDockerRun
 
     // TODO We need to set up a helper cat in-pipe-end > named-pipe
     protected static Process catProcess(Path source, Path target) throws IOException {
-        System.out.println("cat process being set up: " + source + " -> " + target);
+        logger.debug("cat process being set up: " + source + " -> " + target);
         CmdOpExec cat = new CmdOpExec(List.of(), "cat", ArgumentList.of(
             CmdArg.ofPathString(source.toString()),
             CmdArg.redirect(CmdRedirect.out(target.toString()))));
@@ -345,7 +345,7 @@ public class ProcessBuilderDockerRun
 
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", scriptString);
         Process process = pb.start();
-        process.toHandle().onExit().thenRun(() -> System.out.println("cat process terminated: " + source + " -> " + target));
+        process.toHandle().onExit().thenRun(() -> logger.debug("cat process terminated: " + source + " -> " + target));
         return process;
     }
 
