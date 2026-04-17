@@ -13,6 +13,8 @@ import com.github.benmanes.caffeine.cache.Scheduler;
 
 import org.aksw.commons.util.ref.Ref;
 import org.aksw.commons.util.ref.RefImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resource manager that loads resources on demand and defers closing.
@@ -28,6 +30,7 @@ import org.aksw.commons.util.ref.RefImpl;
 public class ResourceMgr<K, V>
     implements AutoCloseable
 {
+    private static final Logger logger = LoggerFactory.getLogger(ResourceMgr.class);
     private Function<K, V> loader;
     private Consumer<V> closer;
     private Duration evictionDelay;
@@ -105,7 +108,7 @@ public class ResourceMgr<K, V>
         // Only close if we successfully transition from 0 to -1
         if (holder != null && holder.markClosed()) {
             try {
-                // System.out.println("Actual close called.");
+                // logger.debug("Actual close called.");
                 closer.accept(holder.resource);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -180,13 +183,13 @@ public static void main(String...args) throws InterruptedException {
 
     {
         try (Ref<String> ref = mgr.get("hi")) {
-            System.out.println(ref.get());
+            logger.debug("{}", ref.get());
         }
     }
 
     {
         try (Ref<String> ref = mgr.get("hi")) {
-            System.out.println(ref.get());
+            logger.debug("{}", ref.get());
         }
     }
 
@@ -194,7 +197,7 @@ public static void main(String...args) throws InterruptedException {
 
     {
         try (Ref<String> ref = mgr.get("hi")) {
-            System.out.println(ref.get());
+            logger.debug("{}", ref.get());
         }
     }
 }

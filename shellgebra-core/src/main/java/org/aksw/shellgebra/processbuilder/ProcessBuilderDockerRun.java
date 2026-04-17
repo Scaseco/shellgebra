@@ -288,7 +288,7 @@ public class ProcessBuilderDockerRun
 //            op = CmdOpExec.ofLiteralArgs(argv);
 //            actualInteractive = baseInteractive.orElse(true);
 //        }
-        // System.out.println("Interactive: " + actualInteractive);
+        // logger.debug("Interactive: {}", actualInteractive);
 
         if (actualInteractive) {
             PathAndProcess inProcess = processInput(executor.inputPipe(), redirectInput());

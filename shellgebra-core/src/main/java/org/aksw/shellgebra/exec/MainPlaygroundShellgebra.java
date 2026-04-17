@@ -13,9 +13,12 @@ import org.aksw.commons.util.docker.ImageIntrospectorImpl;
 import org.aksw.shellgebra.introspect.ShellCatalogEntry;
 import org.aksw.shellgebra.introspect.ShellProbeResult;
 import org.aksw.shellgebra.model.osreo.ImageIntrospector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
 public class MainPlaygroundShellgebra {
+    private static final Logger logger = LoggerFactory.getLogger(MainPlaygroundShellgebra.class);
     public static void main(String[] args) throws IOException, InterruptedException {
 //       String imageName = "ubuntu:latest";
 //       String imageName = "nestio/lbzip2";
@@ -38,17 +41,17 @@ public class MainPlaygroundShellgebra {
 
 //        List<Shell> shells = OsreoUtils.listShells(model);
 //        for (Shell shell : shells) {
-//            System.out.println(shell);
+//            logger.debug("{}", shell);
 //        }
 //
 //        List<LocatorCommand> locatorCommands = OsreoUtils.listLocatorCommands(model);
 //        for (LocatorCommand locatorCommand : locatorCommands) {
-//            System.out.println(locatorCommand);
+//            logger.debug("{}", locatorCommand);
 //        }
 //
 //
 
-        System.out.println("Hostname: " + HostNameUtils.getHostName());
+        logger.debug("Hostname: {}", HostNameUtils.getHostName());
 
 
         // Define paths
@@ -70,7 +73,7 @@ public class MainPlaygroundShellgebra {
         }
 
         String lbzip2Path = ContainerUtils.checkImageForCommand(imageName, "lbzip2");
-        System.out.println("Path: " + lbzip2Path);
+        logger.debug("Path: {}", lbzip2Path);
         String command = lbzip2Path != null ?
                 lbzip2Path + " -d -c /mnt/data/input.bz2 > /mnt/fifo/output.pipe" :
                 "apt update && apt install -y lbzip2 && " +
@@ -79,7 +82,7 @@ public class MainPlaygroundShellgebra {
         try (GenericContainer<?> container = new GenericContainer<>(imageName)
                 .withFileSystemBind(inputFile.toString(), "/mnt/data/input.bz2")
                 .withFileSystemBind(fifoPath.toString(), "/mnt/fifo/output.pipe")
-                .withLogConsumer(frame -> System.out.println(frame.getUtf8StringWithoutLineEnding()))
+                .withLogConsumer(frame -> logger.debug(frame.getUtf8StringWithoutLineEnding()))
                 .withCommand("sh", "-c", command)) {
                 // .waitingFor(Wait.forSuccessfulExit())) {
 
@@ -91,7 +94,7 @@ public class MainPlaygroundShellgebra {
                 .waitContainerCmd(container.getContainerId())
                 .exec(new WaitContainerResultCallback())
                 .awaitCompletion();
-            System.out.println("Decompression to named pipe completed.");
+            logger.debug("Decompression to named pipe completed.");
         }
     }
 }

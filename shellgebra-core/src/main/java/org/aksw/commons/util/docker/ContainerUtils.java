@@ -62,7 +62,7 @@ public class ContainerUtils {
               long exitValue = containerInfo.getState().getExitCodeLong();
               return exitValue;
           }
-          // System.out.println("Could not get exit code, container info not available or container still running.");
+          // logger.debug("Could not get exit code, container info not available or container still running.");
           throw new RuntimeException("No exit value");
     }
 

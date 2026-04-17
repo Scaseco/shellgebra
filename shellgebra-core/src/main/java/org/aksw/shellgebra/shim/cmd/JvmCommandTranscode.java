@@ -14,6 +14,8 @@ import org.aksw.shellgebra.shim.core.ArgsModular;
 import org.aksw.vshell.registry.JvmExecCxt;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JvmCommandTranscode
     extends JvmCommandBase<GenericCodecArgs>
@@ -21,6 +23,8 @@ public class JvmCommandTranscode
     private String codecName;
     private InputStreamTransform inTransform;
     private OutputStreamTransform outTransform;
+
+    private static final Logger logger = LoggerFactory.getLogger(JvmCommandTranscode.class);
 
     public JvmCommandTranscode(String codecName, InputStreamTransform inTransform, OutputStreamTransform outTransform) {
         super();
@@ -37,24 +41,24 @@ public class JvmCommandTranscode
 
     @Override
     protected void runActual(JvmExecCxt cxt, GenericCodecArgs model) throws IOException {
-        System.out.println("transcode called");
+        logger.debug("transcode called");
         if (model.isDecode()) {
             Objects.requireNonNull(inTransform, "No decoding for " + codecName);
             InputStream encodedIn = cxt.in().inputStream();
 
-            // System.out.println("CONSUMED INPUT DATA WAS: " + IOUtils.toString(encodedIn, StandardCharsets.UTF_8));
+            // logger.debug("CONSUMED INPUT DATA WAS: {}", IOUtils.toString(encodedIn, StandardCharsets.UTF_8));
 
             InputStream decodedIn = inTransform.apply(encodedIn);
             OutputStream os = cxt.out().outputStream();
-            System.out.println("transcode reading started.");
+            logger.debug("transcode reading started.");
             decodedIn.transferTo(os);
             if (false) {
                 int c;
                 while ((c = decodedIn.read()) != -1) {
-                    System.out.println("Read byte: " + c);
+                    logger.debug("Read byte: {}", c);
                 }
             }
-            System.out.println("transcode terminated");
+            logger.debug("transcode terminated");
         } else {
             Objects.requireNonNull(inTransform, "No encoding for " + codecName);
             InputStream in = cxt.in().inputStream();

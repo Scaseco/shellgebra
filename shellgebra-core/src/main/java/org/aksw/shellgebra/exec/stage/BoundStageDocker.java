@@ -339,14 +339,14 @@ public class BoundStageDocker
 //                logger.info(msg);
 //            });
 
-            System.out.println("Waiting");
+            logger.debug("Waiting");
             Thread.sleep(2000);
-            System.out.println("Attaching data");
+            logger.debug("Attaching data");
 
         // Get input stream (e.g., file or command output)
         try (InputStream in = byteSource.openStream()) {
             String str = IOUtils.toString(in, StandardCharsets.UTF_8);
-            System.out.println(str);
+            logger.debug("Input content: {}", str);
             InputStream is = new ByteArrayInputStream(str.getBytes());
 
             // BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharset.UTF_8));
@@ -372,9 +372,9 @@ public class BoundStageDocker
                         super.onNext(frame);
                     }
                };
-               System.out.println("Waiting");
+           logger.debug("Waiting");
                Thread.sleep(5000);
-               System.out.println("Awaiting completion");
+               logger.debug("Awaiting completion");
                tmp.exec(callback).awaitCompletion();
 
                // tmp.exec(new AttachContainerResultCallback()).awaitCompletion();
@@ -382,7 +382,7 @@ public class BoundStageDocker
             // x.exec(new AttachContainerResultCallback()).awaitCompletion();
 
             // ResultCallbackTemplate<?, Frame> foo = x.start();
-            System.out.println("Done");
+            logger.debug("Done");
 
             // x.getStdin()
                 //.exec(new AttachContainerResultCallback());

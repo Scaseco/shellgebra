@@ -129,7 +129,7 @@ public class CmdOpVisitorCandidatePlacer
                 }
             }
         }
-        System.out.println("Placement: " + op + ": " + execSites);
+        logger.debug("Placement: {}: {}", op, execSites);
 
         // If no exec sites were found in the preferred exec sites then
         // try to resolve.

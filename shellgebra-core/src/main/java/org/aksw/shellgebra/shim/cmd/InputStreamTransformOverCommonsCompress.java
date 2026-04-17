@@ -1,19 +1,20 @@
 package org.aksw.shellgebra.shim.cmd;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.aksw.commons.io.util.stream.InputStreamTransform;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamProvider;
-import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InputStreamTransformOverCommonsCompress
     implements InputStreamTransform
 {
     protected CompressorStreamProvider provider;
     protected String name;
+
+    private static final Logger logger = LoggerFactory.getLogger(InputStreamTransformOverCommonsCompress.class);
 
     public InputStreamTransformOverCommonsCompress(CompressorStreamProvider provider, String name) {
         super();
@@ -24,13 +25,6 @@ public class InputStreamTransformOverCommonsCompress
     @Override
     public InputStream apply(InputStream t) {
         try {
-            if (false) {
-                try {
-                    System.err.println("DATA IN STREAM: " + IOUtils.toString(t, StandardCharsets.UTF_8));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
             return provider.createCompressorInputStream(name, t, true);
         } catch (CompressorException e) {
             throw new RuntimeException("Failed to create compressor input stream for format: " + name, e);

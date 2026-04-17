@@ -66,7 +66,7 @@ public class BoundStageHost
             List.of(cmdString.cmd()).stream().collect(Collectors.joining(" "))
         };
 
-        List.of(cmdParts).stream().forEach(p -> System.out.println("[" + p + "]"));
+        List.of(cmdParts).stream().forEach(p -> logger.debug("cmdPart: {}", p));
 
         ProcessBuilder result = new ProcessBuilder(cmdParts);
         return List.of(result);

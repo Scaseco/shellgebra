@@ -67,7 +67,7 @@ public class DynamicOutputFromStream
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         } finally {
-                            // System.out.println("Pump thread pipe -> output terminated.");
+                            // logger.debug("Pump thread pipe -> output terminated.");
                         }
                     };
                     pumpFuture = CompletableFuture.runAsync(runnable);

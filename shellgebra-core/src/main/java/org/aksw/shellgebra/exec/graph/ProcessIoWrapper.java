@@ -319,7 +319,7 @@ public class ProcessIoWrapper
             Builder builder = this;
 
             builder.setOutputLineReaderUtf8(str -> {
-                // System.out.println("got output line: " + str);
+                // logger.debug("got output line: {}", str);
                 if (!outBuilder.isEmpty()) {
                     outBuilder.append("\n");
                 }
@@ -327,7 +327,7 @@ public class ProcessIoWrapper
             });
             // wrapper.setErrorLineReaderUtf8(logger::info);
             builder.setErrorLineReaderUtf8(str -> {
-                // System.out.println("got error line: " + str);
+                // logger.debug("got error line: {}", str);
                 if (!errBuilder.isEmpty()) {
                     errBuilder.append("\n");
                 }

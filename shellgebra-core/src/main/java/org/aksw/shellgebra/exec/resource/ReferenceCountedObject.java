@@ -40,7 +40,7 @@ public final class ReferenceCountedObject<T> {
         }
         if (oldCount == 0) {
             try {
-                // System.err.println("Closing resource: " + this);
+                // logger.debug("Closing resource: {}", this);
                 closeAction.close();
             } catch (Exception e) {
                 Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);

@@ -150,13 +150,13 @@ public class CmdExecSystem {
             CmdOpVisitorCandidatePlacer commandPlacer = new CmdOpVisitorCandidatePlacer(cmdCatalog, candidates, inferredCatalog, resolver, Set.of(preferredExecSite));
             PlacedCommand placedCommand = cmdOp.accept(commandPlacer);
             CandidatePlacement candidatePlacement = new CandidatePlacement(placedCommand, commandPlacer.getVarToPlacement());
-            System.out.println("Candidate Placement: " + candidatePlacement);
+            logger.debug("Candidate Placement: {}", candidatePlacement);
 
             FinalPlacement placed = FinalPlacer.place(candidatePlacement);
             // System.out.println("Placed: " + placed);
 
             FinalPlacement inlined = FinalPlacementInliner.inline(placed);
-            System.out.println("Inlined final placement: " + inlined);
+            logger.debug("Inlined final placement: {}", inlined);
 
     //      PlacedCmd placedCmd = resolvedInlined.cmdOp();
             PlacedCmd placedCmd = inlined.cmdOp();
