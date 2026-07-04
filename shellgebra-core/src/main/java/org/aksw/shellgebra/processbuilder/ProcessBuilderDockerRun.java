@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Ulimit;
 
 import org.aksw.commons.util.docker.ContainerPathResolver;
 import org.aksw.commons.util.docker.ContainerUtils;
@@ -501,12 +502,19 @@ public class ProcessBuilderDockerRun
         String actualEntrypoint = tmp.get(0);
         String[] cmdParts = tmp.subList(1, tmp.size()).toArray(String[]::new);
 
+        // XXX Make configurable
+        long ULIMIT_SOFT = 65535;
+        long ULIMIT_HARD = 65535;
+
         // String[] cmdParts = exec.argv().toArray(String[]::new);
         logger.info("image: " + imageRef);
         logger.info("entry point: " + actualEntrypoint);
         List.of(cmdParts).stream().forEach(p -> logger.info("Command part: [" + p + "]"));
         org.testcontainers.containers.GenericContainer<?> result = new org.testcontainers.containers.GenericContainer<>(imageRef)
-            .withCreateContainerCmdModifier(cmd -> cmd.withUser(userStr).withEntrypoint(actualEntrypoint))
+            .withCreateContainerCmdModifier(cmd -> {
+                cmd.getHostConfig().withUlimits(List.of(new Ulimit("nofile", ULIMIT_SOFT, ULIMIT_HARD)));
+                cmd.withUser(userStr).withEntrypoint(actualEntrypoint);
+            })
             .withCommand(cmdParts)
             .withLogConsumer(frame -> logger.info(frame.getUtf8StringWithoutLineEnding()))
             ;
